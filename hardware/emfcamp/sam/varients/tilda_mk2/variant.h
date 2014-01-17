@@ -184,6 +184,82 @@ extern "C"{
 // CAN1
 #define PINS_CAN1            (91u)
 
+// EMAC
+#define PIN_EMAC_EREFCK      (92u)
+#define PIN_EMAC_ETXEN       (93u)
+#define PIN_EMAC_ETX0        (94u)
+#define PIN_EMAC_ETX1        (95u)
+#define PIN_EMAC_ECRSDV      (96u)
+#define PIN_EMAC_ERX0        (97u)
+#define PIN_EMAC_ERX1        (98u)
+#define PIN_EMAC_ERXER       (99u)
+#define PIN_EMAC_EMDC        (100u)
+#define PIN_EMAC_EMDIO       (101u)
+#define PIN_TC0_TIOA2        (102u)
+#define PIN_EMAC_FLAGS       (PIO_PERIPH_A | PIO_DEFAULT)
+/** EMAC PHY address */
+#define BOARD_EMAC_PHY_ADDR  0
+/** EMAC RMII mode */
+#define BOARD_EMAC_MODE_RMII 1
+#define ETXCK                 PIN_EMAC_EREFCK
+#define ETXEN                 PIN_EMAC_ETXEN
+#define ETX0                  PIN_EMAC_ETX0
+#define ETX1                  PIN_EMAC_ETX1
+#define ECRSDV                PIN_EMAC_ECRSDV
+#define ERX0                  PIN_EMAC_ERX0
+#define ERX1                  PIN_EMAC_ERX1
+#define ERXER                 PIN_EMAC_ERXER
+#define EMDC                  PIN_EMAC_EMDC
+#define EMDIO                 PIN_EMAC_EMDIO
+#define TIOA2                 PIN_TC0_TIOA2
+
+#define ERXD1                 ERX1
+#define ETXD1                 ETX1
+//#define ERXER                 PIN_EMAC_ERXER
+#define ERXDV                 ECRSDV
+//#define EMDC                  PIN_EMAC_EMDC
+#define ERXD0                 ERX0
+//#define EMDIO                 PIN_EMAC_EMDIO
+#define ETXD0                 ETX0
+//#define ETXEN                 PIN_EMAC_ETXEN
+#define EXINT                 TIOA2
+#define ETXCLK                ETXCK
+#define CLKEN                 (109)       //PC11
+
+//Taijiuino additional pins
+#define PIN_TAIJI_TP0         (103u)
+#define PIN_TAIJI_TP1         (104u)
+#define PIN_TAIJI_TP2         (105u)
+#define PIN_TAIJI_TP3         (106u)
+#define PIN_TAIJI_TP4         (107u)
+#define PIN_TAIJI_TP5         (108u)
+#define PIN_TAIJI_TP6         (109u)
+#define TP0                   PIN_TAIJI_TP0
+#define TP1                   PIN_TAIJI_TP1
+#define TP2                   PIN_TAIJI_TP2
+#define TP3                   PIN_TAIJI_TP3
+#define TP4                   PIN_TAIJI_TP4
+#define TP5                   PIN_TAIJI_TP5
+#define TP6                   PIN_TAIJI_TP6
+#define TP7                   ERXD1
+#define TP8                   ETXD1
+#define TP9                   ERXER
+#define TP10                  ERXDV
+#define TP11                  EMDC
+#define TP12                  ERXD0
+#define TP13                  EMDIO
+#define TP14                  ETXD0
+#define TP15                  ETXEN
+#define TP16                  EXINT
+#define TP17                  ETXCLK
+#define PB24                  TP0
+#define PB23                  TP1
+#define PB22                  TP2
+#define PB27                  TP3
+#define PC27                  TP3
+#define PC20                  TP4
+#define PC10                  TP5
+#define PC11                  TP6
 
 /*
  * DACC
