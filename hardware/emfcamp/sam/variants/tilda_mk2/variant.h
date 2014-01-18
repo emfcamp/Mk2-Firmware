@@ -16,6 +16,11 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
+/*
+ Orignal from Arduino 1.5.5-r2
+ Modified my EMF Camp for the TiLDA Mk2
+*/
+
 #ifndef _VARIANT_TILDA_MK2_
 #define _VARIANT_TILDA_MK2_
 
