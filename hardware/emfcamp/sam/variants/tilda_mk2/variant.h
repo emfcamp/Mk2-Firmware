@@ -55,7 +55,7 @@ extern "C"{
  *----------------------------------------------------------------------------*/
 
 // Number of pins defined in PinDescription array
-#define PINS_COUNT           (79u)
+#define PINS_COUNT           (96u)
 #define NUM_DIGITAL_PINS     (54u)
 #define NUM_ANALOG_INPUTS    (12u)
 
@@ -89,8 +89,8 @@ extern "C"{
 #define SPI_INTERFACE_ID     ID_SPI0
 #define SPI_CHANNELS_NUM 4
 #define PIN_SPI_SS0          (77u)
-#define PIN_SPI_SS1          (87u)
-#define PIN_SPI_SS2          (86u)
+#define PIN_SPI_SS1          (104u)
+#define PIN_SPI_SS2          (103u)
 #define PIN_SPI_SS3          (78u)
 #define PIN_SPI_MOSI         (75u)
 #define PIN_SPI_MISO         (74u)
@@ -141,18 +141,18 @@ extern "C"{
  * UART/USART Interfaces
  */
 // Serial
-#define PINS_UART            (81u)
+#define PINS_UART            (98u)
 // Serial1
-#define PINS_USART0          (82u)
+#define PINS_USART0          (99u)
 // Serial2
-#define PINS_USART1          (83u)
+#define PINS_USART1          (100u)
 // Serial3
-#define PINS_USART3          (84u)
+#define PINS_USART3          (101u)
 
 /*
  * USB Interfaces
  */
-#define PINS_USB             (85u)
+#define PINS_USB             (102u)
 
 /*
  * Analog pins
@@ -178,90 +178,22 @@ extern "C"{
 /*
  * Complementary CAN pins
  */
-#define CAN1RX 88
-#define CAN1TX 89
+#define CAN1RX 105
+#define CAN1TX 106
 
 // CAN0
-#define PINS_CAN0            (90u)
+#define PINS_CAN0            (107u)
 // CAN1
-#define PINS_CAN1            (91u)
+#define PINS_CAN1            (108u)
 
-// EMAC
-#define PIN_EMAC_EREFCK      (92u)
-#define PIN_EMAC_ETXEN       (93u)
-#define PIN_EMAC_ETX0        (94u)
-#define PIN_EMAC_ETX1        (95u)
-#define PIN_EMAC_ECRSDV      (96u)
-#define PIN_EMAC_ERX0        (97u)
-#define PIN_EMAC_ERX1        (98u)
-#define PIN_EMAC_ERXER       (99u)
-#define PIN_EMAC_EMDC        (100u)
-#define PIN_EMAC_EMDIO       (101u)
-#define PIN_TC0_TIOA2        (102u)
-#define PIN_EMAC_FLAGS       (PIO_PERIPH_A | PIO_DEFAULT)
+// EMAC (TiLDA Mk2)
+#define PINS_EMAC            (109u)
+#define PIN_EMAC_EEXTINT     (95u) // pa5
+#define PIN_EMAC_CLKEN       (84u) // pc11
 /** EMAC PHY address */
 #define BOARD_EMAC_PHY_ADDR  0
 /** EMAC RMII mode */
 #define BOARD_EMAC_MODE_RMII 1
-#define ETXCK                 PIN_EMAC_EREFCK
-#define ETXEN                 PIN_EMAC_ETXEN
-#define ETX0                  PIN_EMAC_ETX0
-#define ETX1                  PIN_EMAC_ETX1
-#define ECRSDV                PIN_EMAC_ECRSDV
-#define ERX0                  PIN_EMAC_ERX0
-#define ERX1                  PIN_EMAC_ERX1
-#define ERXER                 PIN_EMAC_ERXER
-#define EMDC                  PIN_EMAC_EMDC
-#define EMDIO                 PIN_EMAC_EMDIO
-#define TIOA2                 PIN_TC0_TIOA2
-
-#define ERXD1                 ERX1
-#define ETXD1                 ETX1
-//#define ERXER                 PIN_EMAC_ERXER
-#define ERXDV                 ECRSDV
-//#define EMDC                  PIN_EMAC_EMDC
-#define ERXD0                 ERX0
-//#define EMDIO                 PIN_EMAC_EMDIO
-#define ETXD0                 ETX0
-//#define ETXEN                 PIN_EMAC_ETXEN
-#define EXINT                 TIOA2
-#define ETXCLK                ETXCK
-#define CLKEN                 (109)       //PC11
-
-//Taijiuino additional pins
-#define PIN_TAIJI_TP0         (103u)
-#define PIN_TAIJI_TP1         (104u)
-#define PIN_TAIJI_TP2         (105u)
-#define PIN_TAIJI_TP3         (106u)
-#define PIN_TAIJI_TP4         (107u)
-#define PIN_TAIJI_TP5         (108u)
-#define PIN_TAIJI_TP6         (109u)
-#define TP0                   PIN_TAIJI_TP0
-#define TP1                   PIN_TAIJI_TP1
-#define TP2                   PIN_TAIJI_TP2
-#define TP3                   PIN_TAIJI_TP3
-#define TP4                   PIN_TAIJI_TP4
-#define TP5                   PIN_TAIJI_TP5
-#define TP6                   PIN_TAIJI_TP6
-#define TP7                   ERXD1
-#define TP8                   ETXD1
-#define TP9                   ERXER
-#define TP10                  ERXDV
-#define TP11                  EMDC
-#define TP12                  ERXD0
-#define TP13                  EMDIO
-#define TP14                  ETXD0
-#define TP15                  ETXEN
-#define TP16                  EXINT
-#define TP17                  ETXCLK
-#define PB24                  TP0
-#define PB23                  TP1
-#define PB22                  TP2
-#define PB27                  TP3
-#define PC27                  TP3
-#define PC20                  TP4
-#define PC10                  TP5
-#define PC11                  TP6
 
 /*
  * DACC
@@ -291,6 +223,77 @@ extern "C"{
 #define TC_MAX_DUTY_CYCLE   255
 #define TC_MIN_DUTY_CYCLE   0
 #define TC_RESOLUTION		8
+
+// TiLDA Mk2 additional pins and handy defines
+// Test pads
+#define TP4                   (22u) //D22
+#define TP5                   (79u)
+#define TP6                   (78u) //SS3
+#define TP7                   (80u)
+#define TP8                   (83u)
+#define TP9                   (81u)
+#define TP10                  (23u) //D23
+#define TP11                  (16u) //Serial2 TXD
+#define TP12                  (17u) //Serial2 RXD
+#define TP15                  (14u) //Serial3 TXD
+#define TP16                  (15u) //Serial3 RXD
+    
+// RGB LED's
+#define LED1_RED              (37u)
+#define LED1_GREEN            (39u)
+#define LED1_BLUE             (41u)
+#define LED2_RED              (82u)
+#define LED2_GREEN            (44u)
+#define LED2_BLUE             (45u)
+    
+// epaper display
+#define EPD_CS                SS2
+#define EPD_BUSY              (38u)
+#define EPD_RESET             (34u)
+#define EPD_PWM               (35u)
+#define EPD_DISCHARGE         (32u)
+#define EPD_BORDER_CONTROL    (40u)
+#define EPD_PANEL_ON          (33u)
+    
+// SD socket
+#define SD_CS                 SS1
+#define SD_CARD_DECTECT       (36u)
+    
+// Flash
+#define FLASH_CS              SS0
+#define FLASH_HOLD            (49u)
+
+// IMU (MPU & HMC)
+#define MPU_INT               (31u)
+#define HMC_DRDY              (30u)
+    
+// Radio (SRF)
+#define SRF_SLEEP             (61u)
+#define SRF_AT_COMMAND        (43u)
+    
+//IR
+#define IR_TX_PWM             (6u)
+#define IR_RX                 (42u)
+    
+//Buttons
+#define BUTTON_LIGHT          (60u)
+#define BUTTON_SCREEN_RIGHT   (46u)
+#define BUTTON_SCREEN_LEFT    (29u)
+#define BUTTON_A              (47u)
+#define BUTTON_B              (48u)
+#define BUTTON_UP             (27u)
+#define BUTTON_RIGHT          (25u)
+#define BUTTON_DOWN           (26u)
+#define BUTTON_LEFT           (28u)
+#define BUTTON_CENTER         (24u)
+    
+//PMIC
+#define VBATT_MON             A11
+#define PMIC_VUSBGD           (64u)
+#define PMIC_FAULT            (63u)
+#define PMIC_CHRG             (62u)
+#define PMIC_ILIM1            (51u)
+#define PMIC_ILIM0            (50u)
 
 #ifdef __cplusplus
 }
