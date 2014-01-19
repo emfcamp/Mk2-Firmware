@@ -1,5 +1,5 @@
 
-tilda_mk2_dbg.name=TiLDA Mk2 (FTDI)
+tilda_mk2_dbg.name=TiLDA Mk2 (SRF/FTDI)
 tilda_mk2_dbg.vid.0=0x2341
 tilda_mk2_dbg.pid.0=0x003d
 tilda_mk2_dbg.upload.tool=arduino:bossac
