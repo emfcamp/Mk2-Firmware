@@ -94,21 +94,21 @@ void loop() {
         
         switch (setImage) {
             case IMAGE_A:
-            Serial.println("A");
-            if (currentImage)
-            EPD.image(IMAGE_A_BITS, IMAGE_B_BITS);
-            else
-            EPD.image(IMAGE_A_BITS);
-            currentImage = IMAGE_A;
-            break;
+                Serial.println("A");
+                if (currentImage)
+                    EPD.image(IMAGE_B_BITS, IMAGE_A_BITS);
+                else
+                    EPD.image(IMAGE_A_BITS);
+                currentImage = IMAGE_A;
+                break;
             case IMAGE_B:
-            Serial.println("B");
-            if (currentImage)
-            EPD.image(IMAGE_B_BITS, IMAGE_A_BITS);
-            else
-            EPD.image(IMAGE_B_BITS);
-            currentImage = IMAGE_B;
-            break;
+                Serial.println("B");
+                if (currentImage)
+                    EPD.image(IMAGE_A_BITS, IMAGE_B_BITS);
+                else
+                    EPD.image(IMAGE_B_BITS);
+                currentImage = IMAGE_B;
+                break;
             
             default:
             break;
