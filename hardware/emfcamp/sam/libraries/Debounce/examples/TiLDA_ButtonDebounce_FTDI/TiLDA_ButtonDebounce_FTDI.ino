@@ -99,7 +99,7 @@ void setup() {
     
     // setup  Serial
     Serial.begin(115200);
-    while (!Serial) ;
+    delay(250);
     Serial.println("TiLDA Mk2 button debounce tester");
 }
 
@@ -186,9 +186,3 @@ void buttonLeftPress(){
 void buttonCenterPress(){
     buttonCenter = 1;
 }
-
-
-
-
-
-

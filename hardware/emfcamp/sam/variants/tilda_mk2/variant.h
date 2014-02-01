@@ -274,14 +274,14 @@ extern "C"{
     
 // Radio (SRF)
 #define SRF_SLEEP             (61u)
-#define SRF_AT_COMMAND        (43u)
+#define SRF_AT_COMMAND        (60u)  // should be 43 but seems I forgot to swap with LIGHT
     
 //IR
 #define IR_TX_PWM             (6u)
 #define IR_RX                 (42u)
     
 //Buttons
-#define BUTTON_LIGHT          (60u)
+#define BUTTON_LIGHT          (43u) // should be 60 but seems I forgot to swap the trace with SRF_AT_COMMAND
 #define BUTTON_SCREEN_RIGHT   (46u)
 #define BUTTON_SCREEN_LEFT    (29u)
 #define BUTTON_A              (47u)
