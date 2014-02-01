@@ -48,6 +48,9 @@ int setImage = 0;
 void setup() {
     Serial.begin(115200);
     Serial.println("Pin setup");
+    // PMIC to CHARGE
+    pinMode(PMIC_ENOTG, OUTPUT);
+    digitalWrite(PMIC_ENOTG, LOW);
     EPD.pinSetup();
     
     pinMode(BUTTON_A, INPUT);

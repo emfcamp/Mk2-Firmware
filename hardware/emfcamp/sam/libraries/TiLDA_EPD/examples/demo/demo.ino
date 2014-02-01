@@ -229,6 +229,10 @@ void setup() {
 	digitalWrite(Pin_EPD_CS, LOW);
 	digitalWrite(Pin_FLASH_CS, HIGH);
     
+    // PMIC to CHARGE
+    pinMode(PMIC_ENOTG, OUTPUT);
+    digitalWrite(PMIC_ENOTG, LOW);
+    
 	Serial.begin(115200);
     #if !defined(__MSP430_CPU__)
 	// wait for USB CDC serial port to connect.  Arduino Leonardo only

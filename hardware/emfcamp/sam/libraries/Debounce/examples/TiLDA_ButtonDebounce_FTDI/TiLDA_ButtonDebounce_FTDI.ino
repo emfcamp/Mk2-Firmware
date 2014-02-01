@@ -47,6 +47,11 @@ boolean buttonLeft = 0;
 boolean buttonCenter = 0;
 
 void setup() {
+    
+    // PMIC to CHARGE
+    pinMode(PMIC_ENOTG, OUTPUT);
+    digitalWrite(PMIC_ENOTG, LOW);
+    
     // set button pins to input
     pinMode(BUTTON_LIGHT, INPUT);
     pinMode(BUTTON_SCREEN_LEFT, INPUT);
