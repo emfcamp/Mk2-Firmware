@@ -252,7 +252,7 @@ extern "C"{
 #define LED2_BLUE             (45u)
     
 // epaper display
-#define EPD_CS                SS2
+#define EPD_CS                BOARD_SPI_SS2
 #define EPD_BUSY              (38u)
 #define EPD_RESET             (34u)
 #define EPD_PWM               (35u)
@@ -261,11 +261,11 @@ extern "C"{
 #define EPD_PANEL_ON          (33u)
     
 // SD socket
-#define SD_CS                 SS1
+#define SD_CS                 BOARD_SPI_SS1
 #define SD_CARD_DECTECT       (36u)
     
 // Flash
-#define FLASH_CS              SS0
+#define FLASH_CS              BOARD_SPI_SS0
 #define FLASH_HOLD            (49u)
 
 // IMU (MPU & HMC)
