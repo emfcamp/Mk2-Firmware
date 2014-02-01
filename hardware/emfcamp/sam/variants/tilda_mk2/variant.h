@@ -60,7 +60,7 @@ extern "C"{
  *----------------------------------------------------------------------------*/
 
 // Number of pins defined in PinDescription array
-#define PINS_COUNT           (96u)
+#define PINS_COUNT           (97u)
 #define NUM_DIGITAL_PINS     (54u)
 #define NUM_ANALOG_INPUTS    (12u)
 
@@ -94,8 +94,8 @@ extern "C"{
 #define SPI_INTERFACE_ID     ID_SPI0
 #define SPI_CHANNELS_NUM 4
 #define PIN_SPI_SS0          (77u)
-#define PIN_SPI_SS1          (104u)
-#define PIN_SPI_SS2          (103u)
+#define PIN_SPI_SS1          (105u)
+#define PIN_SPI_SS2          (104u)
 #define PIN_SPI_SS3          (78u)
 #define PIN_SPI_MOSI         (75u)
 #define PIN_SPI_MISO         (74u)
@@ -146,18 +146,18 @@ extern "C"{
  * UART/USART Interfaces
  */
 // Serial
-#define PINS_UART            (98u)
+#define PINS_UART            (99u)
 // Serial1
-#define PINS_USART0          (99u)
+#define PINS_USART0          (100u)
 // Serial2
-#define PINS_USART1          (100u)
+#define PINS_USART1          (101u)
 // Serial3
-#define PINS_USART3          (101u)
+#define PINS_USART3          (102u)
 
 /*
  * USB Interfaces
  */
-#define PINS_USB             (102u)
+#define PINS_USB             (103u)
 
 /*
  * Analog pins
@@ -183,16 +183,16 @@ extern "C"{
 /*
  * Complementary CAN pins
  */
-#define CAN1RX 105
-#define CAN1TX 106
+#define CAN1RX 106
+#define CAN1TX 107
 
 // CAN0
-#define PINS_CAN0            (107u)
+#define PINS_CAN0            (108u)
 // CAN1
-#define PINS_CAN1            (108u)
+#define PINS_CAN1            (109u)
 
 // EMAC (TiLDA Mk2)
-#define PINS_EMAC            (109u)
+#define PINS_EMAC            (110u)
 #define PIN_EMAC_EEXTINT     (95u) // pa5
 #define PIN_EMAC_CLKEN       (84u) // pc11
 /** EMAC PHY address */
@@ -294,6 +294,7 @@ extern "C"{
     
 //PMIC
 #define VBATT_MON             A11
+#define PMIC_ENOTG            (96u)
 #define PMIC_VUSBGD           (64u)
 #define PMIC_FAULT            (63u)
 #define PMIC_CHRG             (62u)
