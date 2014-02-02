@@ -55,21 +55,21 @@ static void SPI_put_wait(uint8_t c, int busy_pin);
 static void SPI_send(uint8_t cs_pin, const uint8_t *buffer, uint16_t length);
 
 EPD_Class::EPD_Class(EPD_size size,
-		     int panel_on_pin,
-		     int border_pin,
-		     int discharge_pin,
-		     int pwm_pin,
-		     int reset_pin,
-		     int busy_pin,
-		     int chip_select_pin) :
-	EPD_Pin_PANEL_ON(panel_on_pin),
-	EPD_Pin_BORDER(border_pin),
-	EPD_Pin_DISCHARGE(discharge_pin),
-	EPD_Pin_PWM(pwm_pin),
-	EPD_Pin_RESET(reset_pin),
-	EPD_Pin_BUSY(busy_pin),
-	EPD_Pin_EPD_CS(chip_select_pin) {
-
+                     int panel_on_pin,
+                     int border_pin,
+                     int discharge_pin,
+                     int pwm_pin,
+                     int reset_pin,
+                     int busy_pin,
+                     int chip_select_pin) :
+                        EPD_Pin_PANEL_ON(panel_on_pin),
+                        EPD_Pin_BORDER(border_pin),
+                        EPD_Pin_DISCHARGE(discharge_pin),
+                        EPD_Pin_PWM(pwm_pin),
+                        EPD_Pin_RESET(reset_pin),
+                        EPD_Pin_BUSY(busy_pin),
+                        EPD_Pin_EPD_CS(chip_select_pin) {
+                            
 	this->size = size;
 	this->stage_time = 480; // milliseconds
 	this->lines_per_display = 96;
@@ -285,7 +285,7 @@ void EPD_Class::end() {
 	// dummy line and border
 	if (EPD_1_44 == this->size) {
 		// only for 1.44" EPD
-		this->line(0x7fffu, 0, 0xaa, false, EPD_normal);
+		this->line(0x7fffu, 0, 0x55, false, EPD_normal);
 
 		Delay_ms(250);
 
@@ -699,7 +699,7 @@ static void SPI_on() {
 	SPI.end();
 	SPI.begin();
 	SPI.setBitOrder(MSBFIRST);
-	SPI.setDataMode(SPI_MODE2);
+	SPI.setDataMode(SPI_MODE0);
 #ifdef __SAM3X8E__
 	SPI.setClockDivider(10); // about 8MHz
     SPI_put(0x00);

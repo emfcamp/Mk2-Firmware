@@ -32,13 +32,13 @@
 #include <TiLDA_EPD.h>
 #include <Images.h>
 
-#include <cat_2_7.xbm>
-#include <saturn_2_7.xbm>
+#include <lwk.xbm>
+#include <menu.xbm>
 
 #define IMAGE_A 1
-#define IMAGE_A_BITS cat_2_7_bits
+#define IMAGE_A_BITS lwk_bits
 #define IMAGE_B 2
-#define IMAGE_B_BITS saturn_2_7_bits
+#define IMAGE_B_BITS menu_bits
 
 EPD_Class EPD(EPD_2_7, EPD_PANEL_ON, EPD_BORDER_CONTROL, EPD_DISCHARGE, EPD_PWM, EPD_RESET, EPD_BUSY, 52);
 
