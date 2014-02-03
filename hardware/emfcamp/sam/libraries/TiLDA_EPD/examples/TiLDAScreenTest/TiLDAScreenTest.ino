@@ -47,10 +47,12 @@ int setImage = 0;
 
 void setup() {
     Serial.begin(115200);
+    delay(500);
     Serial.println("Pin setup");
     // PMIC to CHARGE
     pinMode(PMIC_ENOTG, OUTPUT);
     digitalWrite(PMIC_ENOTG, LOW);
+    
     EPD.pinSetup();
     
     pinMode(BUTTON_A, INPUT);
@@ -72,14 +74,6 @@ void setup() {
     EPD.setFactor(temperature);
     EPD.clear();
     EPD.end();
-    delay(100);
-    Serial.println("Clear Screen");
-    // clear the screen
-    EPD.begin();
-    EPD.setFactor(temperature);
-    EPD.clear();
-    EPD.end();
-    
     Serial.println("Start Loop");
 }
 
@@ -104,7 +98,7 @@ void loop() {
             case IMAGE_B:
                 Serial.println("B");
                 if (currentImage)
-                    EPD.partial_image(IMAGE_A_BITS, IMAGE_B_BITS);
+                    EPD.image(IMAGE_A_BITS, IMAGE_B_BITS);
                 else
                     EPD.image(IMAGE_B_BITS);
                 currentImage = IMAGE_B;
