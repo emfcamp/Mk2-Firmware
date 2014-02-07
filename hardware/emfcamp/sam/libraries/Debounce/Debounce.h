@@ -35,14 +35,32 @@
 
 // These are in usec
 // 10ms
-#define DEBOUNCE_DEFAULT 10000
+#define DEBOUNCE_DEFAULT 1000
 
 // 500ms or 0.5sec
 #define DEBOUNCE_MAX 500000
 
-
 void setDebounce(int, int);
 
 void setDebounce(int);
+
+void tildaButtonSetup();
+
+void tildaButtonAttachInterrupts();
+
+void tildaButtonDetachInterrupts();
+
+// Define a bunch of interrupt handlers as weak so can overirde in main program
+extern void buttonLightPress(void) __attribute__ ((weak));
+extern void buttonScreenLeftPress(void) __attribute__ ((weak));
+extern void buttonScreenRightPress(void) __attribute__ ((weak));
+extern void buttonAPress(void) __attribute__ ((weak));
+extern void buttonBPress(void) __attribute__ ((weak));
+extern void buttonUpPress(void) __attribute__ ((weak));
+extern void buttonRightPress(void) __attribute__ ((weak));
+extern void buttonDownPress(void) __attribute__ ((weak));
+extern void buttonLeftPress(void) __attribute__ ((weak));
+extern void buttonCenterPress(void) __attribute__ ((weak));
+
 
 #endif // Debounce_H

@@ -52,53 +52,10 @@ void setup() {
     pinMode(PMIC_ENOTG, OUTPUT);
     digitalWrite(PMIC_ENOTG, LOW);
     
-    // set button pins to input
-    pinMode(BUTTON_LIGHT, INPUT);
-    pinMode(BUTTON_SCREEN_LEFT, INPUT);
-    pinMode(BUTTON_SCREEN_RIGHT, INPUT);
-    pinMode(BUTTON_A, INPUT);
-    pinMode(BUTTON_B, INPUT);
-    pinMode(BUTTON_UP, INPUT);
-    pinMode(BUTTON_RIGHT, INPUT);
-    pinMode(BUTTON_DOWN, INPUT);
-    pinMode(BUTTON_LEFT, INPUT);
-    pinMode(BUTTON_CENTER, INPUT);
-    
-    // enable button pull up's
-    digitalWrite(BUTTON_LIGHT, HIGH);
-    digitalWrite(BUTTON_SCREEN_LEFT, HIGH);
-    digitalWrite(BUTTON_SCREEN_RIGHT, HIGH);
-    digitalWrite(BUTTON_A, HIGH);
-    digitalWrite(BUTTON_B, HIGH);
-    digitalWrite(BUTTON_UP, HIGH);
-    digitalWrite(BUTTON_RIGHT, HIGH);
-    digitalWrite(BUTTON_DOWN, HIGH);
-    digitalWrite(BUTTON_LEFT, HIGH);
-    digitalWrite(BUTTON_CENTER, HIGH);
-    
-    // attach button's to interrupt's
-    attachInterrupt(BUTTON_LIGHT, buttonLightPress, FALLING);
-    attachInterrupt(BUTTON_SCREEN_LEFT, buttonScreenLeftPress, FALLING);
-    attachInterrupt(BUTTON_SCREEN_RIGHT, buttonScreenRightPress, FALLING);
-    attachInterrupt(BUTTON_A, buttonAPress, FALLING);
-    attachInterrupt(BUTTON_B, buttonBPress, FALLING);
-    attachInterrupt(BUTTON_UP, buttonUpPress, FALLING);
-    attachInterrupt(BUTTON_RIGHT, buttonRightPress, FALLING);
-    attachInterrupt(BUTTON_DOWN, buttonDownPress, FALLING);
-    attachInterrupt(BUTTON_LEFT, buttonLeftPress, FALLING);
-    attachInterrupt(BUTTON_CENTER, buttonCenterPress, FALLING);
-    
-    // setup debpunce
-    setDebounce(BUTTON_LIGHT);
-    setDebounce(BUTTON_SCREEN_LEFT);
-    setDebounce(BUTTON_SCREEN_RIGHT);
-    setDebounce(BUTTON_A);
-    setDebounce(BUTTON_B);
-    setDebounce(BUTTON_UP);
-    setDebounce(BUTTON_RIGHT);
-    setDebounce(BUTTON_DOWN);
-    setDebounce(BUTTON_LEFT);
-    setDebounce(BUTTON_CENTER);
+    // set button pins and attach interrupts
+    // dose not matter if we do not define all button interupt handlers
+    tildaButtonSetup();
+    tildaButtonAttachInterrupts();
     
     // setup LED's
     
