@@ -61,14 +61,10 @@ void setup() {
 
     EPD.pinSetup();
     
-    pinMode(BUTTON_A, INPUT_PULLUP);
-    pinMode(BUTTON_B, INPUT_PULLUP);
-        
-    attachInterrupt(BUTTON_A, showImageA, FALLING);
-    setDebounce(BUTTON_A, 200);
-    
-    attachInterrupt(BUTTON_B, showImageB, FALLING);
-    setDebounce(BUTTON_B, 200);
+    // set button pins and attach interrupts
+    // dose not matter if we do not define all button interupt handlers
+    tildaButtonSetup();
+    tildaButtonAttachInterrupts();
     
     Serial.println("Clear Screen");
     // clear the screen
