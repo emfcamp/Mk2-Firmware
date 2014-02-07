@@ -51,3 +51,63 @@ void setDebounce(int pin, int usecs) {
 void setDebounce(int pin) {
     return setDebounce(pin, DEBOUNCE_DEFAULT);
 }
+
+void tildaButtonSetup() {
+    // set button pins to input and enable pull up's
+    pinMode(BUTTON_LIGHT, INPUT_PULLUP);
+    pinMode(BUTTON_SCREEN_LEFT, INPUT_PULLUP);
+    pinMode(BUTTON_SCREEN_RIGHT, INPUT_PULLUP);
+    pinMode(BUTTON_A, INPUT_PULLUP);
+    pinMode(BUTTON_B, INPUT_PULLUP);
+    pinMode(BUTTON_UP, INPUT_PULLUP);
+    pinMode(BUTTON_RIGHT, INPUT_PULLUP);
+    pinMode(BUTTON_DOWN, INPUT_PULLUP);
+    pinMode(BUTTON_LEFT, INPUT_PULLUP);
+    pinMode(BUTTON_CENTER, INPUT_PULLUP);
+    
+    // setup debounce
+    setDebounce(BUTTON_LIGHT);
+    setDebounce(BUTTON_SCREEN_LEFT);
+    setDebounce(BUTTON_SCREEN_RIGHT);
+    setDebounce(BUTTON_A);
+    setDebounce(BUTTON_B);
+    setDebounce(BUTTON_UP);
+    setDebounce(BUTTON_RIGHT);
+    setDebounce(BUTTON_DOWN);
+    setDebounce(BUTTON_LEFT);
+    setDebounce(BUTTON_CENTER);
+    
+}
+
+void tildaButtonAttachInterrupts() {
+    // attach button's to interrupt's
+    attachInterrupt(BUTTON_LIGHT, buttonLightPress, FALLING);
+    attachInterrupt(BUTTON_SCREEN_LEFT, buttonScreenLeftPress, FALLING);
+    attachInterrupt(BUTTON_SCREEN_RIGHT, buttonScreenRightPress, FALLING);
+    attachInterrupt(BUTTON_A, buttonAPress, FALLING);
+    attachInterrupt(BUTTON_B, buttonBPress, FALLING);
+    attachInterrupt(BUTTON_UP, buttonUpPress, FALLING);
+    attachInterrupt(BUTTON_RIGHT, buttonRightPress, FALLING);
+    attachInterrupt(BUTTON_DOWN, buttonDownPress, FALLING);
+    attachInterrupt(BUTTON_LEFT, buttonLeftPress, FALLING);
+    attachInterrupt(BUTTON_CENTER, buttonCenterPress, FALLING);
+    
+}
+
+void tildaButtonDetachInterrupts() {
+    // detach button's to interrupt's
+    detachInterrupt(BUTTON_LIGHT);
+    detachInterrupt(BUTTON_SCREEN_LEFT);
+    detachInterrupt(BUTTON_SCREEN_RIGHT);
+    detachInterrupt(BUTTON_A);
+    detachInterrupt(BUTTON_B);
+    detachInterrupt(BUTTON_UP);
+    detachInterrupt(BUTTON_RIGHT);
+    detachInterrupt(BUTTON_DOWN);
+    detachInterrupt(BUTTON_LEFT);
+    detachInterrupt(BUTTON_CENTER);
+    
+}
+
+
+
