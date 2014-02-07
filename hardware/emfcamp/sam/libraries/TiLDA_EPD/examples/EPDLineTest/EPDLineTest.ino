@@ -61,17 +61,14 @@ void setup() {
 
     EPD.pinSetup();
     
-    pinMode(BUTTON_A, INPUT);
-    pinMode(BUTTON_B, INPUT);
-    
-    digitalWrite(BUTTON_A, HIGH);
-    digitalWrite(BUTTON_B, HIGH);
-    
+    pinMode(BUTTON_A, INPUT_PULLUP);
+    pinMode(BUTTON_B, INPUT_PULLUP);
+        
     attachInterrupt(BUTTON_A, showImageA, FALLING);
-    setDebounce(BUTTON_A, 2000);
+    setDebounce(BUTTON_A, 200);
     
     attachInterrupt(BUTTON_B, showImageB, FALLING);
-    setDebounce(BUTTON_B, 2000);
+    setDebounce(BUTTON_B, 200);
     
     Serial.println("Clear Screen");
     // clear the screen

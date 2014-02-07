@@ -28,6 +28,7 @@
  SOFTWARE.
  */
 
+#include <Debounce.h>
 #include <SPI.h>
 #include <TiLDA_EPD.h>
 #include <Images.h>
@@ -46,8 +47,12 @@ int currentImage = 0;
 int setImage = 0;
 
 void setup() {
+    pinMode(SRF_SLEEP, OUTPUT);
+    digitalWrite(SRF_SLEEP, LOW);
+    
     Serial.begin(115200);
     delay(500);
+    Serial.println("TiLDA EPD Screen test");
     Serial.println("Pin setup");
     // PMIC to CHARGE
     pinMode(PMIC_ENOTG, OUTPUT);
@@ -55,21 +60,18 @@ void setup() {
     
     EPD.pinSetup();
     
-    pinMode(BUTTON_A, INPUT);
-    pinMode(BUTTON_B, INPUT);
-    
-    digitalWrite(BUTTON_A, HIGH);
-    digitalWrite(BUTTON_B, HIGH);
-    
+    pinMode(BUTTON_A, INPUT_PULLUP);
+    pinMode(BUTTON_B, INPUT_PULLUP);
+        
     attachInterrupt(BUTTON_A, showImageA, FALLING);
-    setDebounce(BUTTON_A, 200000);
+    setDebounce(BUTTON_A, 200);
     
     attachInterrupt(BUTTON_B, showImageB, FALLING);
-    setDebounce(BUTTON_B, 200000);
+    setDebounce(BUTTON_B, 200);
     
     Serial.println("Clear Screen");
     // clear the screen
-    int temperature = 24;   // fake it unitil we have either MPU or SAM3X temp working
+    int temperature = 19;   // fake it unitil we have either MPU or SAM3X temp working
     EPD.begin();
     EPD.setFactor(temperature);
     EPD.clear();
@@ -82,7 +84,7 @@ void loop() {
     if (setImage != currentImage){
         Serial.print("Button Pressed: ");
         // lets update the screen
-        int temperature = 24;   // fake it unitil we have either MPU or SAM3X temp working
+        int temperature = 19;   // fake it unitil we have either MPU or SAM3X temp working
         EPD.begin(); // power up the EPD panel
         EPD.setFactor(temperature); // adjust for current temperature
         
@@ -112,24 +114,6 @@ void loop() {
     }
     
 }
-
-void setDebounce(int pin, int usecs){  // reject spikes shorter than usecs on pin
-    if(usecs){
-        g_APinDescription[pin].pPort -> PIO_IFER = g_APinDescription[pin].ulPin;
-        g_APinDescription[pin].pPort -> PIO_DIFSR |= g_APinDescription[pin].ulPin;
-    }
-    else {
-        g_APinDescription[pin].pPort -> PIO_IFDR = g_APinDescription[pin].ulPin;
-        g_APinDescription[pin].pPort -> PIO_DIFSR &=~ g_APinDescription[pin].ulPin;
-        return;
-    }
-    
-    
-    int div=(usecs/31)-1; if(div<0)div=0; if(div > 16383) div=16383;
-    g_APinDescription[pin].pPort -> PIO_SCDR = div;
-    
-}
-
 
 void showImageA(){
     setImage = IMAGE_A;
