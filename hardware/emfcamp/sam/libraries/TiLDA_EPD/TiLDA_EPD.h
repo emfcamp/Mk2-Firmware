@@ -98,26 +98,45 @@ public:
 	void image(PROGMEM const uint8_t *image) {
 		this->frame_fixed_repeat(0xaa, EPD_compensate);
 		this->frame_fixed_repeat(0xaa, EPD_white);
-		this->frame_data_repeat(image, EPD_inverse);
-		this->frame_data_repeat(image, EPD_normal);
+		this->frame_data_repeat(image, NULL, EPD_inverse);
+		this->frame_data_repeat(image, NULL, EPD_normal);
 	}
 
 	// change from old image to new image (PROGMEM data)
 	void image(PROGMEM const uint8_t *old_image, PROGMEM const uint8_t *new_image) {
-		this->frame_data_repeat(old_image, EPD_compensate);
-		this->frame_data_repeat(old_image, EPD_white);
-		this->frame_data_repeat(new_image, EPD_inverse);
-		this->frame_data_repeat(new_image, EPD_normal);
+		this->frame_data_repeat(old_image, NULL, EPD_compensate);
+		this->frame_data_repeat(old_image, NULL, EPD_white);
+		this->frame_data_repeat(new_image, NULL, EPD_inverse);
+		this->frame_data_repeat(new_image, NULL, EPD_normal);
 	}
+    
+    // change from old image to new image (PROGMEM data)
+    // only updateing changed pixels
+	void partial_image(PROGMEM const uint8_t *old_image, PROGMEM const uint8_t *new_image) {
+		this->frame_data_repeat(old_image, new_image, EPD_compensate);
+		this->frame_data_repeat(old_image, new_image, EPD_white);
+		this->frame_data_repeat(new_image, old_image, EPD_inverse);
+		this->frame_data_repeat(new_image, old_image, EPD_normal);
+	}
+    
 
 #if defined(EPD_ENABLE_EXTRA_SRAM)
 
 	// change from old image to new image (SRAM version)
 	void image_sram(const uint8_t *old_image, const uint8_t *new_image) {
-		this->frame_sram_repeat(old_image, EPD_compensate);
-		this->frame_sram_repeat(old_image, EPD_white);
-		this->frame_sram_repeat(new_image, EPD_inverse);
-		this->frame_sram_repeat(new_image, EPD_normal);
+		this->frame_sram_repeat(old_image, NULL, EPD_compensate);
+		this->frame_sram_repeat(old_image, NULL, EPD_white);
+		this->frame_sram_repeat(new_image, NULL, EPD_inverse);
+		this->frame_sram_repeat(new_image, NULL, EPD_normal);
+	}
+    
+    // change from old image to new image (SRAM version)
+    // only updateing changed pixels
+	void partial_image_sram(const uint8_t *old_image, const uint8_t *new_image) {
+		this->frame_sram_repeat(old_image, new_image, EPD_compensate);
+		this->frame_sram_repeat(old_image, new_image, EPD_white);
+		this->frame_sram_repeat(new_image, old_image, EPD_inverse);
+		this->frame_sram_repeat(new_image, old_image, EPD_normal);
 	}
 #endif
 
@@ -126,17 +145,17 @@ public:
 
 	// single frame refresh
 	void frame_fixed(uint8_t fixed_value, EPD_stage stage);
-	void frame_data(PROGMEM const uint8_t *new_image, EPD_stage stage);
+	void frame_data(PROGMEM const uint8_t *new_image, PROGMEM const uint8_t *mask, EPD_stage stage);
 #if defined(EPD_ENABLE_EXTRA_SRAM)
-	void frame_sram(const uint8_t *new_image, EPD_stage stage);
+	void frame_sram(const uint8_t *new_image, const uint8_t *mask, EPD_stage stage);
 #endif
 	void frame_cb(uint32_t address, EPD_reader *reader, EPD_stage stage);
 
 	// stage_time frame refresh
 	void frame_fixed_repeat(uint8_t fixed_value, EPD_stage stage);
-	void frame_data_repeat(PROGMEM const uint8_t *new_image, EPD_stage stage);
+	void frame_data_repeat(PROGMEM const uint8_t *new_image, PROGMEM const uint8_t *mask, EPD_stage stage);
 #if defined(EPD_ENABLE_EXTRA_SRAM)
-	void frame_sram_repeat(const uint8_t *new_image, EPD_stage stage);
+	void frame_sram_repeat(const uint8_t *new_image, const uint8_t *mask, EPD_stage stage);
 #endif
 	void frame_cb_repeat(uint32_t address, EPD_reader *reader, EPD_stage stage);
 
@@ -145,7 +164,7 @@ public:
 
 	// single line display - very low-level
 	// also has to handle AVR progmem
-	void line(uint16_t line, const uint8_t *data, uint8_t fixed_value, bool read_progmem, EPD_stage stage);
+	void line(uint16_t line, const uint8_t *data, uint8_t fixed_value, const uint8_t *mask, bool read_progmem, EPD_stage stage);
 
 	// inline static void attachInterrupt();
 	// inline static void detachInterrupt();

@@ -285,13 +285,13 @@ void EPD_Class::end() {
 	// dummy line and border
 	if (EPD_1_44 == this->size) {
 		// only for 1.44" EPD
-		this->line(0x7fffu, 0, 0x55, false, EPD_normal);
+		this->line(0x7fffu, 0, 0x55, NULL, false, EPD_normal);
 
 		Delay_ms(250);
 
 	} else {
 		// all other display sizes
-		this->line(0x7fffu, 0, 0x55, false, EPD_normal);
+		this->line(0x7fffu, 0, 0x55, NULL, false, EPD_normal);
 
 		Delay_ms(25);
 
@@ -423,23 +423,37 @@ int EPD_Class::temperature_to_factor_10x(int temperature) {
 
 void EPD_Class::frame_fixed(uint8_t fixed_value, EPD_stage stage) {
 	for (uint8_t line = 0; line < this->lines_per_display ; ++line) {
-		this->line(line, 0, fixed_value, false, stage);
+		this->line(line, 0, fixed_value, NULL, false, stage);
 	}
 }
 
 
-void EPD_Class::frame_data(PROGMEM const uint8_t *image, EPD_stage stage){
-	for (uint8_t line = 0; line < this->lines_per_display ; ++line) {
-		this->line(line, &image[line * this->bytes_per_line], 0, true, stage);
-	}
+void EPD_Class::frame_data(PROGMEM const uint8_t *image, PROGMEM const uint8_t *mask, EPD_stage stage){
+    if (NULL == mask) {
+        for (uint8_t line = 0; line < this->lines_per_display ; ++line) {
+            this->line(line, &image[line * this->bytes_per_line], 0, NULL, true, stage);
+        }
+    } else {
+        for (uint8_t line = 0; line < this->lines_per_display ; ++line) {
+            size_t n = line * this->bytes_per_line;
+            this->line(line, &image[n], 0, &mask[n], true, stage);
+        }
+    }
 }
 
 
 #if defined(EPD_ENABLE_EXTRA_SRAM)
-void EPD_Class::frame_sram(const uint8_t *image, EPD_stage stage){
-	for (uint8_t line = 0; line < this->lines_per_display ; ++line) {
-		this->line(line, &image[line * this->bytes_per_line], 0, false, stage);
-	}
+void EPD_Class::frame_sram(const uint8_t *image, const uint8_t *mask, EPD_stage stage){
+    if (NULL == mask) {
+        for (uint8_t line = 0; line < this->lines_per_display ; ++line) {
+            this->line(line, &image[line * this->bytes_per_line], 0, NULL, false, stage);
+        }
+    } else {
+        for (uint8_t line = 0; line < this->lines_per_display ; ++line) {
+            size_t n = line * this->bytes_per_line;
+            this->line(line, &image[n], 0, &mask[n], false, stage);
+        }
+    }
 }
 #endif
 
@@ -448,7 +462,7 @@ void EPD_Class::frame_cb(uint32_t address, EPD_reader *reader, EPD_stage stage) 
 	static uint8_t buffer[264 / 8];
 	for (uint8_t line = 0; line < this->lines_per_display; ++line) {
 		reader(buffer, address + line * this->bytes_per_line, this->bytes_per_line);
-		this->line(line, buffer, 0, false, stage);
+		this->line(line, buffer, 0, NULL, false, stage);
 	}
 }
 
@@ -468,11 +482,11 @@ void EPD_Class::frame_fixed_repeat(uint8_t fixed_value, EPD_stage stage) {
 }
 
 
-void EPD_Class::frame_data_repeat(PROGMEM const uint8_t *image, EPD_stage stage) {
+void EPD_Class::frame_data_repeat(PROGMEM const uint8_t *image, PROGMEM const uint8_t *mask, EPD_stage stage) {
 	long stage_time = this->factored_stage_time;
 	do {
 		unsigned long t_start = millis();
-		this->frame_data(image, stage);
+		this->frame_data(image, mask, stage);
 		unsigned long t_end = millis();
 		if (t_end > t_start) {
 			stage_time -= t_end - t_start;
@@ -484,11 +498,11 @@ void EPD_Class::frame_data_repeat(PROGMEM const uint8_t *image, EPD_stage stage)
 
 
 #if defined(EPD_ENABLE_EXTRA_SRAM)
-void EPD_Class::frame_sram_repeat(const uint8_t *image, EPD_stage stage) {
+void EPD_Class::frame_sram_repeat(const uint8_t *image, const uint8_t *mask, EPD_stage stage) {
 	long stage_time = this->factored_stage_time;
 	do {
 		unsigned long t_start = millis();
-		this->frame_sram(image, stage);
+		this->frame_sram(image, mask, stage);
 		unsigned long t_end = millis();
 		if (t_end > t_start) {
 			stage_time -= t_end - t_start;
@@ -515,7 +529,7 @@ void EPD_Class::frame_cb_repeat(uint32_t address, EPD_reader *reader, EPD_stage 
 }
 
 
-void EPD_Class::line(uint16_t line, const uint8_t *data, uint8_t fixed_value, bool read_progmem, EPD_stage stage) {
+void EPD_Class::line(uint16_t line, const uint8_t *data, uint8_t fixed_value, const uint8_t *mask, bool read_progmem, EPD_stage stage) {
 
 #ifndef SAM_SPI
 	SPI_on();
@@ -556,13 +570,31 @@ void EPD_Class::line(uint16_t line, const uint8_t *data, uint8_t fixed_value, bo
 		if (0 != data) {
 #if defined(__MSP430_CPU__) || defined(__SAM3X8E__)
 			uint8_t pixels = data[b - 1] & 0xaa;
+            uint8_t pixel_mask = 0xff;
+            if (0 != mask) {
+                pixel_mask = (mask[b - 1] ^ pixels) & 0xaa; // mask even pixels
+                pixel_mask |= pixel_mask >> 1;              // mask for data (two bits per pixel)
+            }
 #else
-			// AVR has multiple memory spaces
+            // AVR has multiple memory spaces
 			uint8_t pixels;
+            uint8_t pixel_mask;
 			if (read_progmem) {
 				pixels = pgm_read_byte_near(data + b - 1) & 0xaa;
+                pixel_mask = 0xff;
+                if (0 != mask) {
+                    pixel_mask = (pgm_read_byte_near(mask + b - 1) ^ pixels) & 0xaa;
+                    pixel_mask |= pixel_mask >> 1;
+                }
+
 			} else {
 				pixels = data[b - 1] & 0xaa;
+                pixel_mask = 0xff;
+                if (0 != mask) {
+                    pixel_mask = (mask[b - 1] ^ pixels) & 0xaa;
+                    pixel_mask |= pixel_mask >> 1;
+                }
+
 			}
 #endif
 			switch(stage) {
@@ -580,9 +612,9 @@ void EPD_Class::line(uint16_t line, const uint8_t *data, uint8_t fixed_value, bo
                     break;
 			}
 #ifdef SAM_SPI
-            SPI_put_wait(this->EPD_Pin_EPD_CS, pixels, this->EPD_Pin_BUSY, true);
+            SPI_put_wait(this->EPD_Pin_EPD_CS, (pixels & pixel_mask) | (~pixel_mask & 0x55), this->EPD_Pin_BUSY, true);
 #else
-			SPI_put_wait(pixels, this->EPD_Pin_BUSY);
+			SPI_put_wait((pixels & pixel_mask) | (~pixel_mask & 0x55), this->EPD_Pin_BUSY);
 #endif
         } else {
 #ifdef SAM_SPI
@@ -615,13 +647,29 @@ void EPD_Class::line(uint16_t line, const uint8_t *data, uint8_t fixed_value, bo
 		if (0 != data) {
 #if defined(__MSP430_CPU__) || defined(__SAM3X8E__)
 			uint8_t pixels = data[b] & 0x55;
+			uint8_t pixel_mask = 0xff;
+            if (0 != mask) {
+				pixel_mask = (mask[b] ^ pixels) & 0x55;
+				pixel_mask |= pixel_mask << 1;
+			}
 #else
-			// AVR has multiple memory spaces
+            // AVR has multiple memory spaces
 			uint8_t pixels;
+            uint8_t pixel_mask;
 			if (read_progmem) {
 				pixels = pgm_read_byte_near(data + b) & 0x55;
+                pixel_mask = 0xff;
+                if (0 != mask) {
+                    pixel_mask = (pgm_read_byte_near(mask + b) ^ pixels) & 0x55;
+                    pixel_mask |= pixel_mask << 1;
+                }
 			} else {
 				pixels = data[b] & 0x55;
+                pixel_mask = 0xff;
+                if (0 != mask) {
+                    pixel_mask = (mask[b] ^ pixels) & 0x55;
+                    pixel_mask |= pixel_mask << 1;
+                }
 			}
 #endif
 			switch(stage) {
@@ -638,6 +686,8 @@ void EPD_Class::line(uint16_t line, const uint8_t *data, uint8_t fixed_value, bo
 				pixels = 0xaa | pixels;
 				break;
 			}
+            pixels = (pixels & pixel_mask) | (~pixel_mask & 0x55);
+            
 			uint8_t p1 = (pixels >> 6) & 0x03;
 			uint8_t p2 = (pixels >> 4) & 0x03;
 			uint8_t p3 = (pixels >> 2) & 0x03;
