@@ -125,10 +125,10 @@ void loop() {
 
 
 
-void showImageA(){
+void buttonAPress(){
     setImage = IMAGE_A;
 }
 
-void showImageB(){
+void buttonBPress(){
     setImage = IMAGE_B;
 }
