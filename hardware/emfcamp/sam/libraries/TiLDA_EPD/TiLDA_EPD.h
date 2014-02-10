@@ -14,7 +14,7 @@
 
 /*
  Orignal from https://github.com/repaper/gratis/
- Modified my EMF Camp for the TiLDA Mk2
+ Modified by EMF Camp for the TiLDA Mk2
 */
 
 #if !defined(EPD_H)

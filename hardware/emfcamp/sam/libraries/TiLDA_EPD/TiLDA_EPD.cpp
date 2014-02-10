@@ -14,7 +14,7 @@
 
 /*
  Orignal from https://github.com/repaper/gratis/
- Modified my EMF Camp for the TiLDA Mk2
+ Modified by EMF Camp for the TiLDA Mk2
 */
 
 #include <Arduino.h>
@@ -23,11 +23,6 @@
 #include <SPI.h>
 
 #include "TiLDA_EPD.h"
-
-#ifdef __SAM3X8E__
-// uncoomment to use extended SPI commands
-#define SAM_SPI
-#endif
 
 // delays - more consistent naming
 #define Delay_ms(ms) delay(ms)
@@ -41,17 +36,10 @@
 static void PWM_start(int pin);
 static void PWM_stop(int pin);
 
-#ifdef SAM_SPI
 static void SPI_on(uint8_t cs_pin);
 static void SPI_off(uint8_t cs_pin);
 static void SPI_put(uint8_t cs_pin, uint8_t c, uint8_t contin);
 static void SPI_put_wait(uint8_t cs_pin, uint8_t c, int busy_pin, uint8_t contin);
-#else
-static void SPI_on();
-static void SPI_off();
-static void SPI_put(uint8_t c);
-static void SPI_put_wait(uint8_t c, int busy_pin);
-#endif
 static void SPI_send(uint8_t cs_pin, const uint8_t *buffer, uint16_t length);
 
 EPD_Class::EPD_Class(EPD_size size,
@@ -157,20 +145,12 @@ void EPD_Class::begin() {
 	digitalWrite(this->EPD_Pin_BORDER, LOW);
 	digitalWrite(this->EPD_Pin_EPD_CS, LOW);
     
-#ifndef SAM_SPI
-	SPI_on();
-#endif
-    
     PWM_start(this->EPD_Pin_PWM);
 	Delay_ms(5);
 	digitalWrite(this->EPD_Pin_PANEL_ON, HIGH);
 	Delay_ms(10);
     
-#ifdef SAM_SPI
     SPI_on(this->EPD_Pin_EPD_CS);
-#else
-    digitalWrite(this->EPD_Pin_EPD_CS, HIGH);
-#endif
 
 	digitalWrite(this->EPD_Pin_RESET, HIGH);
 	digitalWrite(this->EPD_Pin_BORDER, HIGH);
@@ -271,9 +251,6 @@ void EPD_Class::begin() {
 	Delay_us(10);
 	SPI_send(this->EPD_Pin_EPD_CS, CU8(0x72, 0x24), 2);
 
-#ifndef SAM_SPI
-	SPI_off();
-#endif
 }
 
 
@@ -300,9 +277,6 @@ void EPD_Class::end() {
 		digitalWrite(this->EPD_Pin_BORDER, HIGH);
 	}
 
-#ifndef SAM_SPI
-	SPI_on();
-#endif
 
 	// latch reset turn on
 	Delay_us(10);
@@ -377,11 +351,8 @@ void EPD_Class::end() {
 	digitalWrite(this->EPD_Pin_BORDER, LOW);
 
 	// ensure SPI MOSI and CLOCK are Low before CS Low
-#ifdef SAM_SPI
     SPI_off(this->EPD_Pin_EPD_CS);
-#else
-	SPI_off();
-#endif	
+
     digitalWrite(this->EPD_Pin_EPD_CS, LOW);
 
 	// discharge pulse
@@ -389,7 +360,6 @@ void EPD_Class::end() {
 	Delay_ms(150);
 	digitalWrite(this->EPD_Pin_DISCHARGE, LOW);
 }
-
 
 // convert a temperature in Celcius to
 // the scale factor for frame_*_repeat methods
@@ -412,7 +382,6 @@ int EPD_Class::temperature_to_factor_10x(int temperature) {
 	return 7;
 }
 
-
 // One frame of data is the number of lines * rows. For example:
 // The 1.44” frame of data is 96 lines * 128 dots.
 // The 2” frame of data is 96 lines * 200 dots.
@@ -427,7 +396,6 @@ void EPD_Class::frame_fixed(uint8_t fixed_value, EPD_stage stage) {
 	}
 }
 
-
 void EPD_Class::frame_data(PROGMEM const uint8_t *image, PROGMEM const uint8_t *mask, EPD_stage stage){
     if (NULL == mask) {
         for (uint8_t line = 0; line < this->lines_per_display ; ++line) {
@@ -440,7 +408,6 @@ void EPD_Class::frame_data(PROGMEM const uint8_t *image, PROGMEM const uint8_t *
         }
     }
 }
-
 
 #if defined(EPD_ENABLE_EXTRA_SRAM)
 void EPD_Class::frame_sram(const uint8_t *image, const uint8_t *mask, EPD_stage stage){
@@ -457,7 +424,6 @@ void EPD_Class::frame_sram(const uint8_t *image, const uint8_t *mask, EPD_stage 
 }
 #endif
 
-
 void EPD_Class::frame_cb(uint32_t address, EPD_reader *reader, EPD_stage stage) {
 	static uint8_t buffer[264 / 8];
 	for (uint8_t line = 0; line < this->lines_per_display; ++line) {
@@ -465,7 +431,6 @@ void EPD_Class::frame_cb(uint32_t address, EPD_reader *reader, EPD_stage stage) 
 		this->line(line, buffer, 0, NULL, false, stage);
 	}
 }
-
 
 void EPD_Class::frame_fixed_repeat(uint8_t fixed_value, EPD_stage stage) {
 	long stage_time = this->factored_stage_time;
@@ -481,7 +446,6 @@ void EPD_Class::frame_fixed_repeat(uint8_t fixed_value, EPD_stage stage) {
 	} while (stage_time > 0);
 }
 
-
 void EPD_Class::frame_data_repeat(PROGMEM const uint8_t *image, PROGMEM const uint8_t *mask, EPD_stage stage) {
 	long stage_time = this->factored_stage_time;
 	do {
@@ -495,7 +459,6 @@ void EPD_Class::frame_data_repeat(PROGMEM const uint8_t *image, PROGMEM const ui
 		}
 	} while (stage_time > 0);
 }
-
 
 #if defined(EPD_ENABLE_EXTRA_SRAM)
 void EPD_Class::frame_sram_repeat(const uint8_t *image, const uint8_t *mask, EPD_stage stage) {
@@ -513,7 +476,6 @@ void EPD_Class::frame_sram_repeat(const uint8_t *image, const uint8_t *mask, EPD
 }
 #endif
 
-
 void EPD_Class::frame_cb_repeat(uint32_t address, EPD_reader *reader, EPD_stage stage) {
 	long stage_time = this->factored_stage_time;
 	do {
@@ -530,11 +492,6 @@ void EPD_Class::frame_cb_repeat(uint32_t address, EPD_reader *reader, EPD_stage 
 
 
 void EPD_Class::line(uint16_t line, const uint8_t *data, uint8_t fixed_value, const uint8_t *mask, bool read_progmem, EPD_stage stage) {
-
-#ifndef SAM_SPI
-	SPI_on();
-#endif
-
 	// charge pump voltage levels
 	Delay_us(10);
 	SPI_send(this->EPD_Pin_EPD_CS, CU8(0x70, 0x04), 2);
@@ -547,56 +504,25 @@ void EPD_Class::line(uint16_t line, const uint8_t *data, uint8_t fixed_value, co
 	Delay_us(10);
 
 	// CS low
-#ifdef SAM_SPI
     SPI_put_wait(this->EPD_Pin_EPD_CS, 0x72, this->EPD_Pin_BUSY, true);
-#else
-	digitalWrite(this->EPD_Pin_EPD_CS, LOW);
-	SPI_put_wait(0x72, this->EPD_Pin_BUSY);
-#endif
-    
+
 	// border byte only necessary for 1.44" EPD
 	if (EPD_1_44 == this->size) {
-#ifdef SAM_SPI
+
 		SPI_put_wait(this->EPD_Pin_EPD_CS, 0x00, this->EPD_Pin_BUSY, true);
-#else
-		SPI_put_wait(0x00, this->EPD_Pin_BUSY);
-#endif
-		//SPI_send(this->EPD_Pin_EPD_CS, CU8(0x00), 1);
 
 	}
 
 	// even pixels
 	for (uint16_t b = this->bytes_per_line; b > 0; --b) {
 		if (0 != data) {
-#if defined(__MSP430_CPU__) || defined(__SAM3X8E__)
 			uint8_t pixels = data[b - 1] & 0xaa;
             uint8_t pixel_mask = 0xff;
             if (0 != mask) {
                 pixel_mask = (mask[b - 1] ^ pixels) & 0xaa; // mask even pixels
                 pixel_mask |= pixel_mask >> 1;              // mask for data (two bits per pixel)
             }
-#else
-            // AVR has multiple memory spaces
-			uint8_t pixels;
-            uint8_t pixel_mask;
-			if (read_progmem) {
-				pixels = pgm_read_byte_near(data + b - 1) & 0xaa;
-                pixel_mask = 0xff;
-                if (0 != mask) {
-                    pixel_mask = (pgm_read_byte_near(mask + b - 1) ^ pixels) & 0xaa;
-                    pixel_mask |= pixel_mask >> 1;
-                }
-
-			} else {
-				pixels = data[b - 1] & 0xaa;
-                pixel_mask = 0xff;
-                if (0 != mask) {
-                    pixel_mask = (mask[b - 1] ^ pixels) & 0xaa;
-                    pixel_mask |= pixel_mask >> 1;
-                }
-
-			}
-#endif
+            
 			switch(stage) {
                 case EPD_compensate:  // B -> W, W -> B (Current Image)
                     pixels = 0xaa | ((pixels ^ 0xaa) >> 1);
@@ -611,67 +537,33 @@ void EPD_Class::line(uint16_t line, const uint8_t *data, uint8_t fixed_value, co
                     pixels = 0xaa | (pixels >> 1);
                     break;
 			}
-#ifdef SAM_SPI
             SPI_put_wait(this->EPD_Pin_EPD_CS, (pixels & pixel_mask) | (~pixel_mask & 0x55), this->EPD_Pin_BUSY, true);
-#else
-			SPI_put_wait((pixels & pixel_mask) | (~pixel_mask & 0x55), this->EPD_Pin_BUSY);
-#endif
         } else {
-#ifdef SAM_SPI
             SPI_put_wait(this->EPD_Pin_EPD_CS, fixed_value, this->EPD_Pin_BUSY, true);
-#else
-			SPI_put_wait(fixed_value, this->EPD_Pin_BUSY);
-#endif
 		}
     }
 
 	// scan line
 	for (uint16_t b = 0; b < this->bytes_per_scan; ++b) {
 		if (line / 4 == b) {
-#ifdef SAM_SPI
             SPI_put_wait(this->EPD_Pin_EPD_CS, 0xc0 >> (2 * (line & 0x03)), this->EPD_Pin_BUSY, true);
-#else
-			SPI_put_wait(0xc0 >> (2 * (line & 0x03)), this->EPD_Pin_BUSY);
-#endif
 		} else {
-#ifdef SAM_SPI
             SPI_put_wait(this->EPD_Pin_EPD_CS, 0x00, this->EPD_Pin_BUSY, true);
-#else
-            SPI_put_wait(0x00, this->EPD_Pin_BUSY);
-#endif
+
 		}
 	}
 
 	// odd pixels
 	for (uint16_t b = 0; b < this->bytes_per_line; ++b) {
 		if (0 != data) {
-#if defined(__MSP430_CPU__) || defined(__SAM3X8E__)
+
 			uint8_t pixels = data[b] & 0x55;
 			uint8_t pixel_mask = 0xff;
             if (0 != mask) {
 				pixel_mask = (mask[b] ^ pixels) & 0x55;
 				pixel_mask |= pixel_mask << 1;
 			}
-#else
-            // AVR has multiple memory spaces
-			uint8_t pixels;
-            uint8_t pixel_mask;
-			if (read_progmem) {
-				pixels = pgm_read_byte_near(data + b) & 0x55;
-                pixel_mask = 0xff;
-                if (0 != mask) {
-                    pixel_mask = (pgm_read_byte_near(mask + b) ^ pixels) & 0x55;
-                    pixel_mask |= pixel_mask << 1;
-                }
-			} else {
-				pixels = data[b] & 0x55;
-                pixel_mask = 0xff;
-                if (0 != mask) {
-                    pixel_mask = (mask[b] ^ pixels) & 0x55;
-                    pixel_mask |= pixel_mask << 1;
-                }
-			}
-#endif
+
 			switch(stage) {
 			case EPD_compensate:  // B -> W, W -> B (Current Image)
 				pixels = 0xaa | (pixels ^ 0x55);
@@ -694,101 +586,41 @@ void EPD_Class::line(uint16_t line, const uint8_t *data, uint8_t fixed_value, co
 			uint8_t p4 = (pixels >> 0) & 0x03;
 			pixels = (p1 << 0) | (p2 << 2) | (p3 << 4) | (p4 << 6);
             
-#ifdef SAM_SPI
+
             SPI_put_wait(this->EPD_Pin_EPD_CS, pixels, this->EPD_Pin_BUSY, true);
-#else
-			SPI_put_wait(pixels, this->EPD_Pin_BUSY);
-#endif
         } else {
-#ifdef SAM_SPI
             SPI_put_wait(this->EPD_Pin_EPD_CS, fixed_value, this->EPD_Pin_BUSY, true);
-#else
-			SPI_put_wait(fixed_value, this->EPD_Pin_BUSY);
-#endif
         }
 	}
 
 	if (this->filler) {
-#ifdef SAM_SPI
         SPI_put_wait(this->EPD_Pin_EPD_CS, 0x00, this->EPD_Pin_BUSY, false);
-#else
-        SPI_put_wait(0x00, this->EPD_Pin_BUSY);
-#endif
+
 	}
 
-	// CS high
-#ifndef SAM_SPI
-	digitalWrite(this->EPD_Pin_EPD_CS, HIGH);
-#endif
 	// output data to panel
 	Delay_us(10);
 	SPI_send(this->EPD_Pin_EPD_CS, CU8(0x70, 0x02), 2);
 	Delay_us(10);
 	SPI_send(this->EPD_Pin_EPD_CS, CU8(0x72, 0x2f), 2);
-
-#ifndef SAM_SPI
-	SPI_off();
-#endif
 }
 
-#ifdef SAM_SPI
 static void SPI_on(uint8_t cs_pin) {
-    //SPI.end(cs_pin);
-    digitalWrite(cs_pin, HIGH);
     SPI.begin(cs_pin);
     SPI.setBitOrder(cs_pin, MSBFIRST);
     SPI.setDataMode(cs_pin, SPI_MODE0);
     SPI.setClockDivider(cs_pin, 7);  // 12MHz
-//  SPI_put(cs_pin, 0x00, true);
-//  SPI_put(cs_pin, 0x00, false);
     Delay_us(10);
-
 }
-#else
-static void SPI_on() {
-	SPI.end();
-	SPI.begin();
-	SPI.setBitOrder(MSBFIRST);
-	SPI.setDataMode(SPI_MODE0);
-#ifdef __SAM3X8E__
-	SPI.setClockDivider(10); // about 8MHz
-    SPI_put(0x00);
-    SPI_put(0x00);
-#else
-    SPI.setClockDivider(SPI_CLOCK_DIV2);
-	SPI_put(0x00);
-	SPI_put(0x00);
 
-#endif
-	Delay_us(10);
-}
-#endif
-
-#ifdef SAM_SPI
 static void SPI_off(uint8_t cs_pin) {
-    // SPI.begin();
-    // SPI.setBitOrder(MSBFIRST);
     SPI.setDataMode(cs_pin, SPI_MODE0);
-    //SPI.setClockDivider(SPI_CLOCK_DIV2);
     SPI_put(cs_pin, 0x00, true);
     SPI_put(cs_pin, 0x00, false);
     Delay_us(10);
     SPI.end(cs_pin);
 }
-#else
-static void SPI_off() {
-	// SPI.begin();
-	// SPI.setBitOrder(MSBFIRST);
-	SPI.setDataMode(SPI_MODE0);
-	// SPI.setClockDivider(SPI_CLOCK_DIV2);
-	SPI_put(0x00);
-	SPI_put(0x00);
-	Delay_us(10);
-	SPI.end();
-}
-#endif
 
-#ifdef SAM_SPI
 static void SPI_put(uint8_t cs_pin, uint8_t c, uint8_t contin) {
     if (contin) {
         SPI.transfer(cs_pin, c, SPI_CONTINUE);
@@ -796,15 +628,8 @@ static void SPI_put(uint8_t cs_pin, uint8_t c, uint8_t contin) {
         SPI.transfer(cs_pin, c);
     }
 }
-#else
-static void SPI_put(uint8_t c) {
-	SPI.transfer(c);
-}
-#endif
 
-#ifdef SAM_SPI
 static void SPI_put_wait(uint8_t cs_pin, uint8_t c, int busy_pin, uint8_t contin) {
-    
     if (contin) {
         SPI.transfer(cs_pin, c, SPI_CONTINUE);
     } else {
@@ -815,20 +640,8 @@ static void SPI_put_wait(uint8_t cs_pin, uint8_t c, int busy_pin, uint8_t contin
     while (HIGH == digitalRead(busy_pin)) {
     }
 }
-#else
-static void SPI_put_wait(uint8_t c, int busy_pin) {
-
-	SPI_put(c);
-
-	// wait for COG ready
-	while (HIGH == digitalRead(busy_pin)) {
-	}
-}
-#endif
-
 
 static void SPI_send(uint8_t cs_pin, const uint8_t *buffer, uint16_t length) {
-#ifdef SAM_SPI
 	// send all data
 	for (uint16_t i = 0; i < length; ++i) {
         if (i == length-1)
@@ -836,26 +649,12 @@ static void SPI_send(uint8_t cs_pin, const uint8_t *buffer, uint16_t length) {
         else
             SPI_put(cs_pin, *buffer++, true);
 	}
-#else
-	// CS low
-	digitalWrite(cs_pin, LOW);
 
-	// send all data
-	for (uint16_t i = 0; i < length; ++i) {
-		SPI_put(*buffer++);
-	}
-
-	// CS high
-	digitalWrite(cs_pin, HIGH);
-
-#endif
 }
-
 
 static void PWM_start(int pin) {
 	analogWrite(pin, 128);  // 50% duty cycle
 }
-
 
 static void PWM_stop(int pin) {
 	analogWrite(pin, 0);
