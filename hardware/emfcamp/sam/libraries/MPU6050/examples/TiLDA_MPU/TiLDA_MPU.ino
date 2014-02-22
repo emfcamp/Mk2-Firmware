@@ -27,7 +27,7 @@
  SOFTWARE.
  */
 
-#include <Debouce.h>
+#include <Debounce.h>
 #include <Wire.h>
 #include "MPU6050.h"
 

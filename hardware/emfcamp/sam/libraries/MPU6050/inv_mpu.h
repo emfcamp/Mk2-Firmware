@@ -38,6 +38,12 @@ struct int_param_s {
     unsigned long pin;
     void (*cb)(volatile void*);
     void *arg;
+#elif defined ARDUINO_SAM_DUE
+    // TODO: define struct for interrupt setup details
+    // copied UC3L0 for now
+    unsigned long pin;
+    void (*cb)();
+    uint32_t arg;
 #endif
 };
 

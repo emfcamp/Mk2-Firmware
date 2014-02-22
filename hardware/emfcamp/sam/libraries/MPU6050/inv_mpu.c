@@ -101,6 +101,88 @@ static inline int reg_int_cb(struct int_param_s *int_param)
 /* UC3 is a 32-bit processor, so abs and labs are equivalent. */
 #define labs        abs
 #define fabs(x)     (((x)>0)?(x):-(x))
+
+#elif defined ARDUINO_SAM_DUE
+/* Arduino DUE platform setup
+ */
+#include <Arduino.h>
+#include <Wire.h>
+#define i2c_write(a, b, c, d)   I2CwriteBytes(a, b, c, d)
+#define i2c_read(a, b, c, d)    I2CreadBytes(a, b, c, d)
+#define delay_ms delay
+#define get_ms(t)  ( t = millis() )
+static inline int reg_int_cb(struct int_param_s *int_param)
+{
+    attachInterrupt(int_param->pin, int_param->cb, int_param->arg);
+    return 0;
+}
+#define log_i       MPL_LOGI
+#define log_e       MPL_LOGE
+/* SAM3X is a 32-bit processor, so abs and labs are equivalent. */
+#define labs        abs
+#define fabs(x)     (((x)>0)?(x):-(x))
+
+/* since we cannot set this via a complie time define the chip type here */
+#define MPU6050
+
+// borrowed from I2Cdev lib
+
+/** Read multiple bytes from an 8-bit device register.
+ * @param devAddr I2C slave device address
+ * @param regAddr First register regAddr to read from
+ * @param length Number of bytes to read
+ * @param data Buffer to store read data in
+ * @param timeout Optional read timeout in milliseconds (0 to disable, leave off to use default class value in I2Cdev::readTimeout)
+ * @return Number of bytes read (-1 indicates failure)
+ */
+int8_t I2CreadBytes(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *data) {
+    int8_t count = 0;
+    
+    // Arduino v1.0.1+, Wire library
+    // Adds official support for repeated start condition, yay!
+    
+    // I2C/TWI subsystem uses internal buffer that breaks with large data requests
+    // so if user requests more than BUFFER_LENGTH bytes, we have to do it in
+    // smaller chunks instead of all at once
+    uint8_t k = 0;
+    for (k; k < length; k += min(length, BUFFER_LENGTH)) {
+        Wire.beginTransmission(devAddr);
+        Wire.write(regAddr);
+        Wire.endTransmission();
+        Wire.beginTransmission(devAddr);
+        Wire.requestFrom(devAddr, (uint8_t)min(length - k, BUFFER_LENGTH));
+        
+        for (; Wire.available(); count++) {
+            data[count] = Wire.read();
+        }
+    }
+    
+    return count;
+}
+
+/** Write multiple bytes to an 8-bit device register.
+ * @param devAddr I2C slave device address
+ * @param regAddr First register address to write to
+ * @param length Number of bytes to write
+ * @param data Buffer to copy new data from
+ * @return Status of operation (true = success)
+ */
+bool I2CwriteBytes(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t* data) {
+    uint8_t status = 0;
+    
+    Wire.beginTransmission(devAddr);
+    Wire.write((uint8_t) regAddr); // send address
+    uint8_t i = 0;
+    for (i; i < length; i++) {
+        Wire.write((uint8_t) data[i]);
+    }
+
+    Wire.endTransmission();
+    status = Wire.endTransmission();
+
+    return status == 0;
+}
+
 #else
 #error  Gyro driver is missing the system layer implementations.
 #endif

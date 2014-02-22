@@ -62,6 +62,19 @@
 #define log_i       MPL_LOGI
 #define log_e       MPL_LOGE
 
+#elif defined ARDUINO_SAM_DUE
+/* Arduino DUE platform setup
+ */
+#include <Arduino.h>
+#define delay_ms delay
+#define get_ms(t)  ( t = millis() )
+#define log_i       Serial.println
+#define log_e       Serial.println
+
+/* since we cannot set this via a complie time define the chip type here */
+#define MPU6050
+
+
 #else
 #error  Gyro driver is missing the system layer implementations.
 #endif
