@@ -95,7 +95,7 @@ void setup() {
 
     flashBuffer[4] = 0;
     Serial.println("Start DMA");
-    SPI.transferDMA(FLASH_CS, &flashBuffer, &flashBuffer, 5+READ_SIZE, SPI_LAST);
+    SPI.transferDMA(FLASH_CS, flashBuffer, flashBuffer, 5+READ_SIZE, SPI_LAST);
     Serial.println("Entering loop");
         
 }
