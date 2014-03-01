@@ -218,11 +218,13 @@ byte SPIClass::transferDMA(uint32_t _pin, uint8_t *txBuffer, uint8_t *rxBuffer, 
  */
 void SPIClass::DMAFinished(uint32_t _status) {
     // check that it was our rxChannel finish interrupt that fired
-    if (_status * (1 << rxChannel)) {
+    if (_status & (1 << rxChannel)) {
+        
         // yes it was
         // clean up SPI
         //SPI_Disable(spi);
         spi->SPI_MR = (SPI_MR_MSTR | SPI_MR_PS | SPI_MR_MODFDIS);
+
         //SPI_Enable(spi);
         // clean up DMA?
         // channels should have been automatically disabled at end of xfer

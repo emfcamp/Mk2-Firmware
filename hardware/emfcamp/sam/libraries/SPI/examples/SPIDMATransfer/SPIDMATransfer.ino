@@ -74,13 +74,15 @@ void setup() {
     Serial.println("TiLDA SPI DMA tests");
     
     Serial.println("Setup flash SPI");
-    pinMode(this->flash_hold, OUTPUT);
-    digitalWrite(this->flash_hold, HIGH);
+    pinMode(FLASH_HOLD, OUTPUT);
+    digitalWrite(FLASH_HOLD, HIGH);
     
     SPI.begin(FLASH_CS);
     SPI.setClockDivider(2); //42MHz
     Serial.println("Configure DMA");
     SPI.configureDMA();
+    
+    SPI.registerDMACallback(spiDMADoneCallback);
     
     // setup buffer with tx data 
     // for a fast read we need to set the first 5 bytes with the command, 24bit start address and blank xfer before the device will start sending back data
@@ -100,8 +102,9 @@ void setup() {
 
 void loop() {
     if (flashXferDoneFlag) {
+        flashXferDoneFlag = 0;
         Serial.println("Flash DMA Xfer Done");
-        for (int i+0; i <= 5+READ_SIZE; i++) {
+        for (int i=0; i <= 5+READ_SIZE; i++) {
             Serial.print(i);
             Serial.print(":0x");
             Serial.println(flashBuffer[i], HEX);
