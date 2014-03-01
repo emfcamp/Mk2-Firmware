@@ -54,7 +54,7 @@ uint32_t startAddress = 0x0;
 
 uint32_t flashXferDoneFlag;
 
-uint8_t flashBuffer[5+256]; // size of a read or write command setup followed by a page of 256
+uint8_t flashBuffer[5+READ_SIZE]; // size of a read or write command setup followed by READ_SIZE
 
 void spiDMADoneCallback() {
     flashXferDoneFlag = 1;
@@ -104,10 +104,11 @@ void loop() {
     if (flashXferDoneFlag) {
         flashXferDoneFlag = 0;
         Serial.println("Flash DMA Xfer Done");
-        for (int i=0; i <= 5+READ_SIZE; i++) {
+        for (int i=0; i < 5+READ_SIZE; i++) {
             Serial.print(i);
             Serial.print(":0x");
             Serial.println(flashBuffer[i], HEX);
+            delay(5);
         }
     }
     
