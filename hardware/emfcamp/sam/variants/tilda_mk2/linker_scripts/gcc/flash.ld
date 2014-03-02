@@ -103,13 +103,26 @@ SECTIONS
     . = ALIGN(4);
     _etext = .;
 
-    .relocate : AT (_etext)
+    _sapprelocate = .;
+    .apprelocate : AT (_sapprelocate)
     {
         . = ALIGN(4);
         _srelocate = .;
+        _sapp = .;
+        KEEP (*(.app .app.*))
+        . = ALIGN(0x200);
+        _eapp = .;
+    } > ram
+
+    /* . is now in ram, so we can't use it here */
+    .relocate : AT (_sapprelocate + SIZEOF(.apprelocate))
+    {
+        . = ALIGN(4);
+        _smainrelocate = .;
         *(.ramfunc .ramfunc.*);
         *(.data .data.*);
         . = ALIGN(4);
+        _emainrelocate = .;
         _erelocate = .;
     } > ram
 
