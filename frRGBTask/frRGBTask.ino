@@ -6,13 +6,13 @@
  
  use a queue to pass in requests for an led change
  some struct with the following
- (RGB, LED, TYPE, TIME, PRIOITY)
+ (RGB, LED, TYPE, TIME, PRIORITY)
  
  block on queue for most of the time
  
  install interrupt handler for the LIGHT button which should pass something on the queue
  
- if LIGHT and IMU orientation is up show only half brigthness
+ if LIGHT and IMU orientation is up show only half brightness
  
  
  
@@ -46,16 +46,13 @@
 #include <FreeRTOS_ARM.h>
 #include "RGBTask.h"
 
-// timer handle for use by pin interrrupt
-TimerHandle_t xLightFadeTimer;
+// timer handle for use by pin interrupt
 QueueHandle_t xRGBRequestQueue;     // use by others and ButtonLigthPress to request a change in led state
 QueueHandle_t xRGBPendQueue;        // needs to be global so RGBTimmerCallback can access it
 RGBRequest_t currentRequest;        // current running request, needs to be global so RGBTimmerCallback can access it
 
-// time to fade lights after in ms
+// time to fade torch lights after in ms
 #define LIGHT_FADE_AFTER   3000     // how long should the LED's be on for
-#define LIGHT_FADE_STEP    5        // how much to decune the PWM by each time (starts at 255)
-#define LIGHT_FADE_DELAY   10       // how much to delay at each level
 
 
 
@@ -101,7 +98,7 @@ void setup() {
     Serial.println("TiLDA Mk2 RGB task tester tester");
 
     // set button pins and attach interrupts
-    // dose not matter if we do not define all button interupt handlers
+    // dose not matter if we do not define all button interrupt handlers
     tildaButtonSetup();
     tildaButtonAttachInterrupts();
     tildaButtonInterruptPriority();
@@ -172,8 +169,8 @@ void RGBSetOutput(RGBRequest_t *request) {
 
 /*
  * RGBTimerCallback
- * This is called at the end of the current running timmer
- * it's job is to switch the light to the next tast in the pending que 
+ * This is called at the end of the current running timer
+ * it's job is to switch the light to the next task in the pending queue
  * or off if there is nothing waiting
  *
  */
@@ -181,7 +178,7 @@ void vRGBTimerCallback(TimerHandle_t pxTimer) {
     // current timer has expired
     Serial.println("Timer expired");
     if (xTimerDelete(pxTimer, (2/portTICK_PERIOD_MS)) != pdPASS) {
-           // TODO: failed to remove timmer
+           // TODO: failed to remove timer
     } else {
             currentRequest.timer = NULL;
     }
@@ -214,7 +211,7 @@ void vRGBFlashCallback(TimerHandle_t xTimer){
 /*
  * RGBFadeCallback
  * handle the next step in the current fade
- * called every facation of request.period
+ * called every fraction of request.period
  */
 void vRGBFadeCallback(TimerHandle_t xTimer){
 
@@ -226,38 +223,90 @@ void vRGBFadeCallback(TimerHandle_t xTimer){
  */
 void RGBProcessRequest() {
     if (currentRequest.type == OFF){
-        // not much to do wigt an off request 
+        // not much to do with an off request
         RGBSetOutput(&currentRequest);
         currentRequest.timer = NULL;
     } else {
         // its not an OFF so do we need a new timer
         if (currentRequest.timer == NULL) {
-            // need a new timmer        
-             currentRequest.timer = xTimerCreate(NULL, (currentRequest.time/portTICK_PERIOD_MS), pdFALSE, NULL, vRGBTimerCallback);
+            // need a new timer
+             currentRequest.timer = xTimerCreate(NULL,
+                                                 (currentRequest.time/portTICK_PERIOD_MS),
+                                                 pdFALSE,
+                                                 NULL,
+                                                 vRGBTimerCallback);
         }
            
         if (currentRequest.type == TORCH) {
+            // for touch we check we are not to bright if orientation is in users face
             // TODO: check IMU state before turning on torch mode
             #define IMU_UP false
             if (IMU_UP) {
                 //reduce brightness
                 currentRequest.rgb = {128,128,128};
-                // TODO: IMU orientation HOOK
+                // TODO: IMU orientation hook, need to add something to set brightness to full if orientation is returned to normal
             }
-            // set LED outputs
-            RGBSetOutput(&currentRequest);
+            
             // start the timer
             if (xTimerStart(currentRequest.timer, (5/portTICK_PERIOD_MS)) != pdPASS) {
                 // TODO: timer could not start
             }
-            
-            
+            // set LED outputs
+            RGBSetOutput(&currentRequest);
+
         } else if (currentRequest.type == STATIC) {
+            // Static is very similar to torch except we don't alter brightness, assume the requesting app has chosen appropriate RGB values
+            // start the timer
+            if (xTimerStart(currentRequest.timer, (5/portTICK_PERIOD_MS)) != pdPASS) {
+                // TODO: timer could not start
+            }
+            // set LED outputs
+            RGBSetOutput(&currentRequest);
             
         } else if (currentRequest.type == FLASH) {
+            // for flash we are switching between on and off states at request.peroid
+            // so use the xFlashTimmer
+            // reconfigure the flash period
+            
+            // start main timmer
+            if (xTimerStart(currentRequest.timer, (5/portTICK_PERIOD_MS)) != pdPASS) {
+                // TODO: timer could not start
+            }
+            // start flash timmer
+            
+            // set led output for first flash
+            RGBSetOutput(&currentRequest);
+        } else if (currentRequest.type == FLASH_ALT) {
+            // like flash we switching between on and off but also with alternate led's
+            // this assumes led = BOTH
+            // reconfigure the flash period
+            
+            // start main timmer
+            if (xTimerStart(currentRequest.timer, (5/portTICK_PERIOD_MS)) != pdPASS) {
+                // TODO: timer could not start
+            }
+            // start flash timmer
+            
+            // set led output for first flash
+            RGBSetOutput(&currentRequest);
             
         } else if (currentRequest.type == FADE) {
-        
+            // this is the trick one we want to fade between the current state and the request.rgb
+            // over the period
+            // need to do some maths to work out steps for each color aginst a tick time for the fade
+            // or do it in the fade timer callback
+            
+            
+            // reconfigure the flash period
+            
+            // start main timmer
+            if (xTimerStart(currentRequest.timer, (5/portTICK_PERIOD_MS)) != pdPASS) {
+                // TODO: timer could not start
+            }
+            // start fade timmer
+            
+            // set led output for first flash
+            RGBSetOutput(&currentRequest);
         }
     }
 }
@@ -267,7 +316,7 @@ void RGBProcessRequest() {
  */
 void vRGBTask(void *pvParameters) {
     Serial.println("RGBTask Start");
-    // LED's off by defualt
+    // LED's off by default
     analogWrite(LED1_RED, 0);
     analogWrite(LED1_GREEN, 0);
     analogWrite(LED1_BLUE, 0);
@@ -286,6 +335,17 @@ void vRGBTask(void *pvParameters) {
     
     BaseType_t xStatus;
     
+    TimerHandle_t xRGBFlashTimer = xTimerCreate(NULL,
+                                                (1/portTICK_PERIOD_MS),
+                                                pdFALSE,
+                                                NULL,
+                                                vRGBFlashCallback);
+    TimerHandle_t xRGBFadeTimer = xTimerCreate(NULL,
+                                                (1/portTICK_PERIOD_MS),
+                                                pdFALSE,
+                                                NULL,
+                                                vRGBFadeCallback);
+    
     RGBRequest_t newRequest;
     RGBRequest_t tempRequest;
     
@@ -303,13 +363,13 @@ void vRGBTask(void *pvParameters) {
             // we have a new RGB Request to process
             Serial.println("Got a newRequest");
             newRequest.timer = NULL;
-            // if we are off we dont need to stash the currentRequest
+            // if we are off we don't need to stash the currentRequest
             if (currentRequest.type !=OFF) {
                 // TODO: should compare which LED's have been requested and which are in use
                 if (newRequest.prioity < currentRequest.prioity) {
                     // TODO: stop the current request timer
                     if (xTimerStop(currentRequest.timer, (2/portTICK_PERIOD_MS)) != pdPASS) {
-                        // TODO: failed to stop the timmer
+                        // TODO: failed to stop the timer
                     }
                     // move current to previous if we are interrupting
                     if (uxQueueMessagesWaiting(xRGBPendQueue) == 0) {
@@ -319,16 +379,16 @@ void vRGBTask(void *pvParameters) {
                         xQueuePeek(xRGBPendQueue, &tempRequest, portMAX_DELAY);
                         if (currentRequest.prioity < tempRequest.prioity) {
                             if (uxQueueSpacesAvailable(xRGBPendQueue)) {
-                                // add to front of queue if current is higher prioity that front of pend queue
+                                // add to front of queue if current is higher priority that front of pend queue
                                 xQueueSendToFront(xRGBPendQueue, &currentRequest, portMAX_DELAY);
                             } else {
-                                // TODO: make room at the back of the que and add currentRequest one to the front
+                                // TODO: make room at the back of the queue and add currentRequest one to the front
                             }
                         } else {
                             if (uxQueueSpacesAvailable(xRGBPendQueue)) {
                                 xQueueSendToBack(xRGBPendQueue, &currentRequest, portMAX_DELAY);
                             } else {
-                                // dont care
+                                // don't care
                             }
                         }
                     }
@@ -344,21 +404,21 @@ void vRGBTask(void *pvParameters) {
                         // peek to deiced if adding to from or back
                         xQueuePeek(xRGBPendQueue, &tempRequest, portMAX_DELAY);
                         if (newRequest.prioity < tempRequest.prioity) {
-                            // newRequest has a higher prioity than whats at the front of the que
+                            // newRequest has a higher priority than whats at the front of the queue
                             // so place it in front
                             if (uxQueueSpacesAvailable(xRGBPendQueue)) {
-                                // add to front of queue if current is higher prioity that front of pend queue
+                                // add to front of queue if current is higher priority that front of pend queue
                                 xQueueSendToFront(xRGBPendQueue, &newRequest, portMAX_DELAY);
                             } else {
-                                // TODO: make room at the back of the que and add newRequest to the front
+                                // TODO: make room at the back of the queue and add newRequest to the front
                             }
                         } else {
-                            // newRequest has same or lower prioity as head of que
+                            // newRequest has same or lower priority as head of queue
                             // so it can go to the back if we have room
                             if (uxQueueSpacesAvailable(xRGBPendQueue)) {
                                 xQueueSendToBack(xRGBPendQueue, &newRequest, portMAX_DELAY);
                             } else {
-                                // TODO: no room, so drop the new reuest or we could over write the oldest
+                                // TODO: no room, so drop the new request or we could over write the oldest
                             }
                         }
                         
@@ -383,7 +443,7 @@ uint8_t firstFire = 1;
 /*
  * A BUTTON_LIGHT press will call the ISR and turn on the LED's to white
  * this will then start the timer to turn them back off after LIGHT_FADE_AFTER
- * Another button press befor the LIGHT_FADE_AFTER time has expired or during the LightFadeCallback
+ * Another button press before the LIGHT_FADE_AFTER time has expired or during the LightFadeCallback
  * will set the RGB's back to White and reset the time out period
  */
 void buttonLightPress(){
@@ -392,7 +452,7 @@ void buttonLightPress(){
       return;
     }
     // called when Light button is pressed
-    // put LIGHT onto RGB que and check for wake task
+    // put LIGHT onto RGB queue and check for wake task
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
     RGBRequest_t light;
     
