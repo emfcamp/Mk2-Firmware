@@ -110,14 +110,14 @@ void setup() {
     // setup RGB task
     t1 = xTaskCreate(vRGBTask,
                      NULL,
-                     400,
+                     configMINIMAL_STACK_SIZE,
                      NULL,
                      2,
                      NULL);
                     
     t2 = xTaskCreate(vBlinkTask,
                      NULL,
-                     configMINIMAL_STACK_SIZE+100,
+                     configMINIMAL_STACK_SIZE,
                      NULL,
                      1,
                      NULL);
@@ -146,7 +146,6 @@ void loop() {
  */
 void RGBSetOutput(RGBRequest_t *request) {
     if (request->type == OFF) {
-       Serial.println(request->led, HEX);
         if (request->led == LED1 || request->led == BOTH) {
             analogWrite(LED1_RED, 0);
             analogWrite(LED1_GREEN, 0);
@@ -304,65 +303,73 @@ void vRGBTask(void *pvParameters) {
             // we have a new RGB Request to process
             Serial.println("Got a newRequest");
             newRequest.timer = NULL;
-            
-            // TODO: should compare which LED's have been requested and which are in use
-            if (newRequest.prioity < currentRequest.prioity) {
-                // TODO: stop the current request timer
-                
-                // move current to previous if we are interrupting
-                if (uxQueueMessagesWaiting(xRGBPendQueue) == 0) {
-                    xQueueSendToBack(xRGBPendQueue, &currentRequest, portMAX_DELAY);
-                } else {
-                    // peek to deiced if adding to from or back
-                    xQueuePeek(xRGBPendQueue, &tempRequest, portMAX_DELAY);
-                    if (currentRequest.prioity < tempRequest.prioity) {
-                        if (uxQueueSpacesAvailable(xRGBPendQueue)) {
-                            // add to front of queue if current is higher prioity that front of pend queue
-                            xQueueSendToFront(xRGBPendQueue, &currentRequest, portMAX_DELAY);
-                        } else {
-                            // TODO: make room at the back of the que and add currentRequest one to the front
-                        }
+            // if we are off we dont need to stash the currentRequest
+            if (currentRequest.type !=OFF) {
+                // TODO: should compare which LED's have been requested and which are in use
+                if (newRequest.prioity < currentRequest.prioity) {
+                    // TODO: stop the current request timer
+                    if (xTimerStop(currentRequest.timer, (2/portTICK_PERIOD_MS)) != pdPASS) {
+                        // TODO: failed to stop the timmer
+                    }
+                    // move current to previous if we are interrupting
+                    if (uxQueueMessagesWaiting(xRGBPendQueue) == 0) {
+                        xQueueSendToBack(xRGBPendQueue, &currentRequest, portMAX_DELAY);
                     } else {
-                        if (uxQueueSpacesAvailable(xRGBPendQueue)) {
-                            xQueueSendToBack(xRGBPendQueue, &currentRequest, portMAX_DELAY);
+                        // peek to deiced if adding to from or back
+                        xQueuePeek(xRGBPendQueue, &tempRequest, portMAX_DELAY);
+                        if (currentRequest.prioity < tempRequest.prioity) {
+                            if (uxQueueSpacesAvailable(xRGBPendQueue)) {
+                                // add to front of queue if current is higher prioity that front of pend queue
+                                xQueueSendToFront(xRGBPendQueue, &currentRequest, portMAX_DELAY);
+                            } else {
+                                // TODO: make room at the back of the que and add currentRequest one to the front
+                            }
                         } else {
-                            // dont care
+                            if (uxQueueSpacesAvailable(xRGBPendQueue)) {
+                                xQueueSendToBack(xRGBPendQueue, &currentRequest, portMAX_DELAY);
+                            } else {
+                                // dont care
+                            }
                         }
                     }
                     
+                    // start setting up the newRequest
+                    currentRequest = newRequest;
+                    RGBProcessRequest();
+                } else {
+                    // Put newRequest in pending queue
+                    if (uxQueueMessagesWaiting(xRGBPendQueue) == 0) {
+                        xQueueSendToBack(xRGBPendQueue, &newRequest, portMAX_DELAY);
+                    } else {
+                        // peek to deiced if adding to from or back
+                        xQueuePeek(xRGBPendQueue, &tempRequest, portMAX_DELAY);
+                        if (newRequest.prioity < tempRequest.prioity) {
+                            // newRequest has a higher prioity than whats at the front of the que
+                            // so place it in front
+                            if (uxQueueSpacesAvailable(xRGBPendQueue)) {
+                                // add to front of queue if current is higher prioity that front of pend queue
+                                xQueueSendToFront(xRGBPendQueue, &newRequest, portMAX_DELAY);
+                            } else {
+                                // TODO: make room at the back of the que and add newRequest to the front
+                            }
+                        } else {
+                            // newRequest has same or lower prioity as head of que
+                            // so it can go to the back if we have room
+                            if (uxQueueSpacesAvailable(xRGBPendQueue)) {
+                                xQueueSendToBack(xRGBPendQueue, &newRequest, portMAX_DELAY);
+                            } else {
+                                // TODO: no room, so drop the new reuest or we could over write the oldest
+                            }
+                        }
+                        
+                    }
+
                 }
-                
-                // start setting up the newRequest
+            } else {
+                // currentRequest is of type OFF
+                // so just start setting up the newRequest
                 currentRequest = newRequest;
                 RGBProcessRequest();
-            } else {
-                // Put newRequest in pending queue
-                if (uxQueueMessagesWaiting(xRGBPendQueue) == 0) {
-                    xQueueSendToBack(xRGBPendQueue, &newRequest, portMAX_DELAY);
-                } else {
-                    // peek to deiced if adding to from or back
-                    xQueuePeek(xRGBPendQueue, &tempRequest, portMAX_DELAY);
-                    if (newRequest.prioity < tempRequest.prioity) {
-                        // newRequest has a higher prioity than whats at the front of the que
-                        // so place it in front
-                        if (uxQueueSpacesAvailable(xRGBPendQueue)) {
-                            // add to front of queue if current is higher prioity that front of pend queue
-                            xQueueSendToFront(xRGBPendQueue, &newRequest, portMAX_DELAY);
-                        } else {
-                            // TODO: make room at the back of the que and add newRequest to the front
-                        }
-                    } else {
-                        // newRequest has same or lower prioity as head of que
-                        // so it can go to the back if we have room
-                        if (uxQueueSpacesAvailable(xRGBPendQueue)) {
-                            xQueueSendToBack(xRGBPendQueue, &newRequest, portMAX_DELAY);
-                        } else {
-                            // TODO: no room, so drop the new reuest or we could over write the oldest
-                        }
-                    }
-                    
-                }
-
             }
         } else {
             // WE SHOULD NEVER GET HERE
@@ -384,7 +391,6 @@ void buttonLightPress(){
       firstFire = 0;
       return;
     }
-    Serial.println("Light Press");
     // called when Light button is pressed
     // put LIGHT onto RGB que and check for wake task
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
@@ -395,9 +401,8 @@ void buttonLightPress(){
     light.type = TORCH;
     light.time = LIGHT_FADE_AFTER;
     light.prioity = 0;
-    Serial.println("Put light request in queue");
     xQueueSendToFrontFromISR(xRGBRequestQueue, &light, &xHigherPriorityTaskWoken);
-    Serial.println("its in the queue");
+    
     if (xHigherPriorityTaskWoken) {
         portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
     }
