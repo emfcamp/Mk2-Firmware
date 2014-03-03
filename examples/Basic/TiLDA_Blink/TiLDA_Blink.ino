@@ -1,9 +1,9 @@
-int red = 37;
-int green = 39;
-int blue = 41;
+int red = LED1_RED;
+int green = LED1_GREEN;
+int blue = LED1_BLUE;
 
-#define LED_OFF LOW
-#define LED_ON HIGH
+#define LED_OFF HIGH
+#define LED_ON LOW
 
 void setup() {
     // PMIC to CHARGE

@@ -110,6 +110,7 @@ SECTIONS
         _srelocate = .;
         _sapp = .;
         KEEP (*(.app .app.*))
+        KEEP (*(.appdata .appdata.*))
         . = ALIGN(0x200);
         _eapp = .;
     } > ram

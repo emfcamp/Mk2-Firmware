@@ -4,9 +4,9 @@ extern byte _eapp;
 #define LED_OFF HIGH
 #define LED_ON LOW
 
-int red = 37;
-int green = 39;
-int blue = 41;
+int red = LED1_RED;
+int green = LED1_GREEN;
+int blue = LED1_BLUE;
 
 int lastMillis;
 int lastPin;
@@ -75,22 +75,19 @@ void loop() {
     } else if (appLoaded) {
         app();
     } else {
-        test();
+        flash(blue, 2000);
     }
 }
 
-__attribute__ ((section(".ramfunc")))
-void test() {
-    if (flash(blue, 1000)) {
-        SerialUSB.println("Hi from ramfunc");
-    }
-}
+__attribute__ ((used, section(".appdata")))
+int counter = 0x1234;
 
 __attribute__ ((used, section(".app")))
 void app() {
-    // NB no new globals, instruction bus will be contended, library calls will go via veneer
+    // NB let touch .data globals, instruction bus will be contended, library calls will go via veneer
     if (flash(green, 500)) {
-        SerialUSB.println("Hi from app");
+        SerialUSB.print("Hi from app: ");
+        SerialUSB.println(counter++, HEX);
     }
 }
 
