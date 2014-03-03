@@ -24,13 +24,13 @@ static void delayMS(uint32_t millis) {
  */
 static void errorBlink(int n) {
 	noInterrupts();
-  pinMode(13, OUTPUT);
+  pinMode(PIN_LED_TXL, OUTPUT);
   for (;;) {
     int i;
     for (i = 0; i < n; i++) {
-      digitalWrite(13, 1);
+      digitalWrite(PIN_LED_TXL, 1);
       delayMS(300);
-      digitalWrite(13, 0);
+      digitalWrite(PIN_LED_TXL, 0);
       delayMS(300);
     }
     delayMS(2000);
@@ -81,7 +81,6 @@ void vApplicationMallocFailedHook() {
 	function, because it is the responsibility of the idle task to clean up
 	memory allocated by the kernel to any task that has since been deleted. */
 void  __attribute__((weak)) vApplicationIdleHook( void ) {
-  void loop();
   loop();
 }
 /*-----------------------------------------------------------*/
@@ -92,7 +91,7 @@ void  __attribute__((weak)) vApplicationIdleHook( void ) {
   \param[in] pxTask Task handle
   \param[in] pcTaskName Task name
   */
-void vApplicationStackOverflowHook(xTaskHandle pxTask, char *pcTaskName) {
+void vApplicationStackOverflowHook(TaskHandle_t pxTask, char *pcTaskName) {
 	(void) pcTaskName;
 	(void) pxTask;
 	errorBlink(5);
