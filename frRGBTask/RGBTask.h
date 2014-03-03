@@ -8,6 +8,7 @@ enum RGBLeds {
 enum RGBType {
     STATIC,
     FLASH,
+    FLASH_ALT,
     TORCH,
     OFF
 };
@@ -19,5 +20,5 @@ struct RGBRequest_t {
     uint32_t time;
     uint32_t period;
     uint8_t prioity;
-    void* timer;
+    TimerHandle_t timer;
 };
