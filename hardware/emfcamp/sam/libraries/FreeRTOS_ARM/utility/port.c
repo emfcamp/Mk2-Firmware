@@ -652,6 +652,10 @@ void xPortSysTickHandler( void )
  */
 __attribute__(( weak )) void vPortSetupTimerInterrupt( void )
 {
+    // can't replace weak version in same file
+    sysTickEnabled = 1; // WHG for Arduino
+    return;  // WHG
+    
 	/* Calculate the constants required to configure the tick interrupt. */
 	#if configUSE_TICKLESS_IDLE == 1
 	{

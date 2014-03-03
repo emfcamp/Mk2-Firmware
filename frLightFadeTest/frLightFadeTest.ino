@@ -36,7 +36,7 @@ void setup() {
   Serial.println("Setup timmer");
   // create Ligth Timmer
   xLightFadeTimer = xTimerCreate(NULL,
-                                 (LIGHT_FADE_AFTER / portTICK_RATE_MS),
+                                 (LIGHT_FADE_AFTER / portTICK_PERIOD_MS),
                                  pdFALSE,
                                  NULL,
                                  vLightFadeCallback);
