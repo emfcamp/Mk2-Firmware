@@ -44,7 +44,7 @@
 
 #include <Debounce.h>
 #include <FreeRTOS_ARM.h>
-
+#include "RGBTask.h"
 
 // timer handle for use by pin interrrupt
 xTimerHandle xLightFadeTimer;
@@ -56,31 +56,8 @@ xQueueHandle xRGBRequestQueue;
 #define LIGHT_FADE_DELAY   10       // how much to delay at each level
 
 
-// (RGB, LED, TYPE, TIME, Period, PRIOITY)
-enum RGBLeds {
-    LED1,
-    LED2,
-    BOTH
-};
 
-enum RGBType {
-    STATIC,
-    FLASH,
-    TORCH,
-    OFF
-};
-
-struct RGBRequest_t {
-    uint8_t rgb[3];
-    RGBLeds led;
-    RGBType type;
-    uint32_t time;
-    uint32_t period;
-    uint8_t prioity;
-    void* timer;
-};
-
-void tildaButtonInterruptsPriority() {
+void tildaButtonInterruptPriority() {
     // reset pin interrupt handler IRQn priority levels to allow use of FreeRTOS API calls
     NVIC_DisableIRQ(PIOA_IRQn);
     NVIC_ClearPendingIRQ(PIOA_IRQn);
@@ -103,8 +80,12 @@ void tildaButtonInterruptsPriority() {
     NVIC_EnableIRQ(PIOD_IRQn);
 }
 
+
+
 void setup() {
-    
+    // holder for task handle
+    portBASE_TYPE t1;
+      
     // PMIC to CHARGE
     pinMode(PMIC_ENOTG, OUTPUT);
     digitalWrite(PMIC_ENOTG, LOW);
@@ -116,7 +97,7 @@ void setup() {
     tildaButtonAttachInterrupts();
     
     pinMode(SRF_SLEEP, OUTPUT);
-    digtialWrite(SRF_SLEEP, LOW);
+    digitalWrite(SRF_SLEEP, LOW);
     
     // setup  Serial
     Serial.begin(115200);
@@ -124,7 +105,7 @@ void setup() {
     Serial.println("TiLDA Mk2 RGB task tester tester");
     
     // setup RGB task
-    t1 = xTaskCreate(vBlinkTask,
+    t1 = xTaskCreate(vRGBTask,
                     NULL,
                     configMINIMAL_STACK_SIZE,
                     NULL,
@@ -146,6 +127,22 @@ void loop() {
 }
 
 /******************************************************************************/
+
+
+/*
+ * helper to set led's
+ */
+void RGBSetOutput(RGBRequest_t *request) {
+    if (request->led == LED1 || request->led == BOTH) {
+        analogWrite(LED1_RED, request->rgb[0]);
+        analogWrite(LED1_GREEN, request->rgb[1]);
+        analogWrite(LED1_BLUE, request->rgb[2]);
+    } else if (request->led == LED2 || request->led == BOTH) {
+        analogWrite(LED2_RED, request->rgb[0]);
+        analogWrite(LED2_GREEN, request->rgb[1]);
+        analogWrite(LED2_BLUE, request->rgb[2]);
+    }
+}
 
 
 
@@ -192,21 +189,21 @@ void vRGBTask(void *pvParameters) {
             
             if (newRequest.prioity > currentRequest.prioity) {
                 // move current to previous if we are interrupting
-                if (uxQueueMessageWaiting(xRGBPendQueue) == 0) {
-                    xQueueSendToBack(xRGBPendQueue, currentRequest, portMAX_DELAY);
+                if (uxQueueMessagesWaiting(xRGBPendQueue) == 0) {
+                    xQueueSendToBack(xRGBPendQueue, &currentRequest, portMAX_DELAY);
                 } else {
                     // peek to deiced if adding to from or back
-                    xQueuePeek(xRGBPendQueue, tempRequest, portMAX_DELAY);
+                    xQueuePeek(xRGBPendQueue, &tempRequest, portMAX_DELAY);
                     if (currentRequest.prioity > tempRequest.prioity) {
                         if (uxQueueSpacesAvailable(xRGBPendQueue)) {
                             // add to front of queue if current is higher prioity that front of pend queue
-                            xQueueSendToFront(xRGBPendQueue, currentRequest, portMAX_DELAY);
+                            xQueueSendToFront(xRGBPendQueue, &currentRequest, portMAX_DELAY);
                         } else {
                             // TODO: make room in que
                         }
                     } else {
                         if (uxQueueSpacesAvailable(xRGBPendQueue)) {
-                            xQueueSendToBack(xRGBPendQueue, currentRequest, portMAX_DELAY);
+                            xQueueSendToBack(xRGBPendQueue, &currentRequest, portMAX_DELAY);
                         } else {
                             // dont care
                         }
@@ -221,7 +218,7 @@ void vRGBTask(void *pvParameters) {
 #define IMU_UP false
                     if (IMU_UP) {
                         //reduce brightness
-                        currentRequest.RGB = {128,128,128};
+                        currentRequest.rgb = {128,128,128};
                         // TODO: IMU orientation HOOK
                     }
                     // set LED outputs
@@ -233,12 +230,11 @@ void vRGBTask(void *pvParameters) {
                     
                 } else if (newRequest.type == FLASH) {
                     
-                } else if (newRequest.Type == OFF){
+                } else if (newRequest.type == OFF){
                     
                 }
             } else {
-                // stuff it in pending
-                pendingRequest = newRequest;
+                // stuff it in pending queue
             }
         } else {
             // WE SHOULD NEVER GET HERE
@@ -246,21 +242,6 @@ void vRGBTask(void *pvParameters) {
         
     }
     
-}
-
-/*
- * helper to set led's
- */
-void RGBSetOutput(RGBRequest_t *request){
-    if (request->led == LED1 || request->led == BOTH) {
-        analogWrite(LED1_RED, request->RGB[0]);
-        analogWrite(LED1_GREEN, request->RGB[1]);
-        analogWrite(LED1_BLUE, request->RGB[2]);
-    } else if (request->led == LED2 || request->led == BOTH) {
-        analogWrite(LED2_RED, request->RGB[0]);
-        analogWrite(LED2_GREEN, request->RGB[1]);
-        analogWrite(LED2_BLUE, request->RGB[2]);
-    }
 }
 
 /*
@@ -275,13 +256,13 @@ void buttonLightPress(){
     portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
     RGBRequest_t light;
     
-    light->RGB = {255,255,255};
-    light->led = BOTH;
-    light->type = TORCH;
-    light->time = LIGHT_FADE_AFTER;
-    light->prioity = 0;
+    light.rgb = {255,255,255};
+    light.led = BOTH;
+    light.type = TORCH;
+    light.time = LIGHT_FADE_AFTER;
+    light.prioity = 0;
 
-    xQueueSendToFrontFromIRS(xRGBRequestQueue, light, &xHigherPriorityTaskWoken);
+    xQueueSendToFrontFromISR(xRGBRequestQueue, &light, &xHigherPriorityTaskWoken);
 
     /* If xHigherPriorityTaskWoken equals pdTRUE, then a context switch
      should be performed.  The syntax required to perform a context switch
@@ -292,7 +273,7 @@ void buttonLightPress(){
     {
         /* Call the interrupt safe yield function here (actual function
          depends on the FreeRTOS port being used). */
-        portEND_SWITCHING_ISR(xHigherPriorityTaskWoken)
+        portEND_SWITCHING_ISR(xHigherPriorityTaskWoken);
     }
 }
 
