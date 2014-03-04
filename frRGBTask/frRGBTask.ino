@@ -144,8 +144,8 @@ void loop() {
 /*
  * helper to set led's
  */
-void RGBSetOutput(RGBRequest_t *request) {
-    if (request->type == OFF) {
+void RGBSetOutput(RGBRequest_t *request, uint8_t offOverride = 0) {
+    if (request->type == OFF || offOverride == 1) {
         if (request->led == LED1 || request->led == BOTH) {
             analogWrite(LED1_RED, 0);
             analogWrite(LED1_GREEN, 0);
@@ -189,6 +189,8 @@ void vRGBTimerCallback(TimerHandle_t pxTimer) {
     } else {
             currentRequest.timer = NULL;
     }
+    // TODO: Stop the flash timer if needed
+    
     if (uxQueueMessagesWaiting(xRGBPendQueue) == 0) {
         // there is nothing in the pending queue to replace it with so turn the LED's OFF
         currentRequest.type = OFF;
@@ -212,7 +214,28 @@ void vRGBTimerCallback(TimerHandle_t pxTimer) {
  * called every request.period to flash change an led flash state
  */
 void vRGBFlashCallback(TimerHandle_t xTimer){
-
+    // switch leds between off and currentrequest.rgb
+    if (currentRequest.type == FLASH) {
+       if (flashState) {
+            // need to turn the leds off 
+            RGBSetOutput(&currentRequest, 1);
+            flashState = 0;
+        } else {
+            RGBSetOutput(&currentRequest);
+            flashState = 1;
+        }
+     
+        // restart the flash timer
+        if (xTimerStart(xTimer, (2/portTICK_PERIOD_MS)) != pdPASS) {
+            // TODO: failed to restart flash timmer
+        }
+    } else if (currentRequest.type == FLASH_ALT) {
+        // need to handle Fashing alternate leds a little diffrently 
+    
+    } else {
+        // this is not a flash we should not have got here
+        
+    }
 }
 
 /*
@@ -274,26 +297,35 @@ void RGBProcessRequest() {
             // for flash we are switching between on and off states at request.peroid
             // so use the xFlashTimmer
             // reconfigure the flash period
-            
+            if (xTimerChangePeriod(xRGBFlashTimer, (currentRequest.period/portTICK_PERIOD_MS), (2/portTICK_PERIOD_MS)) != pdPASS) {
+                // TODO: failed to change flash period
+            }  
             // start main timmer
             if (xTimerStart(currentRequest.timer, (5/portTICK_PERIOD_MS)) != pdPASS) {
                 // TODO: timer could not start
             }
             // start flash timmer
-            
+            if (xTimerStart(xRGBFlashTimer, (5/portTICK_PERIOD_MS)) != pdPASS) {
+                // TODO: timer could not start
+            }
             // set led output for first flash
             RGBSetOutput(&currentRequest);
+            flashState = 1;
         } else if (currentRequest.type == FLASH_ALT) {
             // like flash we switching between on and off but also with alternate led's
             // this assumes led = BOTH
             // reconfigure the flash period
-            
+            if (xTimerChangePeriod(xRGBFlashTimer, (currentRequest.period/portTICK_PERIOD_MS), (2/portTICK_PERIOD_MS)) != pdPASS) {
+                // TODO: failed to change flash period
+            }            
             // start main timmer
             if (xTimerStart(currentRequest.timer, (5/portTICK_PERIOD_MS)) != pdPASS) {
                 // TODO: timer could not start
             }
             // start flash timmer
-            
+            if (xTimerStart(xRGBFlashTimer, (5/portTICK_PERIOD_MS)) != pdPASS) {
+                // TODO: timer could not start
+            }
             // set led output for first flash
             RGBSetOutput(&currentRequest);
             
@@ -304,8 +336,10 @@ void RGBProcessRequest() {
             // or do it in the fade timer callback
             
             
-            // reconfigure the flash period
-            
+            // reconfigure the fade period
+            if (xTimerChangePeriod(xRGBFadeTimer, (currentRequest.period/portTICK_PERIOD_MS), (2/portTICK_PERIOD_MS)) != pdPASS) {
+                // TODO: failed to change flash period
+            }
             // start main timmer
             if (xTimerStart(currentRequest.timer, (5/portTICK_PERIOD_MS)) != pdPASS) {
                 // TODO: timer could not start
