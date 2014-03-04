@@ -15,11 +15,11 @@ enum RGBType {
 };
 
 struct RGBRequest_t {
-    uint8_t rgb[3];        // 3 bytes
-    RGBLeds led;           // 4 bytes
-    RGBType type;          // 4 bytes
-    uint32_t time;         // 4 bytes
-    uint32_t period;       // 4 bytes 
-    uint8_t prioity;       // 1 byte
-    TimerHandle_t timer;   // 4 byte
+    uint8_t rgb[3];
+    RGBLeds led;
+    RGBType type;
+    uint16_t time;
+    uint16_t period;
+    uint8_t prioity;
+    TimerHandle_t timer;
 };

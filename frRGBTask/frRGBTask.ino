@@ -325,7 +325,7 @@ void RGBProcessRequest() {
             }
             // start flash timmer
             if (xTimerStart(xRGBFlashTimer, (2/portTICK_PERIOD_MS)) != pdPASS) {
-                // TODO: timer could not start
+                // TODO: flash timer could not start
             }
             // set led output for first flash
             RGBSetOutput(&currentRequest);
@@ -343,7 +343,7 @@ void RGBProcessRequest() {
             }
             // start flash timmer
             if (xTimerStart(xRGBFlashTimer, (2/portTICK_PERIOD_MS)) != pdPASS) {
-                // TODO: timer could not start
+                // TODO: flash timer could not start
             }
             // set led output for first flash
             // LED2 off LED1 on
@@ -355,12 +355,13 @@ void RGBProcessRequest() {
         } else if (currentRequest.type == FADE) {
             // this is the trick one we want to fade between the current state and the request.rgb
             // over the period
-            // need to do some maths to work out steps for each color aginst a tick time for the fade
+            // need to do some maths to work out steps for each color against a tick time for the fade
             // or do it in the fade timer callback
-            
-            
+
+
+
             // reconfigure the fade period
-            if (xTimerChangePeriod(xRGBFadeTimer, (currentRequest.period/portTICK_PERIOD_MS), (2/portTICK_PERIOD_MS)) != pdPASS) {
+            if (xTimerChangePeriod(xRGBFadeTimer, (period/portTICK_PERIOD_MS), (2/portTICK_PERIOD_MS)) != pdPASS) {
                 // TODO: failed to change flash period
             }
             // start main timmer
@@ -368,7 +369,9 @@ void RGBProcessRequest() {
                 // TODO: timer could not start
             }
             // start fade timmer
-            
+            if (xTimerStart(xRGBFadeTimer, (2/portTICK_PERIOD_MS)) != pdPASS) {
+                // TODO: fade timer could not start
+            }
             // set led output for first flash
             RGBSetOutput(&currentRequest);
         }
