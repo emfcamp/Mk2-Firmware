@@ -51,7 +51,9 @@ TimerHandle_t xRGBFadeTimer;
 QueueHandle_t xRGBRequestQueue;     // use by others and ButtonLigthPress to request a change in led state
 QueueHandle_t xRGBPendQueue;        // needs to be global so RGBTimmerCallback can access it
 RGBRequest_t currentRequest;        // current running request, needs to be global so RGBTimmerCallback can access it
-
+uint8_t RGB1[3];
+uint8_t RGB2[3];
+uint8_t flashState = 0;
 // time to fade torch lights after in ms
 #define LIGHT_FADE_AFTER   3000     // how long should the LED's be on for
 
@@ -148,22 +150,26 @@ void RGBSetOutput(RGBRequest_t *request) {
             analogWrite(LED1_RED, 0);
             analogWrite(LED1_GREEN, 0);
             analogWrite(LED1_BLUE, 0);
+            RGB1 = {0, 0, 0};
         }
         if (request->led == LED2 || request->led == BOTH) {
             analogWrite(LED2_RED, 0);
             analogWrite(LED2_GREEN, 0);
             analogWrite(LED2_BLUE, 0);
+            RGB2 = {0, 0, 0};
         }
     } else {
         if (request->led == LED1 || request->led == BOTH) {
             analogWrite(LED1_RED, request->rgb[0]);
             analogWrite(LED1_GREEN, request->rgb[1]);
             analogWrite(LED1_BLUE, request->rgb[2]);
+            RGB1 = {request->rgb[0], request->rgb[1], request->rgb[2]};
         }
         if (request->led == LED2 || request->led == BOTH) {
             analogWrite(LED2_RED, request->rgb[0]);
             analogWrite(LED2_GREEN, request->rgb[1]);
             analogWrite(LED2_BLUE, request->rgb[2]);
+            RGB2 = {request->rgb[0], request->rgb[1], request->rgb[2]};
         }
     }
 }
