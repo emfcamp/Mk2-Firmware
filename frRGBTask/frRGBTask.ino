@@ -231,7 +231,26 @@ void vRGBFlashCallback(TimerHandle_t xTimer){
         }
     } else if (currentRequest.type == FLASH_ALT) {
         // need to handle Fashing alternate leds a little diffrently 
-    
+        if (flashState) {
+            // need to switch LED 2 off LED1 on
+            currentRequest.led = LED2;
+            RGBSetOutput(&currentRequest, 1);
+            currentRequest.led = LED1;
+            RGBSetOutput(&currentRequest);
+            flashState = 0;
+        } else {
+            // need to switch LED1 off LED2 on
+            currentRequest.led = LED1;
+            RGBSetOutput(&currentRequest, 1);
+            currentRequest.led = LED2;
+            RGBSetOutput(&currentRequest);
+            flashState = 1;
+        }
+        
+        // restart the flash timer
+        if (xTimerStart(xTimer, (2/portTICK_PERIOD_MS)) != pdPASS) {
+            // TODO: failed to restart flash timmer
+        }
     } else {
         // this is not a flash we should not have got here
         
@@ -305,7 +324,7 @@ void RGBProcessRequest() {
                 // TODO: timer could not start
             }
             // start flash timmer
-            if (xTimerStart(xRGBFlashTimer, (5/portTICK_PERIOD_MS)) != pdPASS) {
+            if (xTimerStart(xRGBFlashTimer, (2/portTICK_PERIOD_MS)) != pdPASS) {
                 // TODO: timer could not start
             }
             // set led output for first flash
@@ -323,12 +342,16 @@ void RGBProcessRequest() {
                 // TODO: timer could not start
             }
             // start flash timmer
-            if (xTimerStart(xRGBFlashTimer, (5/portTICK_PERIOD_MS)) != pdPASS) {
+            if (xTimerStart(xRGBFlashTimer, (2/portTICK_PERIOD_MS)) != pdPASS) {
                 // TODO: timer could not start
             }
             // set led output for first flash
+            // LED2 off LED1 on
+            currentRequest.led = LED2;
+            RGBSetOutput(&currentRequest, 1);
+            currentRequest.led = LED1;
             RGBSetOutput(&currentRequest);
-            
+            flashState = 0;
         } else if (currentRequest.type == FADE) {
             // this is the trick one we want to fade between the current state and the request.rgb
             // over the period
