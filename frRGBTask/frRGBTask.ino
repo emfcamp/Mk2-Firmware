@@ -502,7 +502,7 @@ void vRGBTask(void *pvParameters) {
     }
     
 }
-uint8_t firstFire = 1;
+uint8_t firstLightFire = 1;
 
 /*
  * A BUTTON_LIGHT press will call the ISR and turn on the LED's to white
@@ -511,8 +511,8 @@ uint8_t firstFire = 1;
  * will set the RGB's back to White and reset the time out period
  */
 void buttonLightPress(){
-    if (firstFire) {
-      firstFire = 0;
+    if (firstLightFire) {
+      firstLightFire = 0;
       return;
     }
     // called when Light button is pressed
@@ -525,6 +525,108 @@ void buttonLightPress(){
     light.type = TORCH;
     light.time = LIGHT_FADE_AFTER;
     light.prioity = 0;
+    xQueueSendToFrontFromISR(xRGBRequestQueue, &light, &xHigherPriorityTaskWoken);
+    
+    if (xHigherPriorityTaskWoken) {
+        portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+    }
+}
+
+
+/******************************************************************************/
+uint8_t firstRightFire = 1;
+uint8_t firstLeftFire = 1;
+uint8_t firstUpFire = 1;
+uint8_t firstDownFire = 1;
+/*
+ * Tester button interupts these do the same a lightPress but give diffrent test led use cases
+ 
+ */
+void buttonRightPress(){
+    if (firstRightFire) {
+        firstRightFire = 0;
+        return;
+    }
+    // called when Light button is pressed
+    // put LIGHT onto RGB queue and check for wake task
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+    RGBRequest_t light;
+    
+    light.rgb = {0,1,0};
+    light.led = BOTH;
+    light.type = FLASH_ALT;
+    light.period = 100;
+    light.time = LIGHT_FADE_AFTER;
+    light.prioity = 1;
+    xQueueSendToFrontFromISR(xRGBRequestQueue, &light, &xHigherPriorityTaskWoken);
+    
+    if (xHigherPriorityTaskWoken) {
+        portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+    }
+}
+
+void buttonLeftPress(){
+    if (firstLeftFire) {
+        firstLeftFire = 0;
+        return;
+    }
+    // called when Light button is pressed
+    // put LIGHT onto RGB queue and check for wake task
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+    RGBRequest_t light;
+    
+    light.rgb = {1,0,0};
+    light.led = BOTH;
+    light.type = FLASH;
+    light.period = 200;
+    light.time = LIGHT_FADE_AFTER;
+    light.prioity = 2;
+    xQueueSendToFrontFromISR(xRGBRequestQueue, &light, &xHigherPriorityTaskWoken);
+    
+    if (xHigherPriorityTaskWoken) {
+        portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+    }
+}
+
+
+void buttonUpPress(){
+    if (firstUpFire) {
+        firstUpFire = 0;
+        return;
+    }
+    // called when Light button is pressed
+    // put LIGHT onto RGB queue and check for wake task
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+    RGBRequest_t light;
+    
+    light.rgb = {0,0,1};
+    light.led = LED2;
+    light.type = STATIC;
+    light.time = LIGHT_FADE_AFTER;
+    light.prioity = 1;
+    xQueueSendToFrontFromISR(xRGBRequestQueue, &light, &xHigherPriorityTaskWoken);
+    
+    if (xHigherPriorityTaskWoken) {
+        portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+    }
+}
+
+void buttonDownPress(){
+    if (firstDownFire) {
+        firstDownFire = 0;
+        return;
+    }
+    // called when Light button is pressed
+    // put LIGHT onto RGB queue and check for wake task
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+    RGBRequest_t light;
+    
+    light.rgb = {0,6,4};
+    light.led = LED1;
+    light.type = FADE;
+    light.period = 1000;
+    light.time = LIGHT_FADE_AFTER;
+    light.prioity = 1;
     xQueueSendToFrontFromISR(xRGBRequestQueue, &light, &xHigherPriorityTaskWoken);
     
     if (xHigherPriorityTaskWoken) {
