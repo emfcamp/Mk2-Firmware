@@ -46,7 +46,8 @@
 #include <FreeRTOS_ARM.h>
 #include "RGBTask.h"
 
-// timer handle for use by pin interrupt
+TimerHandle_t xRGBFlashTimer;
+TimerHandle_t xRGBFadeTimer;
 QueueHandle_t xRGBRequestQueue;     // use by others and ButtonLigthPress to request a change in led state
 QueueHandle_t xRGBPendQueue;        // needs to be global so RGBTimmerCallback can access it
 RGBRequest_t currentRequest;        // current running request, needs to be global so RGBTimmerCallback can access it
@@ -335,12 +336,12 @@ void vRGBTask(void *pvParameters) {
     
     BaseType_t xStatus;
     
-    TimerHandle_t xRGBFlashTimer = xTimerCreate(NULL,
+    xRGBFlashTimer = xTimerCreate(NULL,
                                                 (1/portTICK_PERIOD_MS),
                                                 pdFALSE,
                                                 NULL,
                                                 vRGBFlashCallback);
-    TimerHandle_t xRGBFadeTimer = xTimerCreate(NULL,
+    xRGBFadeTimer = xTimerCreate(NULL,
                                                 (1/portTICK_PERIOD_MS),
                                                 pdFALSE,
                                                 NULL,
