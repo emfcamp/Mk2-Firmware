@@ -210,6 +210,8 @@ void vRGBTimerCallback(TimerHandle_t pxTimer) {
         currentRequest.type = OFF;
         RGBSetOutput(&currentRequest);
     } else {
+        // TODO: if current is TORCH and poped request is for only one LED turn the other one off
+        
         // load request from the front of the pending queue
         if (xQueueReceive(xRGBPendQueue, &currentRequest, (2/portTICK_PERIOD_MS))) {
             // got request out of the queue
@@ -335,8 +337,8 @@ void vRGBFadeCallback(TimerHandle_t xTimer){
  * Clay Shirky <clay.shirky@nyu.edu>
  * source unknown
  */
-int16_t RGBCalculateFadeStep(int8_t prevValue, int8_t endValue) {
-    int16_t step = endValue - prevValue; // What's the overall gap?
+int32_t RGBCalculateFadeStep(int32_t prevValue, int32_t endValue) {
+    int32_t step = endValue - prevValue; // What's the overall gap?
     if (step) {                      // If its non-zero,
         step = (int16_t)currentRequest.period/step;              //   divide by current period
     }
@@ -561,7 +563,7 @@ void vRGBTask(void *pvParameters) {
                         if (xTimerStop(xRGBFadeTimer, (1/portTICK_PERIOD_MS)) != pdPASS) {
                             // TODO: failed to stop fade timer
                         }
-                        // TODO: for a FADE task we also need to store some more context
+                        // for a FADE task we also need to store some more context
                         if (currentRequest.led == LED1 || currentRequest.led == BOTH) {
                             currentRequest.stateRGB1[0] = RGB1[0];
                             currentRequest.stateRGB1[1] = RGB1[1];
@@ -759,7 +761,7 @@ void buttonDownPress(){
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
     RGBRequest_t light;
     
-    light.rgb = {0,45,14};
+    light.rgb = {0,8,6};
     light.led = LED2;
     light.type = FADE;
     light.period = 1000;
