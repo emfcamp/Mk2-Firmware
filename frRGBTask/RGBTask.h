@@ -22,4 +22,6 @@ struct RGBRequest_t {
     uint16_t period;
     uint8_t prioity;
     TimerHandle_t timer;
+    uint8_t stateRGB1[3];
+    uint8_t stateRGB2[3];
 };

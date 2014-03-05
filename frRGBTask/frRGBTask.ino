@@ -49,14 +49,23 @@
 TimerHandle_t xRGBFlashTimer;
 TimerHandle_t xRGBFadeTimer;
 QueueHandle_t xRGBRequestQueue;     // use by others and ButtonLigthPress to request a change in led state
-QueueHandle_t xRGBPendQueue;        // needs to be global so RGBTimmerCallback can access it
-RGBRequest_t currentRequest;        // current running request, needs to be global so RGBTimmerCallback can access it
+QueueHandle_t xRGBPendQueue;        // needs to be global so RGBtimerCallback can access it
+RGBRequest_t currentRequest;        // current running request, needs to be global so RGBtimerCallback can access it
 uint8_t RGB1[3];
 uint8_t RGB2[3];
 uint8_t flashState = 0;
 // time to fade torch lights after in ms
 #define LIGHT_FADE_AFTER   3000     // how long should the LED's be on for
 
+/*
+ * FadeState 
+ * used to hold information during a FADE
+ */
+struct FadeState {
+    uint16_t period;        // original request period
+    int32_t rgb1Step[3];     // period match count for LED1
+    int32_t rgb2Step[3];     // period match count for LED2
+} RGBFadeState;
 
 
 void tildaButtonInterruptPriority() {
@@ -189,17 +198,35 @@ void vRGBTimerCallback(TimerHandle_t pxTimer) {
     } else {
             currentRequest.timer = NULL;
     }
-    // TODO: Stop the flash timer if needed
+    // Stop the flash timer if needed
+    if (currentRequest.type == FLASH || currentRequest.type == FLASH_ALT) {
+        if (xTimerStop(xRGBFlashTimer, (1/portTICK_PERIOD_MS)) != pdPASS) {
+            // TODO: failed to stop flash timer
+        }
+    }
     
     if (uxQueueMessagesWaiting(xRGBPendQueue) == 0) {
         // there is nothing in the pending queue to replace it with so turn the LED's OFF
         currentRequest.type = OFF;
         RGBSetOutput(&currentRequest);
-        
     } else {
         // load request from the front of the pending queue
         if (xQueueReceive(xRGBPendQueue, &currentRequest, (2/portTICK_PERIOD_MS))) {
             // got request out of the queue
+            // if request is a FADE we need to restore a bit more context
+            if (currentRequest.type == FADE && currentRequest.timer != NULL) {
+                // restore FADE context
+                if (currentRequest.led == LED1 || currentRequest.led == BOTH) {
+                    RGB1[0] = currentRequest.stateRGB1[0];
+                    RGB1[1] = currentRequest.stateRGB1[1];
+                    RGB1[2] = currentRequest.stateRGB1[2];
+                }
+                if (currentRequest.led == LED2 || currentRequest.led == BOTH) {
+                    RGB2[0] = currentRequest.stateRGB2[0];
+                    RGB2[1] = currentRequest.stateRGB2[1];
+                    RGB2[2] = currentRequest.stateRGB2[2];
+                }
+            }
             RGBProcessRequest();
         } else {
             // failed to get request from queue
@@ -227,10 +254,10 @@ void vRGBFlashCallback(TimerHandle_t xTimer){
      
         // restart the flash timer
         if (xTimerStart(xTimer, (2/portTICK_PERIOD_MS)) != pdPASS) {
-            // TODO: failed to restart flash timmer
+            // TODO: failed to restart flash timer
         }
     } else if (currentRequest.type == FLASH_ALT) {
-        // need to handle Fashing alternate leds a little diffrently 
+        // need to handle Flashing alternate leds a little differently
         if (flashState) {
             // need to switch LED 2 off LED1 on
             currentRequest.led = LED2;
@@ -249,7 +276,7 @@ void vRGBFlashCallback(TimerHandle_t xTimer){
         
         // restart the flash timer
         if (xTimerStart(xTimer, (2/portTICK_PERIOD_MS)) != pdPASS) {
-            // TODO: failed to restart flash timmer
+            // TODO: failed to restart flash timer
         }
     } else {
         // this is not a flash we should not have got here
@@ -263,12 +290,90 @@ void vRGBFlashCallback(TimerHandle_t xTimer){
  * called every fraction of request.period
  */
 void vRGBFadeCallback(TimerHandle_t xTimer){
+    if (currentRequest.period == 1) {
+        // last pass
+        currentRequest.period = 0;
+        currentRequest.type = STATIC;
+        
+    }
+    uint32_t i = RGBFadeState.period - currentRequest.period;
+    // match period and step count then change led
+    if (currentRequest.led == LED1 || currentRequest.led == BOTH) {
+        RGB1[0] = RGBCalculateFadeVal(RGBFadeState.rgb1Step[0], RGB1[0], i);
+        RGB1[1] = RGBCalculateFadeVal(RGBFadeState.rgb1Step[1], RGB1[1], i);
+        RGB1[2] = RGBCalculateFadeVal(RGBFadeState.rgb1Step[2], RGB1[2], i);
+        
+        analogWrite(LED1_RED, RGB1[0]);
+        analogWrite(LED1_GREEN, RGB1[1]);
+        analogWrite(LED1_BLUE, RGB1[2]);
+    }
+    if (currentRequest.led == LED2 || currentRequest.led == BOTH) {
+        RGB2[0] = RGBCalculateFadeVal(RGBFadeState.rgb2Step[0], RGB2[0], i);
+        RGB2[1] = RGBCalculateFadeVal(RGBFadeState.rgb2Step[1], RGB2[1], i);
+        RGB2[2] = RGBCalculateFadeVal(RGBFadeState.rgb2Step[2], RGB2[2], i);
+        
+        analogWrite(LED2_RED, RGB2[0]);
+        analogWrite(LED2_GREEN, RGB2[1]);
+        analogWrite(LED2_BLUE, RGB2[2]);
+    }
+    
+    // reduce the currentRequest.period by 1
+    if (currentRequest.period != 0) {
+        currentRequest.period -= 1;
+        // and restart the timers
+        if (xTimerStart(xTimer, (2/portTICK_PERIOD_MS)) != pdPASS) {
+            // TODO: failed to restart fade timer
+        }
+    }
+}
 
+/*
+ * RGBCalculateFadeStep
+ * used in setting up fade's
+ *
+ * Borrowed and modified from a Arduino color fading sketch originally by
+ * Clay Shirky <clay.shirky@nyu.edu>
+ * source unknown
+ */
+int16_t RGBCalculateFadeStep(int8_t prevValue, int8_t endValue) {
+    int16_t step = endValue - prevValue; // What's the overall gap?
+    if (step) {                      // If its non-zero,
+        step = (int16_t)currentRequest.period/step;              //   divide by current period
+    }
+    return step;
+}
+
+/*
+ * RGBCalculateFadeVal
+ * used in fade's
+ *
+ * Borrowed and modified from a Arduino color fading sketch originally by
+ * Clay Shirky <clay.shirky@nyu.edu>
+ * source unknown
+ */
+uint8_t RGBCalculateFadeVal(int32_t step, int val, int32_t i) {
+    if ((step) && i % step == 0) { // If step is non-zero and its time to change a value,
+        if (step > 0) {              //   increment the value if step is positive...
+            val += 1;
+        }
+        else if (step < 0) {         //   ...or decrement it if step is negative
+            val -= 1;
+        }
+    }
+    // Defensive driving: make sure val stays in the range 0-255
+    if (val > 255) {
+        val = 255;
+    }
+    else if (val < 0) {
+        val = 0;
+    }
+    return val;
 }
 
 /*
  * RGBProcessRequest
  * setup request, setup leds, create(?) start timers as needed
+ * request could be either new or a continuation
  */
 void RGBProcessRequest() {
     if (currentRequest.type == OFF){
@@ -314,16 +419,16 @@ void RGBProcessRequest() {
             
         } else if (currentRequest.type == FLASH) {
             // for flash we are switching between on and off states at request.peroid
-            // so use the xFlashTimmer
+            // so use the xFlashtimer
             // reconfigure the flash period
             if (xTimerChangePeriod(xRGBFlashTimer, (currentRequest.period/portTICK_PERIOD_MS), (2/portTICK_PERIOD_MS)) != pdPASS) {
                 // TODO: failed to change flash period
             }  
-            // start main timmer
+            // start main timer
             if (xTimerStart(currentRequest.timer, (5/portTICK_PERIOD_MS)) != pdPASS) {
                 // TODO: timer could not start
             }
-            // start flash timmer
+            // start flash timer
             if (xTimerStart(xRGBFlashTimer, (2/portTICK_PERIOD_MS)) != pdPASS) {
                 // TODO: flash timer could not start
             }
@@ -337,11 +442,11 @@ void RGBProcessRequest() {
             if (xTimerChangePeriod(xRGBFlashTimer, (currentRequest.period/portTICK_PERIOD_MS), (2/portTICK_PERIOD_MS)) != pdPASS) {
                 // TODO: failed to change flash period
             }            
-            // start main timmer
+            // start main timer
             if (xTimerStart(currentRequest.timer, (5/portTICK_PERIOD_MS)) != pdPASS) {
                 // TODO: timer could not start
             }
-            // start flash timmer
+            // start flash timer
             if (xTimerStart(xRGBFlashTimer, (2/portTICK_PERIOD_MS)) != pdPASS) {
                 // TODO: flash timer could not start
             }
@@ -357,23 +462,38 @@ void RGBProcessRequest() {
             // over the period
             // need to do some maths to work out steps for each color against a tick time for the fade
             // or do it in the fade timer callback
-
-
-
-            // reconfigure the fade period
-            if (xTimerChangePeriod(xRGBFadeTimer, (period/portTICK_PERIOD_MS), (2/portTICK_PERIOD_MS)) != pdPASS) {
-                // TODO: failed to change flash period
+            
+            // store the original period so we can use to for later calculations when matching step
+            RGBFadeState.period = currentRequest.period;
+            Serial.print("RGB: ");
+            Serial.print(RGB2[0], DEC);
+            Serial.print(" / ");
+            Serial.print(RGB2[1], DEC);
+            Serial.print(" / ");  
+            Serial.println(RGB2[2], DEC); 
+            // calculate step each LED as needed
+            if (currentRequest.led == LED1 || currentRequest.led == BOTH) {
+                // steps first
+                RGBFadeState.rgb1Step[0] = RGBCalculateFadeStep(RGB1[0], currentRequest.rgb[0]);
+                RGBFadeState.rgb1Step[1] = RGBCalculateFadeStep(RGB1[1], currentRequest.rgb[1]);
+                RGBFadeState.rgb1Step[2] = RGBCalculateFadeStep(RGB1[2], currentRequest.rgb[2]);
             }
-            // start main timmer
+            if (currentRequest.led == LED2 || currentRequest.led == BOTH) {
+                RGBFadeState.rgb2Step[0] = RGBCalculateFadeStep(RGB2[0], currentRequest.rgb[0]);
+                RGBFadeState.rgb2Step[1] = RGBCalculateFadeStep(RGB2[1], currentRequest.rgb[1]);
+                RGBFadeState.rgb2Step[2] = RGBCalculateFadeStep(RGB2[2], currentRequest.rgb[2]);
+            }
+
+            // start main timer
             if (xTimerStart(currentRequest.timer, (5/portTICK_PERIOD_MS)) != pdPASS) {
                 // TODO: timer could not start
             }
-            // start fade timmer
+            // start fade timer
             if (xTimerStart(xRGBFadeTimer, (2/portTICK_PERIOD_MS)) != pdPASS) {
                 // TODO: fade timer could not start
             }
             // set led output for first flash
-            RGBSetOutput(&currentRequest);
+            //RGBSetOutput(&currentRequest);
         }
     }
 }
@@ -383,13 +503,6 @@ void RGBProcessRequest() {
  */
 void vRGBTask(void *pvParameters) {
     Serial.println("RGBTask Start");
-    // LED's off by default
-    analogWrite(LED1_RED, 0);
-    analogWrite(LED1_GREEN, 0);
-    analogWrite(LED1_BLUE, 0);
-    analogWrite(LED2_RED, 0);
-    analogWrite(LED2_GREEN, 0);
-    analogWrite(LED2_BLUE, 0);
     // create RGB request queue
     xRGBRequestQueue = xQueueCreate(3, sizeof(RGBRequest_t ));
     xRGBPendQueue = xQueueCreate(3, sizeof(RGBRequest_t ));
@@ -420,6 +533,7 @@ void vRGBTask(void *pvParameters) {
     currentRequest.type = OFF;
     currentRequest.led = BOTH;
     currentRequest.timer = NULL;
+    RGBSetOutput(&currentRequest);
     
     for(;;) {
         /* block on queue forever */
@@ -434,11 +548,32 @@ void vRGBTask(void *pvParameters) {
             if (currentRequest.type !=OFF) {
                 // TODO: should compare which LED's have been requested and which are in use
                 if (newRequest.prioity < currentRequest.prioity) {
-                    // TODO: stop the current request timer
+                    // stop the current request timer
                     if (xTimerStop(currentRequest.timer, (2/portTICK_PERIOD_MS)) != pdPASS) {
                         // TODO: failed to stop the timer
                     }
-                    // move current to previous if we are interrupting
+                    // stop the flash or fade timer if needed
+                    if (currentRequest.type == FLASH || currentRequest.type == FLASH_ALT) {
+                        if (xTimerStop(xRGBFlashTimer, (1/portTICK_PERIOD_MS)) != pdPASS) {
+                            // TODO: failed to stop flash timer
+                        }
+                    } else if (currentRequest.type == FADE) {
+                        if (xTimerStop(xRGBFadeTimer, (1/portTICK_PERIOD_MS)) != pdPASS) {
+                            // TODO: failed to stop fade timer
+                        }
+                        // TODO: for a FADE task we also need to store some more context
+                        if (currentRequest.led == LED1 || currentRequest.led == BOTH) {
+                            currentRequest.stateRGB1[0] = RGB1[0];
+                            currentRequest.stateRGB1[1] = RGB1[1];
+                            currentRequest.stateRGB1[2] = RGB1[2];
+                        }
+                        if (currentRequest.led == LED2 || currentRequest.led == BOTH) {
+                            currentRequest.stateRGB2[0] = RGB2[0];
+                            currentRequest.stateRGB2[1] = RGB2[1];
+                            currentRequest.stateRGB2[2] = RGB2[2];
+                        }
+                    }
+                    // move current to pendingQueue since we are interrupting
                     if (uxQueueMessagesWaiting(xRGBPendQueue) == 0) {
                         xQueueSendToBack(xRGBPendQueue, &currentRequest, portMAX_DELAY);
                     } else {
@@ -542,7 +677,7 @@ uint8_t firstLeftFire = 1;
 uint8_t firstUpFire = 1;
 uint8_t firstDownFire = 1;
 /*
- * Tester button interupts these do the same a lightPress but give diffrent test led use cases
+ * Tester button interrupts these do the same a lightPress but give different test led use cases
  
  */
 void buttonRightPress(){
@@ -578,7 +713,7 @@ void buttonLeftPress(){
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
     RGBRequest_t light;
     
-    light.rgb = {1,0,0};
+    light.rgb = {2,0,0};
     light.led = BOTH;
     light.type = FLASH;
     light.period = 200;
@@ -602,7 +737,7 @@ void buttonUpPress(){
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
     RGBRequest_t light;
     
-    light.rgb = {0,0,1};
+    light.rgb = {50,0,2};
     light.led = LED2;
     light.type = STATIC;
     light.time = LIGHT_FADE_AFTER;
@@ -624,11 +759,11 @@ void buttonDownPress(){
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
     RGBRequest_t light;
     
-    light.rgb = {0,6,4};
-    light.led = LED1;
+    light.rgb = {0,45,14};
+    light.led = LED2;
     light.type = FADE;
     light.period = 1000;
-    light.time = LIGHT_FADE_AFTER;
+    light.time = 3000;
     light.prioity = 1;
     xQueueSendToFrontFromISR(xRGBRequestQueue, &light, &xHigherPriorityTaskWoken);
     
