@@ -1,10 +1,8 @@
 /*
  TiLDA Mk2
 
- RGBTask
- This task handles the two RGB LEDs for the front of the badge.
- Setting them to a requested color and also provides the Torch functionality
- RGB Request are of type RGBRequest_t are sent to the RGBRequestQueue by other tasks
+ FlashLightTask
+ Torch Mode - Press the light button and both RGB LEDs light up.
 
  The MIT License (MIT)
 
@@ -29,37 +27,15 @@
  SOFTWARE.
  */
 
-#ifndef _RGB_TASK_H_
-#define _RGB_TASK_H_
+#ifndef _FLASH_LIGHT_TASK_H_
+#define _FLASH_LIGHT_TASK_H_
 
 #include <Arduino.h>
 #include <FreeRTOS_ARM.h>
 #include "EMF2014Config.h"
 
-
-
-namespace rgb {
-    enum Led {
-        LED1,
-        LED2,
-        BOTH
-    };
-
-    class Color {
-    public:
-        uint8_t red;
-        uint8_t green;
-        uint8_t blue;
-        Color (uint8_t, uint8_t, uint8_t);
-        bool moveTowards(Color target, uint8_t step);
-    };
-
-    void setColor(rgb::Led led, rgb::Color color);
-    void setColor(rgb::Color color);
-    void fadeToColor(rgb::Led led, rgb::Color color);
-    void fadeToColor(rgb::Color color);
-
+namespace flashLight {
     void initializeTask();
 }
 
-#endif // _RGB_TASK_H_
+#endif // _FLASH_LIGHT_TASK_H_

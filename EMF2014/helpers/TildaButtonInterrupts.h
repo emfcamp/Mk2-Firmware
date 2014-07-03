@@ -1,10 +1,9 @@
 /*
- TiLDA Mk2
+ TiLDA Mk2 button debounce helper
 
- RGBTask
- This task handles the two RGB LEDs for the front of the badge.
- Setting them to a requested color and also provides the Torch functionality
- RGB Request are of type RGBRequest_t are sent to the RGBRequestQueue by other tasks
+ Original based on information from
+ http://forum.arduino.cc/index.php?topic=156474.0
+
 
  The MIT License (MIT)
 
@@ -29,37 +28,39 @@
  SOFTWARE.
  */
 
-#ifndef _RGB_TASK_H_
-#define _RGB_TASK_H_
+#if !defined Debounce_H
+#define Debounce_H
 
 #include <Arduino.h>
-#include <FreeRTOS_ARM.h>
-#include "EMF2014Config.h"
+
+// These are in usec
+// 10ms
+#define DEBOUNCE_DEFAULT 1000
+
+// 500ms or 0.5sec
+#define DEBOUNCE_MAX 500000
+
+void setDebounce(int, int);
+
+void setDebounce(int);
+
+void tildaButtonSetup();
+
+void tildaButtonAttachInterrupts();
+
+void tildaButtonDetachInterrupts();
+
+// Define a bunch of interrupt handlers as weak so can overirde in main program
+extern void buttonLightPress(void) __attribute__ ((weak));
+extern void buttonScreenLeftPress(void) __attribute__ ((weak));
+extern void buttonScreenRightPress(void) __attribute__ ((weak));
+extern void buttonAPress(void) __attribute__ ((weak));
+extern void buttonBPress(void) __attribute__ ((weak));
+extern void buttonUpPress(void) __attribute__ ((weak));
+extern void buttonRightPress(void) __attribute__ ((weak));
+extern void buttonDownPress(void) __attribute__ ((weak));
+extern void buttonLeftPress(void) __attribute__ ((weak));
+extern void buttonCenterPress(void) __attribute__ ((weak));
 
 
-
-namespace rgb {
-    enum Led {
-        LED1,
-        LED2,
-        BOTH
-    };
-
-    class Color {
-    public:
-        uint8_t red;
-        uint8_t green;
-        uint8_t blue;
-        Color (uint8_t, uint8_t, uint8_t);
-        bool moveTowards(Color target, uint8_t step);
-    };
-
-    void setColor(rgb::Led led, rgb::Color color);
-    void setColor(rgb::Color color);
-    void fadeToColor(rgb::Led led, rgb::Color color);
-    void fadeToColor(rgb::Color color);
-
-    void initializeTask();
-}
-
-#endif // _RGB_TASK_H_
+#endif // Debounce_H
