@@ -24,7 +24,7 @@ TiLDA v2 Firmware
 #### EMF2014/
 * This is the main sketch for the EMF 2014 firmware.
 * It is complied using the **TiLDA Mk2** board form the the _Tools->Board_ menu.
-* The code enters via the EMF2014.ino like any other Arduino sketch. 
+* void setup() and void loop() can be found in EMF2014.ino
 * There are several _.c[pp]_ and _.h_ files that make up the _FreeRTOS_ tasks used by the main app.
 
 
