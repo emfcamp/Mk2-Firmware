@@ -29,10 +29,7 @@
 #include "ButtonTask.h"
 #include "DebugTask.h"
 #include <FreeRTOS_ARM.h>
-
 #include "RGBTask.h"
-#include "LinkedList.h"
-
 
 /*
  ToDo: Remove me
@@ -49,17 +46,19 @@
 #define BUTTON_CENTER         (24u)
 */
 
+ #define MAX_BUTTON_SUBSCRIPTIONS 10
+
+
+
 namespace buttons {
-    LinkedList<QueueHandle_t> lightPressQueues;
-    LinkedList<QueueHandle_t> screenLeftPressQueues;
-    LinkedList<QueueHandle_t> screenRightPressQueues;
-    LinkedList<QueueHandle_t> aPressQueues;
-    LinkedList<QueueHandle_t> bPressQueues;
-    LinkedList<QueueHandle_t> upPressQueues;
-    LinkedList<QueueHandle_t> rightPressQueues;
-    LinkedList<QueueHandle_t> downPressQueues;
-    LinkedList<QueueHandle_t> leftPressQueues;
-    LinkedList<QueueHandle_t> centerPressQueues;
+    QueueHandle_t lightPressQueues[MAX_BUTTON_SUBSCRIPTIONS];
+    QueueHandle_t aPressQueues[MAX_BUTTON_SUBSCRIPTIONS];
+    QueueHandle_t bPressQueues[MAX_BUTTON_SUBSCRIPTIONS];
+    QueueHandle_t upPressQueues[MAX_BUTTON_SUBSCRIPTIONS];
+    QueueHandle_t rightPressQueues[MAX_BUTTON_SUBSCRIPTIONS];
+    QueueHandle_t downPressQueues[MAX_BUTTON_SUBSCRIPTIONS];
+    QueueHandle_t leftPressQueues[MAX_BUTTON_SUBSCRIPTIONS];
+    QueueHandle_t centerPressQueues[MAX_BUTTON_SUBSCRIPTIONS];
 
     // A flag that determines whether the task is ready to receive and handle button presses
     boolean readyForInput = false;
@@ -72,17 +71,17 @@ namespace buttons {
         _buttons = buttons;
         _queue = xQueueCreate(1, sizeof(Button));
         configASSERT(_queue);
-        if (buttons & LIGHT)         lightPressQueues.add(_queue);
-        if (buttons & SCREEN_LEFT)   screenLeftPressQueues.add(_queue);
-        if (buttons & SCREEN_RIGHT)  screenRightPressQueues.add(_queue);
-        if (buttons & A)             aPressQueues.add(_queue);
-        if (buttons & B)             bPressQueues.add(_queue);
-        if (buttons & UP)            upPressQueues.add(_queue);
-        if (buttons & DOWN)          downPressQueues.add(_queue);
-        if (buttons & LEFT)          leftPressQueues.add(_queue);
-        if (buttons & RIGHT)         rightPressQueues.add(_queue);
-        if (buttons & CENTER)        centerPressQueues.add(_queue);
+        if (buttons & LIGHT)  _addToArray(lightPressQueues, _queue);
+        if (buttons & A)      _addToArray(aPressQueues, _queue);
+        if (buttons & B)      _addToArray(bPressQueues, _queue);
+        if (buttons & UP)     _addToArray(upPressQueues, _queue);
+        if (buttons & DOWN)   _addToArray(downPressQueues, _queue);
+        if (buttons & LEFT)   _addToArray(leftPressQueues, _queue);
+        if (buttons & RIGHT)  _addToArray(rightPressQueues, _queue);
+        if (buttons & CENTER) _addToArray(centerPressQueues, _queue);
     }
+
+
 
     Button ButtonSubscription::waitForPress(TickType_t ticksToWait) {
         Button button;
@@ -119,35 +118,46 @@ namespace buttons {
         }
     }
 
+    
+
     /**
-     * These are helper functions for interrupts. Their job is to defer button presses
-     * to a timer task and fill the right queues from there
+     * Helper functions
      */
-    void overwriteAllQueues(LinkedList<QueueHandle_t> &queues, Button button) {
-        for (int i = 0; i < queues.size(); i++) {
-            xQueueOverwrite(queues.get(i), &button);
+
+    void _addToArray(QueueHandle_t queues[], QueueHandle_t queue) {
+        for (uint8_t i=0; i<MAX_BUTTON_SUBSCRIPTIONS; i++) {
+            if (queues[i] == NULL) {
+                queues[i] = queue;
+                break;
+            }
         }
     }
 
-    void handleButtonPress(void *pvParameter1, uint32_t ulParameter2) {
-        Button button = ( Button ) ulParameter2;
-             if (button == LIGHT)        overwriteAllQueues(lightPressQueues, button);
-        else if (button == SCREEN_LEFT)  overwriteAllQueues(screenLeftPressQueues, button);
-        else if (button == SCREEN_RIGHT) overwriteAllQueues(screenRightPressQueues, button);
-        else if (button == A)            overwriteAllQueues(aPressQueues, button);
-        else if (button == B)            overwriteAllQueues(bPressQueues, button);
-        else if (button == UP)           overwriteAllQueues(upPressQueues, button);
-        else if (button == DOWN)         overwriteAllQueues(downPressQueues, button);
-        else if (button == LEFT)         overwriteAllQueues(leftPressQueues, button);
-        else if (button == RIGHT)        overwriteAllQueues(rightPressQueues, button);
-        else if (button == CENTER)       overwriteAllQueues(centerPressQueues, button);
-    }
-
-    void deferButtonHandling(Button button) {
+    void _deferButtonHandling(Button button) {
         if (readyForInput) {
             BaseType_t xHigherPriorityTaskWoken;
-            xTimerPendFunctionCallFromISR(handleButtonPress, NULL, ( uint32_t ) button, &xHigherPriorityTaskWoken);
+            xTimerPendFunctionCallFromISR(_handleButtonPress, NULL, ( uint32_t ) button, &xHigherPriorityTaskWoken);
             portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+        }
+    }
+
+    void _handleButtonPress(void *pvParameter1, uint32_t ulParameter2) {
+        Button button = ( Button ) ulParameter2;
+             if (button == LIGHT)        _overwriteAllQueues(lightPressQueues, button);
+        else if (button == A)            _overwriteAllQueues(aPressQueues, button);
+        else if (button == B)            _overwriteAllQueues(bPressQueues, button);
+        else if (button == UP)           _overwriteAllQueues(upPressQueues, button);
+        else if (button == DOWN)         _overwriteAllQueues(downPressQueues, button);
+        else if (button == LEFT)         _overwriteAllQueues(leftPressQueues, button);
+        else if (button == RIGHT)        _overwriteAllQueues(rightPressQueues, button);
+        else if (button == CENTER)       _overwriteAllQueues(centerPressQueues, button);
+    }
+
+    void _overwriteAllQueues(QueueHandle_t queues[], Button button) {
+        for (uint8_t i=0; i<MAX_BUTTON_SUBSCRIPTIONS; i++) {
+            if (queues[i] != NULL) {
+                xQueueOverwrite(queues[i], &button);
+            }
         }
     }
 }
@@ -155,41 +165,34 @@ namespace buttons {
 
 
 void buttonLightPress() {
-    buttons::deferButtonHandling(buttons::LIGHT);
-}
-
-void buttonScreenLeftPress(void) {
-    buttons::deferButtonHandling(buttons::SCREEN_LEFT);
-}
-
-void buttonScreenRightPress(void) {
-    buttons::deferButtonHandling(buttons::SCREEN_RIGHT);
+    buttons::_deferButtonHandling(buttons::LIGHT);
 }
 
 void buttonAPress() {
-    buttons::deferButtonHandling(buttons::A);
+    buttons::_deferButtonHandling(buttons::A);
 }
 
 void buttonBPress() {
-    buttons::deferButtonHandling(buttons::B);
+    buttons::_deferButtonHandling(buttons::B);
 }
 
 void buttonUpPress(void) {
-    buttons::deferButtonHandling(buttons::UP);
+    buttons::_deferButtonHandling(buttons::UP);
 }
 
 void buttonDownPress(void) {
-    buttons::deferButtonHandling(buttons::DOWN);
+    buttons::_deferButtonHandling(buttons::DOWN);
 }
 
 void buttonLeftPress(void) {
-    buttons::deferButtonHandling(buttons::LEFT);
+    buttons::_deferButtonHandling(buttons::LEFT);
 }
 
 void buttonRightPress(void) {
-    buttons::deferButtonHandling(buttons::RIGHT);
+    buttons::_deferButtonHandling(buttons::RIGHT);
 }
 
 void buttonCenterPress(void) {
-    buttons::deferButtonHandling(buttons::CENTER);
+    buttons::_deferButtonHandling(buttons::CENTER);
 }
+

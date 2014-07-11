@@ -40,15 +40,13 @@ namespace buttons {
     enum Button {
         NONE         = 0,
         LIGHT        = 1,
-        SCREEN_LEFT  = 2,
-        SCREEN_RIGHT = 4,
-        A            = 8,
-        B            = 16,
-        UP           = 32,
-        DOWN         = 64,
-        LEFT         = 128,
-        RIGHT        = 256,
-        CENTER       = 512
+        A            = 2,
+        B            = 4,
+        UP           = 8,
+        DOWN         = 16,
+        LEFT         = 32,
+        RIGHT        = 64,
+        CENTER       = 128
     };
 
     class ButtonSubscription {
@@ -63,6 +61,14 @@ namespace buttons {
     };
 
     void initializeTask();
+
+    /** 
+     * Helper functions
+     */
+    void _addToArray(QueueHandle_t queues[], QueueHandle_t queue);
+    void _deferButtonHandling(Button button);
+    void _handleButtonPress(void *pvParameter1, uint32_t ulParameter2);
+    void _overwriteAllQueues(QueueHandle_t queues[], Button button);
 }
 
 #endif // _BUTTON_TASK_H_
