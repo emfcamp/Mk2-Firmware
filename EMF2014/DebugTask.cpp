@@ -39,7 +39,7 @@ namespace debug {
     void log(String text) {
         // ToDo: Add other debug outputs
         if (xSemaphoreTake(serialPortMutex, ( TickType_t ) 10) == pdTRUE ) {
-            Serial.println(text);
+            SerialUSB.println(text);
         }
         xSemaphoreGive(serialPortMutex);
     }
@@ -47,7 +47,7 @@ namespace debug {
     void logFromISR(String text) {
         // ToDo: Add other debug outputs
         if (xSemaphoreTakeFromISR(serialPortMutex, NULL) == pdTRUE) {
-            Serial.println(text);
+            SerialUSB.println(text);
             BaseType_t xHigherPriorityTaskWoken;
             xSemaphoreGiveFromISR(serialPortMutex, &xHigherPriorityTaskWoken);
             portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
@@ -55,7 +55,7 @@ namespace debug {
     }
 
     void setupSerialPort() {
-        Serial.begin(115200);
+        SerialUSB.begin(115200);
         delay(250);
 
         serialPortMutex = xSemaphoreCreateMutex();
