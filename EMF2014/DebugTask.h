@@ -55,4 +55,6 @@ protected:
 	void task();
 };
 
+void vApplicationStackOverflowHook( TaskHandle_t xTask, signed char *pcTaskName );
+
 #endif // _DEBUG_TASK_H_

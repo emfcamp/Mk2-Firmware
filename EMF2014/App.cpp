@@ -47,7 +47,7 @@ void App::suspend() {
     if (running) {
         vTaskSuspend(taskHandle);
         afterSuspension();
-        running = true;
+        running = false;
     } 
 }
 

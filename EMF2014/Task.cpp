@@ -32,7 +32,7 @@
 
 void Task::start() {
     BaseType_t taskHolder;
-    taskHolder = xTaskCreate(_task, "TASKNAME", configMINIMAL_STACK_SIZE, static_cast<void*>(this), 2, taskHandle);
+    taskHolder = xTaskCreate(_task, "TASKNAME", ( uint8_t ) 255, static_cast<void*>(this), 2, &taskHandle);
     if (taskHolder != pdPASS) {
         debug::stopWithMessage("Failed to create " + getName() + " task");
     }

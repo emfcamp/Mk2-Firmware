@@ -40,7 +40,7 @@ public:
 	virtual String getName()=0;
 protected:
     virtual void task()=0;
-    TaskHandle_t *taskHandle;
+    TaskHandle_t taskHandle;
 private:
 	void taskCaller();
 	static void _task(void *referenceToClass);

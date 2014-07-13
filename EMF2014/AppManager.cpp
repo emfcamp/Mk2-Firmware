@@ -1,24 +1,22 @@
 /*
  TiLDA Mk2
- 
- EMF2014Config
- This files contains all the initial configuration details for the badge firmware and any compli time defines that might be used by any of the task
- 
- 
+
+ AppManager
+
  The MIT License (MIT)
- 
+
  Copyright (c) 2014 Electromagnetic Field LTD
- 
+
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
  in the Software without restriction, including without limitation the rights
  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  copies of the Software, and to permit persons to whom the Software is
  furnished to do so, subject to the following conditions:
- 
+
  The above copyright notice and this permission notice shall be included in all
  copies or substantial portions of the Software.
- 
+
  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -27,33 +25,46 @@
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  SOFTWARE.
  */
+#include <FreeRTOS_ARM.h>
+#include "DebugTask.h"
+#include "EMF2014Config.h"
+#include "AppManager.h"
 
-#ifndef _EMF2014_CONFIG_H_
-#define _EMF2014_CONFIG_H_
+App * _apps[MAX_APPS];
+App * activeApp;
 
-// Enable debug task and output
-#define DEBUG 1
-// send the debug output out over the USB Serial line
-#define DEBUG_SERIAL SerialUSB
-// define a pin that will be set to high if stopWithMessage is called
-#define DEBUG_LED 10
-// send the debug output to a log file on the flash
-#define DEBUG_USE_FLASH 0
-// This defines how many subscription each button can handle
-#define MAX_BUTTON_SUBSCRIPTIONS 10
-// maximum amount of apps the AppManager can handle
-#define MAX_APPS 10
+void AppManager::add(App &app) {
+    for (uint8_t i=0; i<MAX_APPS; i++) {
+        if (_apps[i] == NULL) {
+            _apps[i] =& app;
+            break;
+        }
+    }
+}   
 
-enum Button {
-    NONE         = 0,
-    LIGHT        = 1,
-    A            = 2,
-    B            = 4,
-    UP           = 8,
-    DOWN         = 16,
-    LEFT         = 32,
-    RIGHT        = 64,
-    CENTER       = 128
-};
+App & AppManager::getByName(String name) {
+    for (uint8_t i=0; i<MAX_APPS; i++) {
+        if (_apps[i] != NULL) {
+            if (_apps[i]->getName() == name) {
+                return *_apps[i];
+            }
+        } 
+    }
+    debug::log("Error: Trying to start App that doesn't exist: " + name);
+    return *_apps[0];
+}  
 
-#endif // _EMF2014_CONFIG_H_
+void AppManager::open(App & app) {
+    if (activeApp == &app) {
+        return; // App is already active
+    }
+    if (activeApp != NULL) {
+        activeApp->suspend();
+    }
+    app.start();
+    activeApp =& app;
+} 
+
+void AppManager::open(String name) {
+    open(getByName(name));
+}

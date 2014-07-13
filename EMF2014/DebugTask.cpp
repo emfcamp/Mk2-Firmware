@@ -94,11 +94,15 @@ String DebugTask::getName() {
 void DebugTask::task() {
     while(true) {
         // Not sure what to do here
-        debug::log("Still alive");
+        debug::log("Still alive.");
         vTaskDelay( 1000 );
     }
 }
 
+// I'm not even sure if this works...
+void vApplicationStackOverflowHook( TaskHandle_t xTask, signed char *pcTaskName ) {
+    DEBUG_SERIAL.println("Stack Overflow");
+}
 
 
 

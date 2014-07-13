@@ -40,6 +40,8 @@
 #include "DebugTask.h"
 #include "RGBTask.h"
 #include "ButtonTask.h"
+#include "AppOpenerTask.h"
+#include "AppManager.h"
 #include "FlashLightApp.h"
 #include "HomeScreenApp.h"
 #include "TiLDAButtonInterrupts.h"
@@ -53,6 +55,8 @@
 DebugTask debugTask;
 RGBTask rgbTask;
 ButtonTask buttonTask;
+AppOpenerTask appOpenerTask;
+
 FlashLightApp flashLightApp(rgbTask);
 HomeScreenApp homeScreenApp(rgbTask);
 
@@ -72,10 +76,14 @@ void setup() {
     debugTask.start();
     rgbTask.start();
     buttonTask.start();
+    appOpenerTask.start();
 
     // Applications
-    flashLightApp.start();
-    homeScreenApp.start();
+    AppManager::add(homeScreenApp);
+    AppManager::add(flashLightApp);
+
+    // Boot into home screen
+    AppManager::open("HomeScreen");
 
     // Start scheduler
     debug::log("Start Scheduler");
