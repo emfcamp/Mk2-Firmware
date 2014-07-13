@@ -37,7 +37,8 @@
 
 class ButtonSubscription {
 public:
-    ButtonSubscription (int buttons);
+	ButtonSubscription();
+    void addButtons(int buttons);
     Button waitForPress(TickType_t ticksToWait);
     Button waitForPress();
     void clear();

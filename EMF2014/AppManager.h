@@ -41,6 +41,7 @@ public:
 	static void open(String app);
 	static void open(App &app);
 	static App & getByName(String name); 
+	static String getActiveAppName();
 };
 
 #endif // _APP_MANAGER_H_

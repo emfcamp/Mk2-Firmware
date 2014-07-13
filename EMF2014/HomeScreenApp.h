@@ -42,6 +42,8 @@ public:
 	String getName();
 protected:
     void task();
+    void afterSuspension();
+    void beforeResume();
 private:
 	RGBTask _rgbTask;
 };

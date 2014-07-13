@@ -50,6 +50,3 @@ void App::suspend() {
         running = false;
     } 
 }
-
-void App::afterSuspension() {}
-void App::beforeResume() {}

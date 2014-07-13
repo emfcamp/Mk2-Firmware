@@ -38,7 +38,9 @@ void Task::start() {
     }
 }
 
+// ToDo: Remove this function to save some stack 
 void Task::taskCaller() {
+    debug::log("Starting " + getName());
     task();
 
     while(true) {

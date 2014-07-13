@@ -55,6 +55,10 @@ App & AppManager::getByName(String name) {
 }  
 
 void AppManager::open(App & app) {
+    debug::log("Opening " + app.getName());
+    if (activeApp) {
+        debug::log("Current Active App " + activeApp->getName());
+    } 
     if (activeApp == &app) {
         return; // App is already active
     }
@@ -64,6 +68,13 @@ void AppManager::open(App & app) {
     app.start();
     activeApp =& app;
 } 
+
+String AppManager::getActiveAppName() {
+    if (activeApp) {
+        return activeApp->getName();
+    }
+    return "";
+}
 
 void AppManager::open(String name) {
     open(getByName(name));

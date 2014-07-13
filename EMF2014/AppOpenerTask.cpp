@@ -37,12 +37,17 @@ String AppOpenerTask::getName() {
 }
 
 void AppOpenerTask::task() {
-    ButtonSubscription buttonSubscription(LIGHT | B);
+    ButtonSubscription buttonSubscription;
+    buttonSubscription.addButtons(LIGHT | B);
 
     while(true) {
         Button button = buttonSubscription.waitForPress();
         if (button == LIGHT) {
-            AppManager::open("FlashLight");
+            if (AppManager::getActiveAppName() == "FlashLight") {
+                AppManager::open("HomeScreen");
+            } else {
+                AppManager::open("FlashLight");           
+            }
         } else if (button == B) {
             AppManager::open("HomeScreen");
         }

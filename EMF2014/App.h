@@ -44,8 +44,8 @@ public:
     virtual String getName()=0;
 protected:
     virtual void task()=0;
-    void afterSuspension();
-    void beforeResume();
+    virtual void afterSuspension()=0;
+    virtual void beforeResume()=0;
     bool running;
 };
 

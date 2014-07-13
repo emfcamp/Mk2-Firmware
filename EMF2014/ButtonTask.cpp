@@ -39,7 +39,8 @@ String ButtonTask::getName() {
 }
 
 void ButtonTask::task() {
-    ButtonSubscription allButtons(LIGHT | A | B | UP | DOWN | LEFT | RIGHT | CENTER);
+    ButtonSubscription allButtons;
+    allButtons.addButtons(LIGHT | A | B | UP | DOWN | LEFT | RIGHT | CENTER);
 
     while(true) {
         Button button = allButtons.waitForPress(( TickType_t ) 1000);

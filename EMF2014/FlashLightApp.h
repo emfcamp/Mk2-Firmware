@@ -35,15 +35,21 @@
 #include "EMF2014Config.h"
 #include "App.h"
 #include "RGBTask.h"
+#include "ButtonSubscription.h"
 
 class FlashLightApp: public App {
 public:
-	FlashLightApp(RGBTask rgbTask): _rgbTask(rgbTask) {};
+	FlashLightApp(RGBTask rgbTask): _rgbTask(rgbTask), _lightLevel(255) {};
 	String getName();
 protected:
     void task();
+    void afterSuspension();
+    void beforeResume();
 private:
+	void updateLeds();
 	RGBTask _rgbTask;
+	uint8_t _lightLevel;
+	ButtonSubscription *_pbuttons;
 };
 
 #endif // _FLASH_LIGHT_APP_H_

@@ -32,28 +32,51 @@
 #include "ButtonSubscription.h"
 #include "DebugTask.h"
 #include "RGBTask.h"
+#include "AppManager.h"
 
 // ToDo: Add all the fancy features from https://github.com/emfcamp/Mk2-Firmware/blob/master/frRGBTask/frRGBTask.ino
 String FlashLightApp::getName() {
     return "FlashLight";
 }
 
-void FlashLightApp::task() {
-    ButtonSubscription triggerButton(LIGHT);
+void FlashLightApp::updateLeds() {
+    _rgbTask.setColor({_lightLevel, _lightLevel, _lightLevel});
+}
 
-    bool lightIsOn = false;
+void FlashLightApp::task() {
+    ButtonSubscription _buttons;
+    _pbuttons =& _buttons;
+    _buttons.addButtons(UP | DOWN);
+
+    updateLeds();
     while(true) {
-        Button button = triggerButton.waitForPress(( TickType_t ) 1000);
-        if (button == LIGHT) {
-            lightIsOn = !lightIsOn;
-            if (lightIsOn) {
-                debug::log("LIGHT ON");
-                _rgbTask.setColor({255, 255, 255});
-            } else {
-                debug::log("LIGHT OFF");
-                _rgbTask.setColor({0, 0, 0});
+        Button button = _buttons.waitForPress(( TickType_t ) 1000);
+        if (button == UP) {
+            if (_lightLevel < 245) {
+                _lightLevel += 10;
+            } else if (_lightLevel < 255) {
+                _lightLevel = 255;
             }
+            updateLeds();
+        } else if (button == DOWN) {
+            if (_lightLevel > 10) {
+                _lightLevel -= 10;
+            } else if (_lightLevel > 0) {
+                _lightLevel = 0;
+            }
+            updateLeds();
         }
     }
+}
 
+void FlashLightApp::afterSuspension() {
+    _rgbTask.setColor({0, 0, 0});
+}
+
+void FlashLightApp::beforeResume() {
+    if (_pbuttons) {
+        // Clear Button Queue of any up/down button presse that have occured durind suspension
+        _pbuttons->clear();
+    }
+    updateLeds();
 }

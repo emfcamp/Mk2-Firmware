@@ -44,3 +44,6 @@ void HomeScreenApp::task() {
         vTaskDelay(300);
     }
 }
+
+void HomeScreenApp::afterSuspension() {}
+void HomeScreenApp::beforeResume() {}
