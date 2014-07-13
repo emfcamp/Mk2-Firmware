@@ -49,19 +49,25 @@
  * Here is where we will do a lot of work in getting the system running
  * and in FreeRTOS we will start the scheduler
  */
-void setup() {
+RGBTask rgbTask;
+ButtonTask buttonTask;
+FlashLightTask flashLightTask(rgbTask, buttonTask);
 
+void setup() {
+    debug::waitForKey();
+    
     tildaButtonSetup();
     tildaButtonAttachInterrupts();
     tildaButtonInterruptPriority();
 
     // Background tasks
     debug::initializeTask();
-    rgb::initializeTask();
-    buttons::initializeTask();
+    rgbTask.start();
+    //buttonTask.start();
+    //buttonTask.setUpButtonInterrupts();
 
     // Applications
-    flashLight::initializeTask();
+    flashLightTask.start();
 
     // Start scheduler
     debug::log("Start Scheduler");

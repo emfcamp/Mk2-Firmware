@@ -165,7 +165,9 @@ See http://www.FreeRTOS.org/RTOS-Cortex-M3-M4.html. */
 
 /* Normal assert() semantics without relying on the provision of an assert.h
 header file. */
-#define configASSERT( x ) if( ( x ) == 0 ) { taskDISABLE_INTERRUPTS(); for( ;; ); }
+/* If you call taskDISABLE_INTERRUPTS(); in here you'll have to press the reset buttons before being able to upload again. */
+#define configASSERT( x ) if( ( x ) == 0 ) { /*taskDISABLE_INTERRUPTS(); taskENTER_CRITICAL();*/ pinMode(37, OUTPUT); digitalWrite(37, HIGH); for( ;; ); }
+#define configASSERT_ALT( x ) if( ( x ) == 0 ) { /*taskDISABLE_INTERRUPTS(); taskENTER_CRITICAL();*/ pinMode(39, OUTPUT); digitalWrite(39, HIGH); for( ;; ); } else { pinMode(41, OUTPUT); digitalWrite(41, HIGH); }
 
 /* Definitions that map the FreeRTOS port interrupt handlers to their CMSIS
 standard names. */

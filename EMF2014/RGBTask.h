@@ -35,31 +35,35 @@
 #include <Arduino.h>
 #include <FreeRTOS_ARM.h>
 #include "EMF2014Config.h"
+#include "Task.h"
 
+#define INITIAL_COLOR 0, 0, 0
+#define COLOR_CHANGE_PER_FRAME 3
+#define FRAME_RATE_CHANGE 10 / portTICK_PERIOD_MS
+#define FRAME_RATE_SLEEP 100 / portTICK_PERIOD_MS
 
+enum RGBLed {
+    LED1,
+    LED2,
+    BOTH
+};
 
-namespace rgb {
-    enum Led {
-        LED1,
-        LED2,
-        BOTH
-    };
+class RGBColor {
+public:
+    uint8_t red;
+    uint8_t green;
+    uint8_t blue;
+    RGBColor (uint8_t setRed, uint8_t setGreen, uint8_t setBlue): red(setRed), green(setGreen), blue(setBlue) {};
+private:
+};
 
-    class Color {
-    public:
-        uint8_t red;
-        uint8_t green;
-        uint8_t blue;
-        Color (uint8_t, uint8_t, uint8_t);
-        bool moveTowards(Color target, uint8_t step);
-    };
-
-    void setColor(rgb::Led led, rgb::Color color);
-    void setColor(rgb::Color color);
-    void fadeToColor(rgb::Led led, rgb::Color color);
-    void fadeToColor(rgb::Color color);
-
-    void initializeTask();
-}
+class RGBTask: public Task {
+public:
+    String getName();
+    void setColor(RGBLed led, RGBColor color);
+    void setColor(RGBColor color);
+protected:
+    void task();
+};
 
 #endif // _RGB_TASK_H_

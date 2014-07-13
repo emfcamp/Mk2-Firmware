@@ -29,7 +29,8 @@
 #include "DebugTask.h"
 #include <FreeRTOS_ARM.h>
 
-
+#define DEBUG_SERIAL SerialUSB
+#define DEBUG_LED 10
 
 namespace debug {
     // I tried to write this with a queue, but the C++ pointer gods
@@ -39,7 +40,7 @@ namespace debug {
     void log(String text) {
         // ToDo: Add other debug outputs
         if (xSemaphoreTake(serialPortMutex, ( TickType_t ) 10) == pdTRUE ) {
-            SerialUSB.println(text);
+            DEBUG_SERIAL.println(text);
         }
         xSemaphoreGive(serialPortMutex);
     }
@@ -47,15 +48,30 @@ namespace debug {
     void logFromISR(String text) {
         // ToDo: Add other debug outputs
         if (xSemaphoreTakeFromISR(serialPortMutex, NULL) == pdTRUE) {
-            SerialUSB.println(text);
+            DEBUG_SERIAL.println(text);
             BaseType_t xHigherPriorityTaskWoken;
             xSemaphoreGiveFromISR(serialPortMutex, &xHigherPriorityTaskWoken);
             portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
         }
     }
 
+    /**
+     * Lights the debug led and waits for a key to be pressed in 
+     * the serial console before sending the text
+     */
+    void stopWithMessage(String text) {
+        digitalWrite(DEBUG_LED, HIGH);
+        waitForKey();
+        DEBUG_SERIAL.println(text);
+        while(true);
+    }
+
+     void waitForKey() {
+        while (!DEBUG_SERIAL.available());
+    }
+
     void setupSerialPort() {
-        SerialUSB.begin(115200);
+        DEBUG_SERIAL.begin(115200);
         delay(250);
 
         serialPortMutex = xSemaphoreCreateMutex();
@@ -66,6 +82,7 @@ namespace debug {
 
         while(true) {
             // Not sure what to do here
+            debug::log("Still alive");
             vTaskDelay( 1000 );
         }
     }
@@ -73,6 +90,9 @@ namespace debug {
 
     void initializeTask() {
         debug::setupSerialPort();
+
+        pinMode(DEBUG_LED, OUTPUT);
+        digitalWrite(DEBUG_LED, LOW);
 
         BaseType_t taskHolder;
         taskHolder = xTaskCreate(task, "debugTask", configMINIMAL_STACK_SIZE, NULL, 2, NULL);
@@ -82,4 +102,3 @@ namespace debug {
         }
     }
 }
-

@@ -1,8 +1,7 @@
 /*
  TiLDA Mk2
 
- FlashLightTask
- Torch Mode - Press the light button and both RGB LEDs light up.
+ Task
 
  The MIT License (MIT)
 
@@ -26,26 +25,28 @@
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  SOFTWARE.
  */
-
-#ifndef _FLASH_LIGHT_TASK_H_
-#define _FLASH_LIGHT_TASK_H_
-
-#include <Arduino.h>
 #include <FreeRTOS_ARM.h>
-#include "EMF2014Config.h"
+#include "DebugTask.h"
+
 #include "Task.h"
-#include "RGBTask.h"
-#include "ButtonTask.h"
 
-class FlashLightTask: public Task {
-public:
-	FlashLightTask(RGBTask rgbTask, ButtonTask buttonTask): _rgbTask(rgbTask), _buttonTask(buttonTask) {};
-	String getName();
-protected:
-    void task();
-private:
-	RGBTask _rgbTask;
-	ButtonTask _buttonTask;
-};
+void Task::start() {
+    BaseType_t taskHolder;
+    taskHolder = xTaskCreate(_task, "TASKNAME", configMINIMAL_STACK_SIZE, static_cast<void*>(this), 2, NULL);
+    if (taskHolder != pdPASS) {
+        debug::stopWithMessage("Failed to create " + getName() + " task");
+    }
+}
 
-#endif // _FLASH_LIGHT_TASK_H_
+void Task::taskCaller() {
+    task();
+
+    while(true) {
+        debug::log("Please make sure that no task ever returns. Task: " + getName());
+        vTaskDelay(1000);
+    }
+}
+
+void Task::_task(void *referenceToClass) {
+    static_cast<Task*>(referenceToClass)->taskCaller();
+}

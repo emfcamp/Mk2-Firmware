@@ -33,42 +33,60 @@
 #include <Arduino.h>
 #include <FreeRTOS_ARM.h>
 #include "EMF2014Config.h"
+#include "Task.h"
 
-void buttonLightPress();
+enum Button {
+    NONE         = 0,
+    LIGHT        = 1,
+    A            = 2,
+    B            = 4,
+    UP           = 8,
+    DOWN         = 16,
+    LEFT         = 32,
+    RIGHT        = 64,
+    CENTER       = 128
+};
 
-namespace buttons {
-    enum Button {
-        NONE         = 0,
-        LIGHT        = 1,
-        A            = 2,
-        B            = 4,
-        UP           = 8,
-        DOWN         = 16,
-        LEFT         = 32,
-        RIGHT        = 64,
-        CENTER       = 128
-    };
-
-    class ButtonSubscription {
-    public:
-        ButtonSubscription(int buttons);
-        Button waitForPress(TickType_t ticksToWait);
-        Button waitForPress();
-        void clear();
-    private:
-        int _buttons;
-        QueueHandle_t _queue;
-    };
-
-    void initializeTask();
-
-    /** 
-     * Helper functions
-     */
-    void _addToArray(QueueHandle_t queues[], QueueHandle_t queue);
-    void _deferButtonHandling(Button button);
-    void _handleButtonPress(void *pvParameter1, uint32_t ulParameter2);
+class ButtonTask: public Task {
+friend class ButtonSubscription;
+public:
+    ButtonTask();
+    String getName();
+    static void deferButtonHandling(Button button);
+    //void setUpButtonInterrupts();
+protected:
+    void task();
+private:
+    static void _handleButtonPressHelper(void *pvParameter1, uint32_t ulParameter2);
+    void _handleButtonPress(Button button);
     void _overwriteAllQueues(QueueHandle_t queues[], Button button);
-}
+
+    QueueHandle_t lightPressQueues[MAX_BUTTON_SUBSCRIPTIONS];
+    QueueHandle_t aPressQueues[MAX_BUTTON_SUBSCRIPTIONS];
+    QueueHandle_t bPressQueues[MAX_BUTTON_SUBSCRIPTIONS];
+    QueueHandle_t upPressQueues[MAX_BUTTON_SUBSCRIPTIONS];
+    QueueHandle_t rightPressQueues[MAX_BUTTON_SUBSCRIPTIONS];
+    QueueHandle_t downPressQueues[MAX_BUTTON_SUBSCRIPTIONS];
+    QueueHandle_t leftPressQueues[MAX_BUTTON_SUBSCRIPTIONS];
+    QueueHandle_t centerPressQueues[MAX_BUTTON_SUBSCRIPTIONS];
+
+    //bool readyToHandleButtonPress;
+    static ButtonTask *mainButtonTask;
+};
+
+class ButtonSubscription {
+public:
+    ButtonSubscription (int buttons, ButtonTask buttonTask);
+    Button waitForPress(TickType_t ticksToWait);
+    Button waitForPress();
+    void clear();
+private:
+    void _addToArray(QueueHandle_t queues[], QueueHandle_t queue);
+
+    int _buttons;
+    QueueHandle_t _queue;
+};
+
+void setUpButtonInterrupts(ButtonTask buttonTask);
 
 #endif // _BUTTON_TASK_H_

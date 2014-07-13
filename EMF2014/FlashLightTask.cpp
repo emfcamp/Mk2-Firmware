@@ -25,42 +25,35 @@
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  SOFTWARE.
  */
+#include "FlashLightTask.h"
+
 #include <FreeRTOS_ARM.h>
 
 #include "ButtonTask.h"
 #include "DebugTask.h"
 #include "RGBTask.h"
 
-
 // ToDo: Add all the fancy features from https://github.com/emfcamp/Mk2-Firmware/blob/master/frRGBTask/frRGBTask.ino
+String FlashLightTask::getName() {
+    return "FlashLight";
+}
 
-namespace flashLight {
-    void task(void *pvParameters) {
-        debug::log("Starting Flash Light task");
-        buttons::ButtonSubscription triggerButton = buttons::ButtonSubscription(buttons::LIGHT);
+void FlashLightTask::task() {
+    ButtonSubscription triggerButton(LIGHT, _buttonTask);
 
-        bool lightIsOn = false;
-        while(true) {
-            buttons::Button button = triggerButton.waitForPress(( TickType_t ) 1000);
-            if (button == buttons::LIGHT) {
-                lightIsOn = !lightIsOn;
-                if (lightIsOn) {
-                    debug::log("LIGHT ON");
-                    rgb::fadeToColor({255, 255, 255});
-                } else {
-                    debug::log("LIGHT OFF");
-                    rgb::fadeToColor({0, 0, 0});
-                }
+    bool lightIsOn = false;
+    while(true) {
+        Button button = triggerButton.waitForPress(( TickType_t ) 1000);
+        if (button == LIGHT) {
+            lightIsOn = !lightIsOn;
+            if (lightIsOn) {
+                debug::log("LIGHT ON");
+                _rgbTask.setColor({255, 255, 255});
+            } else {
+                debug::log("LIGHT OFF");
+                _rgbTask.setColor({0, 0, 0});
             }
         }
     }
 
-    void initializeTask() {
-        BaseType_t taskHolder;
-        taskHolder = xTaskCreate(task, "flashLightTask", configMINIMAL_STACK_SIZE, NULL, 2, NULL);
-        if (taskHolder != pdPASS) {
-            debug::log("Failed to create flash light task");
-            while(1);
-        }
-    }
 }

@@ -1,8 +1,8 @@
 /*
  TiLDA Mk2
 
- FlashLightTask
- Torch Mode - Press the light button and both RGB LEDs light up.
+ Task
+ Wrapper around a FreeRTOS task
 
  The MIT License (MIT)
 
@@ -27,25 +27,22 @@
  SOFTWARE.
  */
 
-#ifndef _FLASH_LIGHT_TASK_H_
-#define _FLASH_LIGHT_TASK_H_
+#ifndef _TASK_H_
+#define _TASK_H_
 
 #include <Arduino.h>
 #include <FreeRTOS_ARM.h>
 #include "EMF2014Config.h"
-#include "Task.h"
-#include "RGBTask.h"
-#include "ButtonTask.h"
 
-class FlashLightTask: public Task {
+class Task {
 public:
-	FlashLightTask(RGBTask rgbTask, ButtonTask buttonTask): _rgbTask(rgbTask), _buttonTask(buttonTask) {};
-	String getName();
+	void start();
+	virtual String getName()=0;
 protected:
-    void task();
+    virtual void task()=0;
 private:
-	RGBTask _rgbTask;
-	ButtonTask _buttonTask;
+	void taskCaller();
+	static void _task(void *referenceToClass);
 };
 
-#endif // _FLASH_LIGHT_TASK_H_
+#endif // _TASK_H_

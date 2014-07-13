@@ -37,7 +37,7 @@
 #define DEBUG_USE_USB 1
 // send the debug output to a log file on the flash
 #define DEBUG_USE_FLASH 0
-
-
+// This defines how many subscription each button can handle
+#define MAX_BUTTON_SUBSCRIPTIONS 10
 
 #endif // _EMF2014_CONFIG_H_

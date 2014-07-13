@@ -43,6 +43,9 @@ namespace debug {
     void log(String text);
     void logFromISR(String text);
 
+    void stopWithMessage(String text);
+    void waitForKey();
+
     void initializeTask();
 }
 
