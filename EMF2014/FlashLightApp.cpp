@@ -1,7 +1,7 @@
 /*
  TiLDA Mk2
 
- Flash Light Task
+ Flash Light App
 
  The MIT License (MIT)
 
@@ -25,7 +25,7 @@
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  SOFTWARE.
  */
-#include "FlashLightTask.h"
+#include "FlashLightApp.h"
 
 #include <FreeRTOS_ARM.h>
 
@@ -34,11 +34,11 @@
 #include "RGBTask.h"
 
 // ToDo: Add all the fancy features from https://github.com/emfcamp/Mk2-Firmware/blob/master/frRGBTask/frRGBTask.ino
-String FlashLightTask::getName() {
+String FlashLightApp::getName() {
     return "FlashLight";
 }
 
-void FlashLightTask::task() {
+void FlashLightApp::task() {
     ButtonSubscription triggerButton(LIGHT);
 
     bool lightIsOn = false;

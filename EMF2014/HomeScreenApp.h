@@ -1,8 +1,8 @@
 /*
  TiLDA Mk2
 
- Task
- Wrapper around a FreeRTOS task
+ HomeScreenApp
+ This is just a placeholder at the moment - Later this will be showing some sort of menu
 
  The MIT License (MIT)
 
@@ -27,23 +27,23 @@
  SOFTWARE.
  */
 
-#ifndef _TASK_H_
-#define _TASK_H_
+#ifndef _HOME_SCREEN_APP_H_
+#define _HOME_SCREEN_APP_H_
 
 #include <Arduino.h>
 #include <FreeRTOS_ARM.h>
 #include "EMF2014Config.h"
+#include "App.h"
+#include "RGBTask.h"
 
-class Task {
+class HomeScreenApp: public App {
 public:
-	void start();
-	virtual String getName()=0;
+	HomeScreenApp (RGBTask rgbTask): _rgbTask(rgbTask) {};
+	String getName();
 protected:
-    virtual void task()=0;
-    TaskHandle_t *taskHandle;
+    void task();
 private:
-	void taskCaller();
-	static void _task(void *referenceToClass);
+	RGBTask _rgbTask;
 };
 
-#endif // _TASK_H_
+#endif // _HOME_SCREEN_APP_H_

@@ -40,7 +40,8 @@
 #include "DebugTask.h"
 #include "RGBTask.h"
 #include "ButtonTask.h"
-#include "FlashLightTask.h"
+#include "FlashLightApp.h"
+#include "HomeScreenApp.h"
 #include "TiLDAButtonInterrupts.h"
 
 
@@ -52,7 +53,8 @@
 DebugTask debugTask;
 RGBTask rgbTask;
 ButtonTask buttonTask;
-FlashLightTask flashLightTask(rgbTask);
+FlashLightApp flashLightApp(rgbTask);
+HomeScreenApp homeScreenApp(rgbTask);
 
 void setup() {
     debug::setup();
@@ -60,7 +62,7 @@ void setup() {
     // Uncomment this if you want to see serial output during startup
     // This will require you to send a character over serial before unblocking 
     // the startup
-    //debug::waitForKey();
+    debug::waitForKey();
     
     tildaButtonSetup();
     tildaButtonAttachInterrupts();
@@ -72,7 +74,8 @@ void setup() {
     buttonTask.start();
 
     // Applications
-    flashLightTask.start();
+    flashLightApp.start();
+    homeScreenApp.start();
 
     // Start scheduler
     debug::log("Start Scheduler");

@@ -1,8 +1,9 @@
 /*
  TiLDA Mk2
 
- FlashLightTask
- Torch Mode - Press the light button and both RGB LEDs light up.
+ App
+ Any piece of code that runs in the foreground (i.e. uses the display and buttons)
+ should be extending this base class
 
  The MIT License (MIT)
 
@@ -27,24 +28,25 @@
  SOFTWARE.
  */
 
-#ifndef _FLASH_LIGHT_TASK_H_
-#define _FLASH_LIGHT_TASK_H_
+#ifndef _APP_H_
+#define _APP_H_
 
 #include <Arduino.h>
 #include <FreeRTOS_ARM.h>
 #include "EMF2014Config.h"
 #include "Task.h"
-#include "RGBTask.h"
-#include "ButtonTask.h"
 
-class FlashLightTask: public Task {
+class App: public Task {
 public:
-	FlashLightTask(RGBTask rgbTask): _rgbTask(rgbTask) {};
-	String getName();
+	App(): running(false) {};
+	void start();
+	void suspend();
+    virtual String getName()=0;
 protected:
-    void task();
-private:
-	RGBTask _rgbTask;
+    virtual void task()=0;
+    void afterSuspension();
+    void beforeResume();
+    bool running;
 };
 
-#endif // _FLASH_LIGHT_TASK_H_
+#endif // _APP_H_

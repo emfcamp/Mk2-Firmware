@@ -2,7 +2,6 @@
  TiLDA Mk2
 
  Task
- Wrapper around a FreeRTOS task
 
  The MIT License (MIT)
 
@@ -26,24 +25,31 @@
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  SOFTWARE.
  */
-
-#ifndef _TASK_H_
-#define _TASK_H_
-
-#include <Arduino.h>
 #include <FreeRTOS_ARM.h>
-#include "EMF2014Config.h"
+#include "DebugTask.h"
 
-class Task {
-public:
-	void start();
-	virtual String getName()=0;
-protected:
-    virtual void task()=0;
-    TaskHandle_t *taskHandle;
-private:
-	void taskCaller();
-	static void _task(void *referenceToClass);
-};
+#include "App.h"
 
-#endif // _TASK_H_
+void App::start() {
+    if (!running) {
+        if (taskHandle == NULL) {
+            debug::log("Start app");
+            Task::start();
+        } else {
+            beforeResume();
+            vTaskResume(taskHandle);
+        }
+        running = true;
+    }
+}
+
+void App::suspend() {
+    if (running) {
+        vTaskSuspend(taskHandle);
+        afterSuspension();
+        running = true;
+    } 
+}
+
+void App::afterSuspension() {}
+void App::beforeResume() {}
