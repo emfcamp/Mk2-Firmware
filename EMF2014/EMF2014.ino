@@ -60,7 +60,7 @@ void setup() {
     // Uncomment this if you want to see serial output during startup
     // This will require you to send a character over serial before unblocking 
     // the startup
-    debug::waitForKey();
+    //debug::waitForKey();
     
     tildaButtonSetup();
     tildaButtonAttachInterrupts();
