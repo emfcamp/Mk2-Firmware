@@ -1,8 +1,9 @@
 /*
  TiLDA Mk2
 
- ButtonTask
- Buttons are handled via interrupt callbacks
+ ButtonSubscription
+ A button subscription is a helper that allows tasks to wait for one or
+ more button events. Think of it as an event listener for multiple events.
 
  The MIT License (MIT)
 
@@ -27,20 +28,22 @@
  SOFTWARE.
  */
 
-#ifndef _BUTTON_TASK_H_
-#define _BUTTON_TASK_H_
+#ifndef _BUTTON_SUBSCRIPTION_H_
+#define _BUTTON_SUBSCRIPTION_H_
 
 #include <Arduino.h>
 #include <FreeRTOS_ARM.h>
 #include "EMF2014Config.h"
-#include "Task.h"
 
-class ButtonTask: public Task {
-friend class ButtonSubscription;
+class ButtonSubscription {
 public:
-    String getName();
-protected:
-    void task();
+    ButtonSubscription (int buttons);
+    Button waitForPress(TickType_t ticksToWait);
+    Button waitForPress();
+    void clear();
+private:
+    int _buttons;
+    QueueHandle_t _queue;
 };
 
-#endif // _BUTTON_TASK_H_
+#endif // _BUTTON_SUBSCRIPTION_H_

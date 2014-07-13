@@ -40,4 +40,16 @@
 // This defines how many subscription each button can handle
 #define MAX_BUTTON_SUBSCRIPTIONS 10
 
+ enum Button {
+    NONE         = 0,
+    LIGHT        = 1,
+    A            = 2,
+    B            = 4,
+    UP           = 8,
+    DOWN         = 16,
+    LEFT         = 32,
+    RIGHT        = 64,
+    CENTER       = 128
+};
+
 #endif // _EMF2014_CONFIG_H_

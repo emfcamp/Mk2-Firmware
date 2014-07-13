@@ -39,13 +39,12 @@
 
 class FlashLightTask: public Task {
 public:
-	FlashLightTask(RGBTask rgbTask, ButtonTask buttonTask): _rgbTask(rgbTask), _buttonTask(buttonTask) {};
+	FlashLightTask(RGBTask rgbTask): _rgbTask(rgbTask) {};
 	String getName();
 protected:
     void task();
 private:
 	RGBTask _rgbTask;
-	ButtonTask _buttonTask;
 };
 
 #endif // _FLASH_LIGHT_TASK_H_

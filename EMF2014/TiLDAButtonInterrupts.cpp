@@ -29,6 +29,7 @@
 
 #include "TiLDAButtonInterrupts.h"
 #include <FreeRTOS_ARM.h>
+#include "DebugTask.h"
 
 // reject spikes shorter than usecs on pin
 void setDebounce(int pin, int usecs) {
@@ -79,8 +80,6 @@ void tildaButtonInterruptPriority() {
 void tildaButtonSetup() {
     // set button pins to input and enable pull up's
     pinMode(BUTTON_LIGHT, INPUT_PULLUP);
-    pinMode(BUTTON_SCREEN_LEFT, INPUT_PULLUP);
-    pinMode(BUTTON_SCREEN_RIGHT, INPUT_PULLUP);
     pinMode(BUTTON_A, INPUT_PULLUP);
     pinMode(BUTTON_B, INPUT_PULLUP);
     pinMode(BUTTON_UP, INPUT_PULLUP);
@@ -91,8 +90,6 @@ void tildaButtonSetup() {
 
     // setup debounce
     setDebounce(BUTTON_LIGHT);
-    setDebounce(BUTTON_SCREEN_LEFT);
-    setDebounce(BUTTON_SCREEN_RIGHT);
     setDebounce(BUTTON_A);
     setDebounce(BUTTON_B);
     setDebounce(BUTTON_UP);
@@ -103,26 +100,11 @@ void tildaButtonSetup() {
 
 }
 
-void tildaButtonAttachInterrupts() {
-    // attach button's to interrupt's
-    attachInterrupt(BUTTON_LIGHT, buttonLightPress, FALLING);
-    attachInterrupt(BUTTON_SCREEN_LEFT, buttonScreenLeftPress, FALLING);
-    attachInterrupt(BUTTON_SCREEN_RIGHT, buttonScreenRightPress, FALLING);
-    attachInterrupt(BUTTON_A, buttonAPress, FALLING);
-    attachInterrupt(BUTTON_B, buttonBPress, FALLING);
-    attachInterrupt(BUTTON_UP, buttonUpPress, FALLING);
-    attachInterrupt(BUTTON_RIGHT, buttonRightPress, FALLING);
-    attachInterrupt(BUTTON_DOWN, buttonDownPress, FALLING);
-    attachInterrupt(BUTTON_LEFT, buttonLeftPress, FALLING);
-    attachInterrupt(BUTTON_CENTER, buttonCenterPress, FALLING);
 
-}
 
 void tildaButtonDetachInterrupts() {
     // detach button's to interrupt's
     detachInterrupt(BUTTON_LIGHT);
-    detachInterrupt(BUTTON_SCREEN_LEFT);
-    detachInterrupt(BUTTON_SCREEN_RIGHT);
     detachInterrupt(BUTTON_A);
     detachInterrupt(BUTTON_B);
     detachInterrupt(BUTTON_UP);
@@ -133,4 +115,110 @@ void tildaButtonDetachInterrupts() {
 
 }
 
+/**
+ * Button Queue Logic:
+ * Multiple Tasks can listen to the same button, therefore every button
+ * has a list of queues that will be alerted when a button is pressed.
+ * To allow for the fact that more than one task might be woken by a single
+ * press we have to defer those calls into a real task via xTimerPendFunctionCallFromISR
+ */
+QueueHandle_t lightPressQueues[MAX_BUTTON_SUBSCRIPTIONS];
+QueueHandle_t aPressQueues[MAX_BUTTON_SUBSCRIPTIONS];
+QueueHandle_t bPressQueues[MAX_BUTTON_SUBSCRIPTIONS];
+QueueHandle_t upPressQueues[MAX_BUTTON_SUBSCRIPTIONS];
+QueueHandle_t rightPressQueues[MAX_BUTTON_SUBSCRIPTIONS];
+QueueHandle_t downPressQueues[MAX_BUTTON_SUBSCRIPTIONS];
+QueueHandle_t leftPressQueues[MAX_BUTTON_SUBSCRIPTIONS];
+QueueHandle_t centerPressQueues[MAX_BUTTON_SUBSCRIPTIONS];
 
+void addQueueToButton(QueueHandle_t queues[], QueueHandle_t queue) {
+    for (uint8_t i=0; i<MAX_BUTTON_SUBSCRIPTIONS; i++) {
+        if (queues[i] == NULL) {
+            queues[i] = queue;
+            break;
+        }
+    }
+}
+
+void addQueueToButtons(uint32_t buttons, QueueHandle_t queue) {
+    if (buttons & LIGHT)    addQueueToButton(lightPressQueues, queue);
+    if (buttons & A)        addQueueToButton(aPressQueues, queue);
+    if (buttons & B)        addQueueToButton(bPressQueues, queue);
+    if (buttons & UP)       addQueueToButton(upPressQueues, queue);
+    if (buttons & RIGHT)    addQueueToButton(rightPressQueues, queue);
+    if (buttons & DOWN)     addQueueToButton(downPressQueues, queue);
+    if (buttons & LEFT)     addQueueToButton(leftPressQueues, queue);
+    if (buttons & CENTER)   addQueueToButton(centerPressQueues, queue);
+}
+
+void emitToQueues(QueueHandle_t queues[], Button button) {
+    for (uint8_t i=0; i<MAX_BUTTON_SUBSCRIPTIONS; i++) {
+        if (queues[i] != NULL) {
+            xQueueOverwrite(queues[i], &button);
+        }
+    }
+}
+
+void handleButtonPress(void *pvParameter1, uint32_t ulParameter2) {
+    Button button = ( Button ) ulParameter2;
+         if (button == LIGHT)        emitToQueues(lightPressQueues, button);
+    else if (button == A)            emitToQueues(aPressQueues, button);
+    else if (button == B)            emitToQueues(bPressQueues, button);
+    else if (button == UP)           emitToQueues(upPressQueues, button);
+    else if (button == DOWN)         emitToQueues(downPressQueues, button);
+    else if (button == LEFT)         emitToQueues(leftPressQueues, button);
+    else if (button == RIGHT)        emitToQueues(rightPressQueues, button);
+    else if (button == CENTER)       emitToQueues(centerPressQueues, button);
+}
+
+void deferButtonHandling(Button button) {
+    if (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING) {
+        BaseType_t xHigherPriorityTaskWoken;
+        xTimerPendFunctionCallFromISR(handleButtonPress, NULL, ( uint32_t ) button, &xHigherPriorityTaskWoken);
+        portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+    }
+}
+
+void buttonLightPress() {
+    deferButtonHandling(LIGHT);
+}
+
+void buttonAPress() {
+    deferButtonHandling(A);
+}
+
+void buttonBPress() {
+    deferButtonHandling(B);
+}
+
+void buttonUpPress(void) {
+    deferButtonHandling(UP);
+}
+
+void buttonDownPress(void) {
+    deferButtonHandling(DOWN);
+}
+
+void buttonLeftPress(void) {
+    deferButtonHandling(LEFT);
+}
+
+void buttonRightPress(void) {
+    deferButtonHandling(RIGHT);
+}
+
+void buttonCenterPress(void) {
+    deferButtonHandling(CENTER);
+}
+
+void tildaButtonAttachInterrupts() {
+    // attach button's to interrupt's
+    attachInterrupt(BUTTON_LIGHT, buttonLightPress, FALLING);
+    attachInterrupt(BUTTON_A, buttonAPress, FALLING);
+    attachInterrupt(BUTTON_B, buttonBPress, FALLING);
+    attachInterrupt(BUTTON_UP, buttonUpPress, FALLING);
+    attachInterrupt(BUTTON_RIGHT, buttonRightPress, FALLING);
+    attachInterrupt(BUTTON_DOWN, buttonDownPress, FALLING);
+    attachInterrupt(BUTTON_LEFT, buttonLeftPress, FALLING);
+    attachInterrupt(BUTTON_CENTER, buttonCenterPress, FALLING);
+}

@@ -1,8 +1,7 @@
 /*
  TiLDA Mk2
 
- ButtonTask
- Buttons are handled via interrupt callbacks
+ ButtonSubscription
 
  The MIT License (MIT)
 
@@ -27,20 +26,34 @@
  SOFTWARE.
  */
 
-#ifndef _BUTTON_TASK_H_
-#define _BUTTON_TASK_H_
-
-#include <Arduino.h>
+#include "ButtonSubscription.h"
+#include "DebugTask.h"
 #include <FreeRTOS_ARM.h>
+#include "TiLDAButtonInterrupts.h"
 #include "EMF2014Config.h"
-#include "Task.h"
 
-class ButtonTask: public Task {
-friend class ButtonSubscription;
-public:
-    String getName();
-protected:
-    void task();
-};
+ButtonSubscription::ButtonSubscription(int buttons) {
+    _buttons = buttons;
+    _queue = xQueueCreate(1, sizeof(Button));
+    configASSERT(_queue);
+    addQueueToButtons(buttons, _queue);
+}
 
-#endif // _BUTTON_TASK_H_
+Button ButtonSubscription::waitForPress(TickType_t ticksToWait) {
+    Button button;
+    if(xQueueReceive( _queue, &button, ticksToWait) == pdTRUE) {
+        return button;
+    }
+    return NONE;
+}
+
+Button ButtonSubscription::waitForPress() {
+    return waitForPress(portMAX_DELAY);
+}
+
+void ButtonSubscription::clear() {
+    xQueueReset( _queue);
+}
+
+
+

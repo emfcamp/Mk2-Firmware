@@ -29,7 +29,7 @@
 
 #include <FreeRTOS_ARM.h>
 
-#include "ButtonTask.h"
+#include "ButtonSubscription.h"
 #include "DebugTask.h"
 #include "RGBTask.h"
 
@@ -39,7 +39,7 @@ String FlashLightTask::getName() {
 }
 
 void FlashLightTask::task() {
-    ButtonSubscription triggerButton(LIGHT, _buttonTask);
+    ButtonSubscription triggerButton(LIGHT);
 
     bool lightIsOn = false;
     while(true) {

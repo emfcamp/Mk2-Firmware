@@ -51,7 +51,7 @@
  */
 RGBTask rgbTask;
 ButtonTask buttonTask;
-FlashLightTask flashLightTask(rgbTask, buttonTask);
+FlashLightTask flashLightTask(rgbTask);
 
 void setup() {
     debug::waitForKey();
@@ -63,8 +63,7 @@ void setup() {
     // Background tasks
     debug::initializeTask();
     rgbTask.start();
-    //buttonTask.start();
-    //buttonTask.setUpButtonInterrupts();
+    buttonTask.start();
 
     // Applications
     flashLightTask.start();
@@ -83,8 +82,4 @@ void setup() {
  */
 void loop() {
 
-}
-
-void vApplicationStackOverflowHook( TaskHandle_t xTask, signed char *pcTaskName ) {
-    debug::log("Stack overflow detected");
 }

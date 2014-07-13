@@ -28,10 +28,12 @@
  SOFTWARE.
  */
 
-#if !defined Debounce_H
-#define Debounce_H
+#ifndef _TILDA_BUTTON_INTERRUPTS_H_
+#define _TILDA_BUTTON_INTERRUPTS_H_
 
 #include <Arduino.h>
+#include <FreeRTOS_ARM.h>
+#include "EMF2014Config.h"
 
 // These are in usec
 // 10ms
@@ -52,17 +54,6 @@ void tildaButtonAttachInterrupts();
 
 void tildaButtonDetachInterrupts();
 
-// Define a bunch of interrupt handlers as weak so can overirde in main program
-extern void buttonLightPress(void) __attribute__ ((weak));
-extern void buttonScreenLeftPress(void) __attribute__ ((weak));
-extern void buttonScreenRightPress(void) __attribute__ ((weak));
-extern void buttonAPress(void) __attribute__ ((weak));
-extern void buttonBPress(void) __attribute__ ((weak));
-extern void buttonUpPress(void) __attribute__ ((weak));
-extern void buttonRightPress(void) __attribute__ ((weak));
-extern void buttonDownPress(void) __attribute__ ((weak));
-extern void buttonLeftPress(void) __attribute__ ((weak));
-extern void buttonCenterPress(void) __attribute__ ((weak));
+void addQueueToButtons(uint32_t buttons, QueueHandle_t queue);
 
-
-#endif // Debounce_H
+#endif // _TILDA_BUTTON_INTERRUPTS_H_
