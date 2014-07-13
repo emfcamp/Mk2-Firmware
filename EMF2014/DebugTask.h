@@ -38,15 +38,21 @@
 #include <Arduino.h>
 #include <FreeRTOS_ARM.h>
 #include "EMF2014Config.h"
+#include "Task.h"
 
 namespace debug {
+	void setup();
     void log(String text);
     void logFromISR(String text);
-
     void stopWithMessage(String text);
     void waitForKey();
-
-    void initializeTask();
 }
+
+class DebugTask: public Task {
+public:
+	String getName();
+protected:
+	void task();
+};
 
 #endif // _DEBUG_TASK_H_

@@ -29,8 +29,6 @@
 #include "DebugTask.h"
 #include <FreeRTOS_ARM.h>
 
-#define DEBUG_SERIAL SerialUSB
-#define DEBUG_LED 10
 
 namespace debug {
     // I tried to write this with a queue, but the C++ pointer gods
@@ -39,19 +37,27 @@ namespace debug {
 
     void log(String text) {
         // ToDo: Add other debug outputs
-        if (xSemaphoreTake(serialPortMutex, ( TickType_t ) 10) == pdTRUE ) {
+        if (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING) {
+            if (xSemaphoreTake(serialPortMutex, ( TickType_t ) 10) == pdTRUE ) {
+                DEBUG_SERIAL.println(text);
+            }
+            xSemaphoreGive(serialPortMutex);
+        } else {
             DEBUG_SERIAL.println(text);
         }
-        xSemaphoreGive(serialPortMutex);
     }
 
     void logFromISR(String text) {
         // ToDo: Add other debug outputs
-        if (xSemaphoreTakeFromISR(serialPortMutex, NULL) == pdTRUE) {
+        if (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING) {
+            if (xSemaphoreTakeFromISR(serialPortMutex, NULL) == pdTRUE) {
+                DEBUG_SERIAL.println(text);
+                BaseType_t xHigherPriorityTaskWoken;
+                xSemaphoreGiveFromISR(serialPortMutex, &xHigherPriorityTaskWoken);
+                portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+            }
+        } else {
             DEBUG_SERIAL.println(text);
-            BaseType_t xHigherPriorityTaskWoken;
-            xSemaphoreGiveFromISR(serialPortMutex, &xHigherPriorityTaskWoken);
-            portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
         }
     }
 
@@ -70,35 +76,29 @@ namespace debug {
         while (!DEBUG_SERIAL.available());
     }
 
-    void setupSerialPort() {
+    void setup() {
         DEBUG_SERIAL.begin(115200);
         delay(250);
 
-        serialPortMutex = xSemaphoreCreateMutex();
-    }
-
-    void task(void *pvParameters) {
-        debug::log("Starting debugger task");
-
-        while(true) {
-            // Not sure what to do here
-            debug::log("Still alive");
-            vTaskDelay( 1000 );
-        }
-    }
-
-
-    void initializeTask() {
-        debug::setupSerialPort();
-
-        pinMode(DEBUG_LED, OUTPUT);
+        pinMode(DEBUG_LED, OUTPUT);       
         digitalWrite(DEBUG_LED, LOW);
 
-        BaseType_t taskHolder;
-        taskHolder = xTaskCreate(task, "debugTask", configMINIMAL_STACK_SIZE, NULL, 2, NULL);
-        if (taskHolder != pdPASS) {
-            debug::log("Failed to create debugger task");
-            while(1);
-        }
+        serialPortMutex = xSemaphoreCreateMutex();
     }
 }
+
+String DebugTask::getName() {
+    return "DebugTask";
+}
+
+void DebugTask::task() {
+    while(true) {
+        // Not sure what to do here
+        debug::log("Still alive");
+        vTaskDelay( 1000 );
+    }
+}
+
+
+
+

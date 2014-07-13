@@ -49,11 +49,17 @@
  * Here is where we will do a lot of work in getting the system running
  * and in FreeRTOS we will start the scheduler
  */
+DebugTask debugTask;
 RGBTask rgbTask;
 ButtonTask buttonTask;
 FlashLightTask flashLightTask(rgbTask);
 
 void setup() {
+    debug::setup();
+
+    // Uncomment this if you want to see serial output during startup
+    // This will require you to send a character over serial before unblocking 
+    // the startup
     debug::waitForKey();
     
     tildaButtonSetup();
@@ -61,7 +67,7 @@ void setup() {
     tildaButtonInterruptPriority();
 
     // Background tasks
-    debug::initializeTask();
+    debugTask.start();
     rgbTask.start();
     buttonTask.start();
 
