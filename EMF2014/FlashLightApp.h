@@ -39,7 +39,7 @@
 
 class FlashLightApp: public App {
 public:
-	FlashLightApp(RGBTask rgbTask): _rgbTask(rgbTask), _lightLevel(255) {};
+	FlashLightApp(RGBTask rgbTask): _rgbTask(rgbTask), _lightLevel(8) {};
 	String getName();
 protected:
     void task();
@@ -48,7 +48,7 @@ protected:
 private:
 	void updateLeds();
 	RGBTask _rgbTask;
-	uint8_t _lightLevel;
+	signed char _lightLevel;
 	ButtonSubscription *_pbuttons;
 };
 

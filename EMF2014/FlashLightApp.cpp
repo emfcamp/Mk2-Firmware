@@ -40,7 +40,11 @@ String FlashLightApp::getName() {
 }
 
 void FlashLightApp::updateLeds() {
-    _rgbTask.setColor({_lightLevel, _lightLevel, _lightLevel});
+    uint8_t actualLightLevel = 1 << _lightLevel;
+    if (_lightLevel == 8) {
+        actualLightLevel = 255;
+    }
+    _rgbTask.setColor({actualLightLevel, actualLightLevel, actualLightLevel});
 }
 
 void FlashLightApp::task() {
@@ -52,16 +56,16 @@ void FlashLightApp::task() {
     while(true) {
         Button button = _buttons.waitForPress(( TickType_t ) 1000);
         if (button == UP) {
-            if (_lightLevel < 245) {
-                _lightLevel += 10;
-            } else if (_lightLevel < 255) {
-                _lightLevel = 255;
+            if (_lightLevel < 8) {
+                _lightLevel++;
+            } else {
+                _lightLevel = 8;
             }
             updateLeds();
         } else if (button == DOWN) {
-            if (_lightLevel > 10) {
-                _lightLevel -= 10;
-            } else if (_lightLevel > 0) {
+            if (_lightLevel > 1) {
+                _lightLevel--;
+            } else {
                 _lightLevel = 0;
             }
             updateLeds();
