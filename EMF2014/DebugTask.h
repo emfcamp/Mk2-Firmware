@@ -42,6 +42,7 @@
 
 namespace debug {
 	void setup();
+	void logHash(String text, byte hash[]);
     void log(String text);
     void logFromISR(String text);
     void stopWithMessage(String text);

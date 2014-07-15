@@ -29,6 +29,10 @@
 #include "RadioTask.h"
 #include "DebugTask.h"
 #include <FreeRTOS_ARM.h>
+#include "sha1.h"
+
+#define RADIO_ENTER_AT_MODE() vTaskDelay(10); digitalWrite(RADIO_AT_MODE_PIN, LOW); vTaskDelay(10);
+#define RADIO_LEAVE_AT_MODE() vTaskDelay(10); digitalWrite(RADIO_AT_MODE_PIN, HIGH); vTaskDelay(10);
 
 String RadioTask::getName() {
 	return "RadioTask";
@@ -36,48 +40,79 @@ String RadioTask::getName() {
 
 void RadioTask::task() {
 	// Setup radio communitcation
-	pinMode(8, OUTPUT);
-	digitalWrite(8, HIGH);
 	RADIO_SERIAL.begin(115200);
 
-	// Initial setup
-	Serial.println("+++");
-	delay(1200);
-	Serial.println("ATID");
-	Serial.println("ATDN");
+	// Setup AT Mode pin
+	pinMode(RADIO_AT_MODE_PIN, OUTPUT);
+
+	//Sha1.init();
+	//Sha1.print("abc");
+	//debug::logHash("Hash:", Sha1.result());
+
+	//pinMode(RADIO_AT_MODE_PIN, OUTPUT);
+
+	// Set general setting for radio
+	RADIO_ENTER_AT_MODE();
+	RADIO_SERIAL.println("ATZD3");  // output format <payload>|<rssi>
+	RADIO_SERIAL.println("ATPK3A"); // 58byte
+	RADIO_SERIAL.println("ATAC");   // apply
+	RADIO_LEAVE_AT_MODE();
+
+	// Clear buffer
+	for (uint8_t i=0; i<32; i++) RADIO_SERIAL.read();
 
 	// Buffers
-	byte packetBuffer[RADIO_PACKET_WITH_RSSI_LENGTH];
-	uint8_t packetBufferPosition = 0;
+	byte packetBuffer[RADIO_PACKET_WITH_RSSI_LENGTH + 1];
+	uint8_t packetBufferLength = 0;
 
 	while (true) {
 		uint8_t availableBytes = RADIO_SERIAL.available();
-		debug::log("Radio loop" + String(availableBytes));
 		if (availableBytes > 0) {
-			debug::log("Available Bytes: " + String(availableBytes));
+			//debug::log("Bytes to read: " + String(availableBytes));
 			while (availableBytes > 0) {
-				packetBuffer[packetBufferPosition] = RADIO_SERIAL.read();
-				packetBufferPosition++;
+				packetBuffer[packetBufferLength] = RADIO_SERIAL.read();
+				packetBufferLength++;
 				availableBytes--;
 
 				// Only handle one packet at a time
-				if (packetBufferPosition == RADIO_PACKET_WITH_RSSI_LENGTH) {
+				if (packetBufferLength == RADIO_PACKET_WITH_RSSI_LENGTH) {
+					debug::log("Break - we have enough for one packet");
 					break;
 				}
 			}
 
-			debug::log("Received " + String((char*)packetBuffer));
+			//debug::log("Out: " + String((char*)packetBuffer));
 
 			// Have we received a whole packet yet?
-			if (packetBufferPosition == RADIO_PACKET_WITH_RSSI_LENGTH) {
-				packetBufferPosition = 0;
+			bool receivedWholePacket = 
+				packetBufferLength >= 5 + 1 && // Has to have at least one byte payload
+				packetBuffer[packetBufferLength - 1] >= 48 && packetBuffer[packetBufferLength - 1] <= 57 && // Digit
+				packetBuffer[packetBufferLength - 2] >= 48 && packetBuffer[packetBufferLength - 2] <= 57 && // Digit
+				packetBuffer[packetBufferLength - 3] >= 48 && packetBuffer[packetBufferLength - 3] <= 57 && // Digit
+				packetBuffer[packetBufferLength - 4] == '-' &&
+				packetBuffer[packetBufferLength - 5] == '|';
 
+			// If the data looks like a packet we can start parsing it
+			if (receivedWholePacket) {
+				uint8_t rssi = (packetBuffer[packetBufferLength - 1] - 48) +
+					(packetBuffer[packetBufferLength - 2] - 48) * 10 +
+					(packetBuffer[packetBufferLength - 3] - 48) * 100;
+				packetBufferLength -= 5;
 
+				String test = "";
+				for (uint8_t i=0; i<packetBufferLength; i++) {
+					test += (char)packetBuffer[i];
+				}
+				debug::log("Packet: " + test + " RSSI: " + rssi);
+
+				packetBufferLength = 0;
+
+			} else if (packetBufferLength == RADIO_PACKET_WITH_RSSI_LENGTH) {
+				debug::log("Packet does not conform");
+				// Something's wrong, we received enough bytes but it's not formated correctly. 
+				packetBufferLength = 0;
 			}
 
-		} else {
-			// Avoid busy waiting
-			vTaskDelay(1200);
-		}
+		} 
 	}
 }

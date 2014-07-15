@@ -44,7 +44,9 @@
 // maximum amount of apps the AppManager can handle
 #define MAX_APPS 10
 // Radio serial port
-#define RADIO_SERIAL Serial
+#define RADIO_SERIAL Serial3
+// Radio AT-mode pin
+#define RADIO_AT_MODE_PIN 52
 
 enum Button {
     NONE         = 0,

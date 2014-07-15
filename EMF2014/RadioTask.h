@@ -38,7 +38,7 @@
 #include "Task.h"
 
 #define RADIO_PACKET_LENGTH 64
-#define RADIO_PACKET_WITH_RSSI_LENGTH 64 + 1 + 3
+#define RADIO_PACKET_WITH_RSSI_LENGTH 64 + 1 + 4
 
 class RadioTask: public Task {
 public:

@@ -47,6 +47,24 @@ namespace debug {
         }
     }
 
+    void logHash(String text, byte hash[]) {
+        // ToDo: Add other debug outputs
+        if (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING) {
+            if (xSemaphoreTake(serialPortMutex, ( TickType_t ) 10) == pdTRUE ) {
+                DEBUG_SERIAL.print(text);
+                int i;
+                for (i=0; i<20; i++) {
+                    DEBUG_SERIAL.print("0123456789abcdef"[hash[i]>>4]);
+                    DEBUG_SERIAL.print("0123456789abcdef"[hash[i]&0xf]);
+                }
+                DEBUG_SERIAL.println();
+            }
+            xSemaphoreGive(serialPortMutex);
+        } else {
+            DEBUG_SERIAL.println("Can't print hash, scheduler not running.");
+        }
+    }
+
     void logFromISR(String text) {
         // ToDo: Add other debug outputs
         if (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING) {
@@ -95,7 +113,7 @@ void DebugTask::task() {
     while(true) {
         // Not sure what to do here
         debug::log("Still alive.");
-        vTaskDelay( 1000 );
+        vTaskDelay( 5000 );
     }
 }
 
