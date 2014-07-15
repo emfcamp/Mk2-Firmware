@@ -43,6 +43,8 @@
 #define MAX_BUTTON_SUBSCRIPTIONS 10
 // maximum amount of apps the AppManager can handle
 #define MAX_APPS 10
+// Radio serial port
+#define RADIO_SERIAL Serial
 
 enum Button {
     NONE         = 0,

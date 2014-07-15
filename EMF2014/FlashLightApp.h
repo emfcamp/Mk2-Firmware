@@ -48,7 +48,7 @@ protected:
 private:
 	void updateLeds();
 	RGBTask _rgbTask;
-	signed char _lightLevel;
+	unsigned char _lightLevel;
 	ButtonSubscription *_pbuttons;
 };
 

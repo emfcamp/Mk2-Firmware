@@ -35,7 +35,16 @@
 #include <Arduino.h>
 #include <FreeRTOS_ARM.h>
 #include "EMF2014Config.h"
+#include "Task.h"
 
+#define RADIO_PACKET_LENGTH 64
+#define RADIO_PACKET_WITH_RSSI_LENGTH 64 + 1 + 3
 
+class RadioTask: public Task {
+public:
+	String getName();
+protected:
+	void task();
+};
 
 #endif // _RADIO_TASK_H_

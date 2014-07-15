@@ -27,3 +27,57 @@
  */
 
 #include "RadioTask.h"
+#include "DebugTask.h"
+#include <FreeRTOS_ARM.h>
+
+String RadioTask::getName() {
+	return "RadioTask";
+}
+
+void RadioTask::task() {
+	// Setup radio communitcation
+	pinMode(8, OUTPUT);
+	digitalWrite(8, HIGH);
+	RADIO_SERIAL.begin(115200);
+
+	// Initial setup
+	Serial.println("+++");
+	delay(1200);
+	Serial.println("ATID");
+	Serial.println("ATDN");
+
+	// Buffers
+	byte packetBuffer[RADIO_PACKET_WITH_RSSI_LENGTH];
+	uint8_t packetBufferPosition = 0;
+
+	while (true) {
+		uint8_t availableBytes = RADIO_SERIAL.available();
+		debug::log("Radio loop" + String(availableBytes));
+		if (availableBytes > 0) {
+			debug::log("Available Bytes: " + String(availableBytes));
+			while (availableBytes > 0) {
+				packetBuffer[packetBufferPosition] = RADIO_SERIAL.read();
+				packetBufferPosition++;
+				availableBytes--;
+
+				// Only handle one packet at a time
+				if (packetBufferPosition == RADIO_PACKET_WITH_RSSI_LENGTH) {
+					break;
+				}
+			}
+
+			debug::log("Received " + String((char*)packetBuffer));
+
+			// Have we received a whole packet yet?
+			if (packetBufferPosition == RADIO_PACKET_WITH_RSSI_LENGTH) {
+				packetBufferPosition = 0;
+
+
+			}
+
+		} else {
+			// Avoid busy waiting
+			vTaskDelay(1200);
+		}
+	}
+}

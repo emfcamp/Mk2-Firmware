@@ -40,6 +40,7 @@
 #include "DebugTask.h"
 #include "RGBTask.h"
 #include "ButtonTask.h"
+#include "RadioTask.h"
 #include "AppOpenerTask.h"
 #include "AppManager.h"
 #include "FlashLightApp.h"
@@ -55,6 +56,7 @@
 DebugTask debugTask;
 RGBTask rgbTask;
 ButtonTask buttonTask;
+RadioTask radioTask;
 AppOpenerTask appOpenerTask;
 
 FlashLightApp flashLightApp(rgbTask);
@@ -76,6 +78,7 @@ void setup() {
     debugTask.start();
     rgbTask.start();
     buttonTask.start();
+    radioTask.start();
     appOpenerTask.start();
 
     // Applications
