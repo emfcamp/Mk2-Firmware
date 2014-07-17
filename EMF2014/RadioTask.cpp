@@ -29,7 +29,7 @@
 #include "RadioTask.h"
 #include "DebugTask.h"
 #include <FreeRTOS_ARM.h>
-#include "sha1.h"
+#include <Sha1.h>
 
 #define RADIO_ENTER_AT_MODE() vTaskDelay(10); digitalWrite(RADIO_AT_MODE_PIN, LOW); vTaskDelay(10);
 #define RADIO_LEAVE_AT_MODE() vTaskDelay(10); digitalWrite(RADIO_AT_MODE_PIN, HIGH); vTaskDelay(10);

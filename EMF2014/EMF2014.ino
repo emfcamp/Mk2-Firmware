@@ -36,6 +36,7 @@
  */
 
 #include <FreeRTOS_ARM.h>
+#include <Sha1.h>
 #include "EMF2014Config.h"
 #include "DebugTask.h"
 #include "RGBTask.h"
