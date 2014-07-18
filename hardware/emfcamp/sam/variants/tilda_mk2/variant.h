@@ -242,6 +242,25 @@ extern "C"{
 #define TP12                  (17u) //Serial2 RXD
 #define TP15                  (14u) //Serial3 TXD
 #define TP16                  (15u) //Serial3 RXD
+// v0.2 aditional pads
+#define TP20                  (29u) //SCREEN_LEFT
+#define TP21                  (46u) //SCREEN_RIGHT
+#define TP22                  (51u) //D51
+#define TP23                  (64u) //A64
+#define TP24                  (63u) //A63
+#define TP25                  (35u) //D35
+#define TP26                  (32u) //D32
+#define TP27                  (96u) //UOTGVOBOF
+    
+// LCD display v0.2
+#define LCD_CS                BOARD_SIP_SS2
+#define LCD_POWER             (40u)
+#define LCD_BACKLIGHT         (33u)
+#define LCD_A0                (38u)
+#DEfine LCD_RESET             (34u)
+
+// MCP73831 v0.2
+#define MCP_STAT              (62u)
     
 // RGB LED's
 #define LED1_RED              (37u)
@@ -251,7 +270,7 @@ extern "C"{
 #define LED2_GREEN            (44u)
 #define LED2_BLUE             (45u)
     
-// epaper display
+// epaper display v0.1
 #define EPD_CS                BOARD_SPI_SS2
 #define EPD_BUSY              (38u)
 #define EPD_RESET             (34u)
