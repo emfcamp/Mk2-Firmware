@@ -253,11 +253,11 @@ extern "C"{
 #define TP27                  (96u) //UOTGVOBOF
     
 // LCD display v0.2
-#define LCD_CS                BOARD_SIP_SS2
+#define LCD_CS                BOARD_SPI_SS2
 #define LCD_POWER             (40u)
 #define LCD_BACKLIGHT         (33u)
 #define LCD_A0                (38u)
-#DEfine LCD_RESET             (34u)
+#define LCD_RESET             (34u)
 
 // MCP73831 v0.2
 #define MCP_STAT              (62u)
