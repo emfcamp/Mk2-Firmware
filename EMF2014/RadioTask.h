@@ -37,14 +37,30 @@
 #include "EMF2014Config.h"
 #include "Task.h"
 
-#define RADIO_PACKET_LENGTH 64
-#define RADIO_PACKET_WITH_RSSI_LENGTH 64 + 1 + 4
-
 class RadioTask: public Task {
 public:
 	String getName();
 protected:
 	void task();
+private:
+	inline void _enterAtMode();
+	inline void _leaveAtMode();
+
+	inline uint16_t _bytesToInt(byte b1, byte b2);
+	inline uint32_t _bytesToInt(byte b1, byte b2, byte b3, byte b4);
+
+	inline void _parsePacketBuffer(byte packetBuffer[], uint8_t& packetBufferLength);
+	inline void _handlePacket(byte packetBuffer[], uint8_t packetBufferLength);
+	inline void _verifyMessage();
+
+	static const uint16_t NO_CURRENT_MESSAGE = 65535;
+
+	byte _messageBuffer[RADIO_MAX_MESSAGE_BUFFER_LENGTH];
+	uint16_t _messageBufferPosition;
+	uint32_t _remainingMessageLength;
+	uint16_t _currentMessageReceiver;
+	byte _currentMessageHash[20];
+	byte _currentMessageSignature[32];
 };
 
 #endif // _RADIO_TASK_H_

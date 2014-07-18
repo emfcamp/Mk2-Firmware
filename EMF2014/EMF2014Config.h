@@ -43,10 +43,18 @@
 #define MAX_BUTTON_SUBSCRIPTIONS 10
 // maximum amount of apps the AppManager can handle
 #define MAX_APPS 10
+
+
 // Radio serial port
 #define RADIO_SERIAL Serial3
+#define RADIO_SERIAL_BAUD 115200
 // Radio AT-mode pin
 #define RADIO_AT_MODE_PIN 52
+// Packet length
+#define RADIO_PACKET_LENGTH 58
+#define RADIO_PACKET_WITH_RSSI_LENGTH 58 + 1 + 4
+// Radio message buffer length
+#define RADIO_MAX_MESSAGE_BUFFER_LENGTH 40960
 
 enum Button {
     NONE         = 0,

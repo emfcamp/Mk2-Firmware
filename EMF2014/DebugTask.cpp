@@ -47,15 +47,16 @@ namespace debug {
         }
     }
 
-    void logHash(String text, byte hash[]) {
+    void logByteArray(byte in[], int len) {
         // ToDo: Add other debug outputs
         if (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING) {
             if (xSemaphoreTake(serialPortMutex, ( TickType_t ) 10) == pdTRUE ) {
-                DEBUG_SERIAL.print(text);
+                //DEBUG_SERIAL.print(String((char*)in));
                 int i;
-                for (i=0; i<20; i++) {
-                    DEBUG_SERIAL.print("0123456789abcdef"[hash[i]>>4]);
-                    DEBUG_SERIAL.print("0123456789abcdef"[hash[i]&0xf]);
+                for (i=0; i<len; i++) {
+                    DEBUG_SERIAL.print("0123456789abcdef"[in[i]>>4]);
+                    DEBUG_SERIAL.print("0123456789abcdef"[in[i]&0xf]);
+                    DEBUG_SERIAL.print(" ");
                 }
                 DEBUG_SERIAL.println();
             }
@@ -113,7 +114,7 @@ void DebugTask::task() {
     while(true) {
         // Not sure what to do here
         debug::log("Still alive.");
-        vTaskDelay( 5000 );
+        vTaskDelay( 50000 );
     }
 }
 
