@@ -36,6 +36,7 @@
 #include <FreeRTOS_ARM.h>
 #include "EMF2014Config.h"
 #include "Task.h"
+#include "MessageCheckTask.h"
 
 class RadioTask: public Task {
 public:
@@ -59,8 +60,8 @@ private:
 	uint16_t _messageBufferPosition;
 	uint32_t _remainingMessageLength;
 	uint16_t _currentMessageReceiver;
-	byte _currentMessageHash[20];
-	byte _currentMessageSignature[32];
+	byte _currentMessageHash[12];
+	byte _currentMessageSignature[40];
 };
 
 #endif // _RADIO_TASK_H_

@@ -28,7 +28,7 @@
 
 #include "DebugTask.h"
 #include <FreeRTOS_ARM.h>
-
+ 
 
 namespace debug {
     // I tried to write this with a queue, but the C++ pointer gods
@@ -47,7 +47,7 @@ namespace debug {
         }
     }
 
-    void logByteArray(byte in[], int len) {
+    void logByteArray(const byte in[], int len) {
         // ToDo: Add other debug outputs
         if (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING) {
             if (xSemaphoreTake(serialPortMutex, ( TickType_t ) 10) == pdTRUE ) {
@@ -66,11 +66,16 @@ namespace debug {
         }
     }
 
+    void logHWM() {
+        UBaseType_t uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
+        DEBUG_SERIAL.println("HWM: " + String(uxHighWaterMark));
+    }
+
     void logFromISR(String text) {
         // ToDo: Add other debug outputs
         if (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING) {
             if (xSemaphoreTakeFromISR(serialPortMutex, NULL) == pdTRUE) {
-                DEBUG_SERIAL.println(text);
+                    DEBUG_SERIAL.println(text);
                 BaseType_t xHigherPriorityTaskWoken;
                 xSemaphoreGiveFromISR(serialPortMutex, &xHigherPriorityTaskWoken);
                 portYIELD_FROM_ISR(xHigherPriorityTaskWoken);

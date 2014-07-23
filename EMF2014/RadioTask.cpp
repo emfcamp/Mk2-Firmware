@@ -29,7 +29,6 @@
 #include "RadioTask.h"
 #include "DebugTask.h"
 #include <FreeRTOS_ARM.h>
-#include <Sha1.h>
 
 String RadioTask::getName() {
 	return "RadioTask";
@@ -104,8 +103,6 @@ inline void RadioTask::_parsePacketBuffer(byte packetBuffer[], uint8_t & packetB
 			(packetBuffer[packetBufferLength - 3] - 48) * 100;
 		packetBufferLength -= 5;
 
-		//debug::log("Received packet with RSSI " + String(rssi));
-		//debug::logByteArray(packetBuffer, 58);
 		if (packetBufferLength!=58) {
 			debug::log("Found packet that's too short: " + String(packetBufferLength));
 		}
@@ -125,9 +122,9 @@ inline void RadioTask::_handlePacket(byte packetBuffer[], uint8_t packetBufferLe
 	// the first two bytes are always describing the receiver
 	int packetReceiver = _bytesToInt(packetBuffer[0], packetBuffer[1]);
 
-	if (_currentMessageReceiver != packetReceiver) {
+	/*if (_currentMessageReceiver != packetReceiver) {
 		debug::log("Still waiting for packets, but got new receiver. Was waiting for " + String(_remainingMessageLength) + " bytes");
-	}
+	}*/
 
 	// parsing the packet - is it payload or header?
 	bool couldBeMessageHeader = 
@@ -140,9 +137,8 @@ inline void RadioTask::_handlePacket(byte packetBuffer[], uint8_t packetBufferLe
 		_messageBufferPosition = 0;
 		_currentMessageReceiver = packetReceiver;
 		_remainingMessageLength = _bytesToInt(packetBuffer[2], packetBuffer[3], packetBuffer[4], packetBuffer[5]);
-		memcpy(_currentMessageHash, packetBuffer + 6, sizeof(_currentMessageHash));
-		memcpy(_currentMessageSignature, packetBuffer + 26, sizeof(_currentMessageSignature));
-		debug::log("Received message header to " + String(_currentMessageReceiver) + " with length " + String(_remainingMessageLength));
+		memcpy(_currentMessageHash, packetBuffer + 6, 12);
+		memcpy(_currentMessageSignature, packetBuffer + 18, 40);
 	} else {
 		if (_messageBufferPosition + packetBufferLength > RADIO_MAX_MESSAGE_BUFFER_LENGTH) {
 			// buffer overflow protection. a message should never be this long. 
@@ -151,9 +147,6 @@ inline void RadioTask::_handlePacket(byte packetBuffer[], uint8_t packetBufferLe
 
 		// assemble message
 		int bytesToCopy = min(_remainingMessageLength, packetBufferLength - 2);
-		if (bytesToCopy!=56) {
-			debug::log("Less bytes to copy " + String(bytesToCopy));
-		}
 		memcpy(_messageBuffer + _messageBufferPosition, packetBuffer + 2, bytesToCopy);
 		_messageBufferPosition += bytesToCopy;
 		_remainingMessageLength -= bytesToCopy;
@@ -169,28 +162,23 @@ inline void RadioTask::_handlePacket(byte packetBuffer[], uint8_t packetBufferLe
 }
 
 inline void RadioTask::_verifyMessage() {
+	// We're not actually verifying messages in this task, they're passed
+	// on to the MessageCheckTask 
 	uint32_t messageLength = _messageBufferPosition;
 
-	// Create SHA1 digest
-	Sha1.init();
-	char receiverHi = _currentMessageReceiver >> 8;
-	char receiverLo = _currentMessageReceiver & 0xFF;
- 	Sha1.print(receiverHi);
-	Sha1.print(receiverLo);
-	for (uint32_t i=0; i<messageLength; i++) {
-		Sha1.print((char)_messageBuffer[i]);
-	}
-	byte* digest = Sha1.result();	
-	
-	// Check our digest against the one send in the header
-	if (memcmp(digest, _currentMessageHash, 20) != 0) {
-		debug::log("Can't validate message, checksum doesn't match.");
-		debug::logByteArray(digest, 20);
-		debug::logByteArray(_currentMessageHash, 20);
-		return;
-	}
+	// Create a message object. We must rememeber to free the memory used
+	// afterwards
+	IncomingRadioMessage *message = new IncomingRadioMessage();
+	message->content = (byte*) malloc(messageLength);
+	for (uint16_t i=0; i<messageLength; i++) {
+    	message->content[i]=_messageBuffer[i]; 
+    }
+	message->length = messageLength;
+	memcpy(message->hash, _currentMessageHash, 12);
+	memcpy(message->signature, _currentMessageSignature, 40);
+	message->receiver = _currentMessageReceiver;
 
-	debug::log("Received message (checksum ok): " + String((char*)_messageBuffer));
+	MessageCheckTask::addIncomingMessage(message);
 }
 
 inline uint16_t RadioTask::_bytesToInt(byte b1, byte b2) {
