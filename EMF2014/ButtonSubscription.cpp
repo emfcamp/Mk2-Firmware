@@ -32,10 +32,14 @@
 #include "TiLDAButtonInterrupts.h"
 #include "EMF2014Config.h"
 
-ButtonSubscription::ButtonSubscription(int buttons) {
-    _buttons = buttons;
+ButtonSubscription::ButtonSubscription() {
     _queue = xQueueCreate(1, sizeof(Button));
     configASSERT(_queue);
+    _buttons = 0;
+}
+
+void ButtonSubscription::addButtons(int buttons) {
+    _buttons = _buttons | buttons;
     addQueueToButtons(buttons, _queue);
 }
 

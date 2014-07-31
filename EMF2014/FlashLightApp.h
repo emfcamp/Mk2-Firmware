@@ -1,7 +1,8 @@
 /*
  TiLDA Mk2
 
- Flash Light Task
+ FlashLightApp
+ Torch Mode - Press the light button and both RGB LEDs light up.
 
  The MIT License (MIT)
 
@@ -25,35 +26,30 @@
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  SOFTWARE.
  */
-#include "FlashLightTask.h"
 
+#ifndef _FLASH_LIGHT_APP_H_
+#define _FLASH_LIGHT_APP_H_
+
+#include <Arduino.h>
 #include <FreeRTOS_ARM.h>
-
-#include "ButtonSubscription.h"
-#include "DebugTask.h"
+#include "EMF2014Config.h"
+#include "App.h"
 #include "RGBTask.h"
+#include "ButtonSubscription.h"
 
-// ToDo: Add all the fancy features from https://github.com/emfcamp/Mk2-Firmware/blob/master/frRGBTask/frRGBTask.ino
-String FlashLightTask::getName() {
-    return "FlashLight";
-}
+class FlashLightApp: public App {
+public:
+	FlashLightApp(RGBTask rgbTask): _rgbTask(rgbTask), _lightLevel(8) {};
+	String getName();
+protected:
+    void task();
+    void afterSuspension();
+    void beforeResume();
+private:
+	void updateLeds();
+	RGBTask _rgbTask;
+	signed char _lightLevel;
+	ButtonSubscription *_pbuttons;
+};
 
-void FlashLightTask::task() {
-    ButtonSubscription triggerButton(LIGHT);
-
-    bool lightIsOn = false;
-    while(true) {
-        Button button = triggerButton.waitForPress(( TickType_t ) 1000);
-        if (button == LIGHT) {
-            lightIsOn = !lightIsOn;
-            if (lightIsOn) {
-                debug::log("LIGHT ON");
-                _rgbTask.setColor({255, 255, 255});
-            } else {
-                debug::log("LIGHT OFF");
-                _rgbTask.setColor({0, 0, 0});
-            }
-        }
-    }
-
-}
+#endif // _FLASH_LIGHT_APP_H_

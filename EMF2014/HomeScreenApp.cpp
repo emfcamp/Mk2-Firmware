@@ -1,8 +1,7 @@
 /*
  TiLDA Mk2
 
- FlashLightTask
- Torch Mode - Press the light button and both RGB LEDs light up.
+ Task
 
  The MIT License (MIT)
 
@@ -26,25 +25,25 @@
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  SOFTWARE.
  */
-
-#ifndef _FLASH_LIGHT_TASK_H_
-#define _FLASH_LIGHT_TASK_H_
-
-#include <Arduino.h>
 #include <FreeRTOS_ARM.h>
-#include "EMF2014Config.h"
-#include "Task.h"
-#include "RGBTask.h"
-#include "ButtonTask.h"
+#include "DebugTask.h"
 
-class FlashLightTask: public Task {
-public:
-	FlashLightTask(RGBTask rgbTask): _rgbTask(rgbTask) {};
-	String getName();
-protected:
-    void task();
-private:
-	RGBTask _rgbTask;
-};
+#include "HomeScreenApp.h"
 
-#endif // _FLASH_LIGHT_TASK_H_
+String HomeScreenApp::getName() {
+    return "HomeScreen";
+}
+
+void HomeScreenApp::task() {
+    while(true) {
+        _rgbTask.setColor({255, 0, 0});
+        vTaskDelay(300);
+        _rgbTask.setColor({0, 255, 0});
+        vTaskDelay(300);
+        _rgbTask.setColor({0, 0, 255});
+        vTaskDelay(300);
+    }
+}
+
+void HomeScreenApp::afterSuspension() {}
+void HomeScreenApp::beforeResume() {}

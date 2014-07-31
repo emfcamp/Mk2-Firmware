@@ -1,7 +1,7 @@
 /*
  TiLDA Mk2
 
- Task
+ AppManager
 
  The MIT License (MIT)
 
@@ -27,28 +27,55 @@
  */
 #include <FreeRTOS_ARM.h>
 #include "DebugTask.h"
+#include "EMF2014Config.h"
+#include "AppManager.h"
 
-#include "Task.h"
+App * _apps[MAX_APPS];
+App * activeApp;
 
-void Task::start() {
-    BaseType_t taskHolder;
-    taskHolder = xTaskCreate(_task, "TASKNAME", ( uint8_t ) 255, static_cast<void*>(this), 2, &taskHandle);
-    if (taskHolder != pdPASS) {
-        debug::stopWithMessage("Failed to create " + getName() + " task");
+void AppManager::add(App &app) {
+    for (uint8_t i=0; i<MAX_APPS; i++) {
+        if (_apps[i] == NULL) {
+            _apps[i] =& app;
+            break;
+        }
     }
+}   
+
+App & AppManager::getByName(String name) {
+    for (uint8_t i=0; i<MAX_APPS; i++) {
+        if (_apps[i] != NULL) {
+            if (_apps[i]->getName() == name) {
+                return *_apps[i];
+            }
+        } 
+    }
+    debug::log("Error: Trying to start App that doesn't exist: " + name);
+    return *_apps[0];
+}  
+
+void AppManager::open(App & app) {
+    debug::log("Opening " + app.getName());
+    if (activeApp) {
+        debug::log("Current Active App " + activeApp->getName());
+    } 
+    if (activeApp == &app) {
+        return; // App is already active
+    }
+    if (activeApp != NULL) {
+        activeApp->suspend();
+    }
+    app.start();
+    activeApp =& app;
+} 
+
+String AppManager::getActiveAppName() {
+    if (activeApp) {
+        return activeApp->getName();
+    }
+    return "";
 }
 
-// ToDo: Remove this function to save some stack 
-void Task::taskCaller() {
-    debug::log("Starting " + getName());
-    task();
-
-    while(true) {
-        debug::log("Please make sure that no task ever returns. Task: " + getName());
-        vTaskDelay(1000);
-    }
-}
-
-void Task::_task(void *referenceToClass) {
-    static_cast<Task*>(referenceToClass)->taskCaller();
+void AppManager::open(String name) {
+    open(getByName(name));
 }
