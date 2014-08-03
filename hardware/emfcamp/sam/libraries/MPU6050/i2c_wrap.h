@@ -1,7 +1,7 @@
 /*
  TiLDA Mk2 MPU-6050 driver
  
- Wrapper file for InvenSense Embedded MotionDriver 5.1
+ Wrapper file for i2c interface
  
  
  The MIT License (MIT)
@@ -27,19 +27,38 @@
  SOFTWARE.
  */
 
-#ifndef _MPU6050_H_
-#define _MPU6050_H_
+#ifndef _I2C_WRAP_H_
+#define _I2C_WARP_H_
 
 #include <Arduino.h>
 
-#include "inv_mpu.h"
-#include "inv_mpu_dmp_motion_driver.h"
-#include "dmpKey.h"
-#include "dmpmap.h"
-#include "i2c_wrap.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 
+/** Read multiple bytes from an 8-bit device register.
+ * @param devAddr I2C slave device address
+ * @param regAddr First register regAddr to read from
+ * @param length Number of bytes to read
+ * @param data Buffer to store read data in
+ * @param timeout Optional read timeout in milliseconds (0 to disable, leave off to use default class value in I2Cdev::readTimeout)
+ * @return Number of bytes read (-1 indicates failure)
+ */
+int8_t I2CreadBytes(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *data);
+
+/** Write multiple bytes to an 8-bit device register.
+ * @param devAddr I2C slave device address
+ * @param regAddr First register address to write to
+ * @param length Number of bytes to write
+ * @param data Buffer to copy new data from
+ * @return Status of operation (true = success)
+ */
+bool I2CwriteBytes(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t* data);
+ 
+#ifdef __cplusplus
+}
+#endif
 
 
-
-#endif _MPU6050_H_
+#endif _I2C_WRAP_H_

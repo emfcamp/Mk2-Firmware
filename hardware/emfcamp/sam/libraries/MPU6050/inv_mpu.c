@@ -106,11 +106,16 @@ static inline int reg_int_cb(struct int_param_s *int_param)
 /* Arduino DUE platform setup
  */
 #include <Arduino.h>
-#include <Wire.h>
+#include "i2c_wrap.h"
+
 #define i2c_write(a, b, c, d)   I2CwriteBytes(a, b, c, d)
 #define i2c_read(a, b, c, d)    I2CreadBytes(a, b, c, d)
 #define delay_ms delay
-#define get_ms(t)  ( t = millis() )
+void get_ms(unsigned long* t)
+{
+    return millis();
+}
+
 static inline int reg_int_cb(struct int_param_s *int_param)
 {
     attachInterrupt(int_param->pin, int_param->cb, int_param->arg);
@@ -124,64 +129,6 @@ static inline int reg_int_cb(struct int_param_s *int_param)
 
 /* since we cannot set this via a complie time define the chip type here */
 #define MPU6050
-
-// borrowed from I2Cdev lib
-
-/** Read multiple bytes from an 8-bit device register.
- * @param devAddr I2C slave device address
- * @param regAddr First register regAddr to read from
- * @param length Number of bytes to read
- * @param data Buffer to store read data in
- * @param timeout Optional read timeout in milliseconds (0 to disable, leave off to use default class value in I2Cdev::readTimeout)
- * @return Number of bytes read (-1 indicates failure)
- */
-int8_t I2CreadBytes(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *data) {
-    int8_t count = 0;
-    
-    // Arduino v1.0.1+, Wire library
-    // Adds official support for repeated start condition, yay!
-    
-    // I2C/TWI subsystem uses internal buffer that breaks with large data requests
-    // so if user requests more than BUFFER_LENGTH bytes, we have to do it in
-    // smaller chunks instead of all at once
-    uint8_t k = 0;
-    for (k; k < length; k += min(length, BUFFER_LENGTH)) {
-        Wire.beginTransmission(devAddr);
-        Wire.write(regAddr);
-        Wire.endTransmission();
-        Wire.beginTransmission(devAddr);
-        Wire.requestFrom(devAddr, (uint8_t)min(length - k, BUFFER_LENGTH));
-        
-        for (; Wire.available(); count++) {
-            data[count] = Wire.read();
-        }
-    }
-    
-    return count;
-}
-
-/** Write multiple bytes to an 8-bit device register.
- * @param devAddr I2C slave device address
- * @param regAddr First register address to write to
- * @param length Number of bytes to write
- * @param data Buffer to copy new data from
- * @return Status of operation (true = success)
- */
-bool I2CwriteBytes(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t* data) {
-    uint8_t status = 0;
-    
-    Wire.beginTransmission(devAddr);
-    Wire.write((uint8_t) regAddr); // send address
-    uint8_t i = 0;
-    for (i; i < length; i++) {
-        Wire.write((uint8_t) data[i]);
-    }
-
-    Wire.endTransmission();
-    status = Wire.endTransmission();
-
-    return status == 0;
-}
 
 #else
 #error  Gyro driver is missing the system layer implementations.
@@ -371,6 +318,10 @@ struct test_s {
     float min_g;
     float max_g;
     float max_accel_var;
+#ifdef MPU6500
+    float max_g_offset;
+    unsigned short sample_wait_ms;
+#endif
 };
 
 /* Gyro driver state variables. */
@@ -658,19 +609,21 @@ const struct hw_s hw = {
 
 const struct test_s test = {
     .gyro_sens      = 32768/250,
-    .accel_sens     = 32768/16,
+    .accel_sens     = 32768/2,  //FSR = +-2G = 16384 LSB/G
     .reg_rate_div   = 0,    /* 1kHz. */
-    .reg_lpf        = 1,    /* 188Hz. */
+    .reg_lpf        = 2,    /* 92Hz low pass filter*/
     .reg_gyro_fsr   = 0,    /* 250dps. */
-    .reg_accel_fsr  = 0x18, /* 16g. */
-    .wait_ms        = 50,
-    .packet_thresh  = 5,    /* 5% */
-    .min_dps        = 10.f,
-    .max_dps        = 105.f,
-    .max_gyro_var   = 0.14f,
-    .min_g          = 0.3f,
-    .max_g          = 0.95f,
-    .max_accel_var  = 0.14f
+    .reg_accel_fsr  = 0x0,  /* Accel FSR setting = 2g. */
+    .wait_ms        = 200,   //200ms stabilization time
+    .packet_thresh  = 200,    /* 200 samples */
+    .min_dps        = 20.f,  //20 dps for Gyro Criteria C
+    .max_dps        = 60.f, //Must exceed 60 dps threshold for Gyro Criteria B
+    .max_gyro_var   = .5f, //Must exceed +50% variation for Gyro Criteria A
+    .min_g          = .225f, //Accel must exceed Min 225 mg for Criteria B
+    .max_g          = .675f, //Accel cannot exceed Max 675 mg for Criteria B
+    .max_accel_var  = .5f,  //Accel must be within 50% variation for Criteria A
+    .max_g_offset   = .5f,   //500 mg for Accel Criteria C
+    .sample_wait_ms = 10    //10ms sample time wait
 };
 
 static struct gyro_state_s st = {
@@ -681,6 +634,9 @@ static struct gyro_state_s st = {
 #endif
 
 #define MAX_PACKET_LENGTH (12)
+#ifdef MPU6500
+#define HWST_MAX_PACKET_LENGTH (512)
+#endif
 
 #ifdef AK89xx_SECONDARY
 static int setup_compass(void);
@@ -772,7 +728,7 @@ int mpu_read_reg(unsigned char reg, unsigned char *data)
  */
 int mpu_init(struct int_param_s *int_param)
 {
-    unsigned char data[6], rev;
+    unsigned char data[6];
 
     /* Reset device. */
     data[0] = BIT_RESET;
@@ -785,48 +741,9 @@ int mpu_init(struct int_param_s *int_param)
     if (i2c_write(st.hw->addr, st.reg->pwr_mgmt_1, 1, data))
         return -1;
 
-#if defined MPU6050
-    /* Check product revision. */
-    if (i2c_read(st.hw->addr, st.reg->accel_offs, 6, data))
-        return -1;
-    rev = ((data[5] & 0x01) << 2) | ((data[3] & 0x01) << 1) |
-        (data[1] & 0x01);
+   st.chip_cfg.accel_half = 0;
 
-    if (rev) {
-        /* Congrats, these parts are better. */
-        if (rev == 1)
-            st.chip_cfg.accel_half = 1;
-        else if (rev == 2)
-            st.chip_cfg.accel_half = 0;
-        else {
-            log_e("Unsupported software product rev %d.\n", rev);
-            return -1;
-        }
-    } else {
-        if (i2c_read(st.hw->addr, st.reg->prod_id, 1, data))
-            return -1;
-        rev = data[0] & 0x0F;
-        if (!rev) {
-            log_e("Product ID read as 0 indicates device is either "
-                "incompatible or an MPU3050.\n");
-            return -1;
-        } else if (rev == 4) {
-            log_i("Half sensitivity part found.\n");
-            st.chip_cfg.accel_half = 1;
-        } else
-            st.chip_cfg.accel_half = 0;
-    }
-#elif defined MPU6500
-#define MPU6500_MEM_REV_ADDR    (0x17)
-    if (mpu_read_mem(MPU6500_MEM_REV_ADDR, 1, &rev))
-        return -1;
-    if (rev == 0x1)
-        st.chip_cfg.accel_half = 0;
-    else {
-        log_e("Unsupported software product rev %d.\n", rev);
-        return -1;
-    }
-
+#ifdef MPU6500
     /* MPU6500 shares 4kB of memory between the DMP and the FIFO. Since the
      * first 3kB are needed by the DMP, we'll use the last 1kB for the FIFO.
      */
@@ -1050,54 +967,190 @@ int mpu_get_temperature(long *data, unsigned long *timestamp)
 }
 
 /**
- *  @brief      Push biases to the accel bias registers.
+ *  @brief      Read biases to the accel bias 6500 registers.
+ *  This function reads from the MPU6500 accel offset cancellations registers.
+ *  The format are G in +-8G format. The register is initialized with OTP 
+ *  factory trim values.
+ *  @param[in]  accel_bias  returned structure with the accel bias
+ *  @return     0 if successful.
+ */
+int mpu_read_6500_accel_bias(long *accel_bias) {
+	unsigned char data[6];
+	if (i2c_read(st.hw->addr, 0x77, 2, &data[0]))
+		return -1;
+	if (i2c_read(st.hw->addr, 0x7A, 2, &data[2]))
+		return -1;
+	if (i2c_read(st.hw->addr, 0x7D, 2, &data[4]))
+		return -1;
+	accel_bias[0] = ((long)data[0]<<8) | data[1];
+	accel_bias[1] = ((long)data[2]<<8) | data[3];
+	accel_bias[2] = ((long)data[4]<<8) | data[5];
+	return 0;
+}
+
+/**
+ *  @brief      Read biases to the accel bias 6050 registers.
+ *  This function reads from the MPU6050 accel offset cancellations registers.
+ *  The format are G in +-8G format. The register is initialized with OTP 
+ *  factory trim values.
+ *  @param[in]  accel_bias  returned structure with the accel bias
+ *  @return     0 if successful.
+ */
+int mpu_read_6050_accel_bias(long *accel_bias) {
+	unsigned char data[6];
+	if (i2c_read(st.hw->addr, 0x06, 2, &data[0]))
+		return -1;
+	if (i2c_read(st.hw->addr, 0x08, 2, &data[2]))
+		return -1;
+	if (i2c_read(st.hw->addr, 0x0A, 2, &data[4]))
+		return -1;
+	accel_bias[0] = ((long)data[0]<<8) | data[1];
+	accel_bias[1] = ((long)data[2]<<8) | data[3];
+	accel_bias[2] = ((long)data[4]<<8) | data[5];
+	return 0;
+}
+
+int mpu_read_6500_gyro_bias(long *gyro_bias) {
+	unsigned char data[6];
+	if (i2c_read(st.hw->addr, 0x13, 2, &data[0]))
+		return -1;
+	if (i2c_read(st.hw->addr, 0x15, 2, &data[2]))
+		return -1;
+	if (i2c_read(st.hw->addr, 0x17, 2, &data[4]))
+		return -1;
+	gyro_bias[0] = ((long)data[0]<<8) | data[1];
+	gyro_bias[1] = ((long)data[2]<<8) | data[3];
+	gyro_bias[2] = ((long)data[4]<<8) | data[5];
+	return 0;
+}
+
+/**
+ *  @brief      Push biases to the gyro bias 6500/6050 registers.
  *  This function expects biases relative to the current sensor output, and
- *  these biases will be added to the factory-supplied values.
+ *  these biases will be added to the factory-supplied values. Bias inputs are LSB
+ *  in +-1000dps format.
+ *  @param[in]  gyro_bias  New biases.
+ *  @return     0 if successful.
+ */
+int mpu_set_gyro_bias_reg(long *gyro_bias)
+{
+    unsigned char data[6] = {0, 0, 0, 0, 0, 0};
+    int i=0;
+    for(i=0;i<3;i++) {
+    	gyro_bias[i]= (-gyro_bias[i]);
+    }
+    data[0] = (gyro_bias[0] >> 8) & 0xff;
+    data[1] = (gyro_bias[0]) & 0xff;
+    data[2] = (gyro_bias[1] >> 8) & 0xff;
+    data[3] = (gyro_bias[1]) & 0xff;
+    data[4] = (gyro_bias[2] >> 8) & 0xff;
+    data[5] = (gyro_bias[2]) & 0xff;
+    if (i2c_write(st.hw->addr, 0x13, 2, &data[0]))
+        return -1;
+    if (i2c_write(st.hw->addr, 0x15, 2, &data[2]))
+        return -1;
+    if (i2c_write(st.hw->addr, 0x17, 2, &data[4]))
+        return -1;
+    return 0;
+}
+
+/**
+ *  @brief      Push biases to the accel bias 6050 registers.
+ *  This function expects biases relative to the current sensor output, and
+ *  these biases will be added to the factory-supplied values. Bias inputs are LSB
+ *  in +-8G format.
  *  @param[in]  accel_bias  New biases.
  *  @return     0 if successful.
  */
-int mpu_set_accel_bias(const long *accel_bias)
+int mpu_set_accel_bias_6050_reg(const long *accel_bias)
 {
-    unsigned char data[6];
-    short accel_hw[3];
-    short got_accel[3];
-    short fg[3];
+    unsigned char data[6] = {0, 0, 0, 0, 0, 0};
+    long accel_reg_bias[3] = {0, 0, 0};
+    long mask = 0x0001;
+    unsigned char mask_bit[3] = {0, 0, 0};
+    unsigned char i = 0;
+    if(mpu_read_6050_accel_bias(accel_reg_bias))
+    	return -1;
 
-    if (!accel_bias)
+    //bit 0 of the 2 byte bias is for temp comp
+    //calculations need to compensate for this and not change it
+    for(i=0; i<3; i++) {
+    	if(accel_reg_bias[i]&mask)
+    		mask_bit[i] = 0x01;
+    }
+
+    accel_reg_bias[0] -= accel_bias[0];
+    accel_reg_bias[1] -= accel_bias[1];
+    accel_reg_bias[2] -= accel_bias[2];
+
+    data[0] = (accel_reg_bias[0] >> 8) & 0xff;
+    data[1] = (accel_reg_bias[0]) & 0xff;
+    data[1] = data[1]|mask_bit[0];
+    data[2] = (accel_reg_bias[1] >> 8) & 0xff;
+    data[3] = (accel_reg_bias[1]) & 0xff;
+    data[3] = data[3]|mask_bit[1];
+    data[4] = (accel_reg_bias[2] >> 8) & 0xff;
+    data[5] = (accel_reg_bias[2]) & 0xff;
+    data[5] = data[5]|mask_bit[2];
+
+    if (i2c_write(st.hw->addr, 0x06, 2, &data[0]))
         return -1;
-    if (!accel_bias[0] && !accel_bias[1] && !accel_bias[2])
-        return 0;
-
-    if (i2c_read(st.hw->addr, 3, 3, data))
+    if (i2c_write(st.hw->addr, 0x08, 2, &data[2]))
         return -1;
-    fg[0] = ((data[0] >> 4) + 8) & 0xf;
-    fg[1] = ((data[1] >> 4) + 8) & 0xf;
-    fg[2] = ((data[2] >> 4) + 8) & 0xf;
-
-    accel_hw[0] = (short)(accel_bias[0] * 2 / (64 + fg[0]));
-    accel_hw[1] = (short)(accel_bias[1] * 2 / (64 + fg[1]));
-    accel_hw[2] = (short)(accel_bias[2] * 2 / (64 + fg[2]));
-
-    if (i2c_read(st.hw->addr, 0x06, 6, data))
+    if (i2c_write(st.hw->addr, 0x0A, 2, &data[4]))
         return -1;
 
-    got_accel[0] = ((short)data[0] << 8) | data[1];
-    got_accel[1] = ((short)data[2] << 8) | data[3];
-    got_accel[2] = ((short)data[4] << 8) | data[5];
+    return 0;
+}
 
-    accel_hw[0] += got_accel[0];
-    accel_hw[1] += got_accel[1];
-    accel_hw[2] += got_accel[2];
 
-    data[0] = (accel_hw[0] >> 8) & 0xff;
-    data[1] = (accel_hw[0]) & 0xff;
-    data[2] = (accel_hw[1] >> 8) & 0xff;
-    data[3] = (accel_hw[1]) & 0xff;
-    data[4] = (accel_hw[2] >> 8) & 0xff;
-    data[5] = (accel_hw[2]) & 0xff;
+/**
+ *  @brief      Push biases to the accel bias 6500 registers.
+ *  This function expects biases relative to the current sensor output, and
+ *  these biases will be added to the factory-supplied values. Bias inputs are LSB
+ *  in +-8G format.
+ *  @param[in]  accel_bias  New biases.
+ *  @return     0 if successful.
+ */
+int mpu_set_accel_bias_6500_reg(const long *accel_bias)
+{
+    unsigned char data[6] = {0, 0, 0, 0, 0, 0};
+    long accel_reg_bias[3] = {0, 0, 0};
+    long mask = 0x0001;
+    unsigned char mask_bit[3] = {0, 0, 0};
+    unsigned char i = 0;
 
-    if (i2c_write(st.hw->addr, 0x06, 6, data))
+    if(mpu_read_6500_accel_bias(accel_reg_bias))
+    	return -1;
+
+    //bit 0 of the 2 byte bias is for temp comp
+    //calculations need to compensate for this
+    for(i=0; i<3; i++) {
+    	if(accel_reg_bias[i]&mask)
+    		mask_bit[i] = 0x01;
+    }
+
+    accel_reg_bias[0] -= accel_bias[0];
+    accel_reg_bias[1] -= accel_bias[1];
+    accel_reg_bias[2] -= accel_bias[2];
+
+    data[0] = (accel_reg_bias[0] >> 8) & 0xff;
+    data[1] = (accel_reg_bias[0]) & 0xff;
+    data[1] = data[1]|mask_bit[0];
+    data[2] = (accel_reg_bias[1] >> 8) & 0xff;
+    data[3] = (accel_reg_bias[1]) & 0xff;
+    data[3] = data[3]|mask_bit[1];
+    data[4] = (accel_reg_bias[2] >> 8) & 0xff;
+    data[5] = (accel_reg_bias[2]) & 0xff;
+    data[5] = data[5]|mask_bit[2];
+
+    if (i2c_write(st.hw->addr, 0x77, 2, &data[0]))
         return -1;
+    if (i2c_write(st.hw->addr, 0x7A, 2, &data[2]))
+        return -1;
+    if (i2c_write(st.hw->addr, 0x7D, 2, &data[4]))
+        return -1;
+
     return 0;
 }
 
@@ -1987,6 +2040,7 @@ static int gyro_self_test(long *bias_regular, long *bias_st)
     return result;
 }
 
+#endif 
 #ifdef AK89xx_SECONDARY
 static int compass_self_test(void)
 {
@@ -2021,6 +2075,7 @@ static int compass_self_test(void)
         goto AKM_restore;
 
     result = 0;
+#if defined MPU9150
     data = (short)(tmp[1] << 8) | tmp[0];
     if ((data > 100) || (data < -100))
         result |= 0x01;
@@ -2030,7 +2085,17 @@ static int compass_self_test(void)
     data = (short)(tmp[5] << 8) | tmp[4];
     if ((data > -300) || (data < -1000))
         result |= 0x04;
-
+#elif defined MPU9250
+    data = (short)(tmp[1] << 8) | tmp[0];
+    if ((data > 200) || (data < -200))  
+        result |= 0x01;
+    data = (short)(tmp[3] << 8) | tmp[2];
+    if ((data > 200) || (data < -200))  
+        result |= 0x02;
+    data = (short)(tmp[5] << 8) | tmp[4];
+    if ((data > -800) || (data < -3200))  
+        result |= 0x04;
+#endif
 AKM_restore:
     tmp[0] = 0 | SUPPORTS_AK89xx_HIGH_SENS;
     i2c_write(st.chip_cfg.compass_addr, AKM_REG_ASTC, 1, tmp);
@@ -2039,7 +2104,6 @@ AKM_restore:
     mpu_set_bypass(0);
     return result;
 }
-#endif
 #endif
 
 static int get_st_biases(long *gyro, long *accel, unsigned char hw_test)
@@ -2162,8 +2226,354 @@ static int get_st_biases(long *gyro, long *accel, unsigned char hw_test)
     return 0;
 }
 
+#ifdef MPU6500
+#define REG_6500_XG_ST_DATA     0x0
+#define REG_6500_XA_ST_DATA     0xD
+static const unsigned short mpu_6500_st_tb[256] = {
+	2620,2646,2672,2699,2726,2753,2781,2808, //7
+	2837,2865,2894,2923,2952,2981,3011,3041, //15
+	3072,3102,3133,3165,3196,3228,3261,3293, //23
+	3326,3359,3393,3427,3461,3496,3531,3566, //31
+	3602,3638,3674,3711,3748,3786,3823,3862, //39
+	3900,3939,3979,4019,4059,4099,4140,4182, //47
+	4224,4266,4308,4352,4395,4439,4483,4528, //55
+	4574,4619,4665,4712,4759,4807,4855,4903, //63
+	4953,5002,5052,5103,5154,5205,5257,5310, //71
+	5363,5417,5471,5525,5581,5636,5693,5750, //79
+	5807,5865,5924,5983,6043,6104,6165,6226, //87
+	6289,6351,6415,6479,6544,6609,6675,6742, //95
+	6810,6878,6946,7016,7086,7157,7229,7301, //103
+	7374,7448,7522,7597,7673,7750,7828,7906, //111
+	7985,8065,8145,8227,8309,8392,8476,8561, //119
+	8647,8733,8820,8909,8998,9088,9178,9270,
+	9363,9457,9551,9647,9743,9841,9939,10038,
+	10139,10240,10343,10446,10550,10656,10763,10870,
+	10979,11089,11200,11312,11425,11539,11654,11771,
+	11889,12008,12128,12249,12371,12495,12620,12746,
+	12874,13002,13132,13264,13396,13530,13666,13802,
+	13940,14080,14221,14363,14506,14652,14798,14946,
+	15096,15247,15399,15553,15709,15866,16024,16184,
+	16346,16510,16675,16842,17010,17180,17352,17526,
+	17701,17878,18057,18237,18420,18604,18790,18978,
+	19167,19359,19553,19748,19946,20145,20347,20550,
+	20756,20963,21173,21385,21598,21814,22033,22253,
+	22475,22700,22927,23156,23388,23622,23858,24097,
+	24338,24581,24827,25075,25326,25579,25835,26093,
+	26354,26618,26884,27153,27424,27699,27976,28255,
+	28538,28823,29112,29403,29697,29994,30294,30597,
+	30903,31212,31524,31839,32157,32479,32804,33132
+};
+static int accel_6500_self_test(long *bias_regular, long *bias_st, int debug)
+{
+    int i, result = 0, otp_value_zero = 0;
+    float accel_st_al_min, accel_st_al_max;
+    float st_shift_cust[3], st_shift_ratio[3], ct_shift_prod[3], accel_offset_max;
+    unsigned char regs[3];
+    if (i2c_read(st.hw->addr, REG_6500_XA_ST_DATA, 3, regs)) {
+    	if(debug)
+    		log_i("Reading OTP Register Error.\n");
+    	return 0x07;
+    }
+    if(debug)
+    	log_i("Accel OTP:%d, %d, %d\n", regs[0], regs[1], regs[2]);
+	for (i = 0; i < 3; i++) {
+		if (regs[i] != 0) {
+			ct_shift_prod[i] = mpu_6500_st_tb[regs[i] - 1];
+			ct_shift_prod[i] *= 65536.f;
+			ct_shift_prod[i] /= test.accel_sens;
+		}
+		else {
+			ct_shift_prod[i] = 0;
+			otp_value_zero = 1;
+		}
+	}
+	if(otp_value_zero == 0) {
+		if(debug)
+			log_i("ACCEL:CRITERIA A\n");
+		for (i = 0; i < 3; i++) {
+			st_shift_cust[i] = bias_st[i] - bias_regular[i];
+			if(debug) {
+				log_i("Bias_Shift=%7.4f, Bias_Reg=%7.4f, Bias_HWST=%7.4f\r\n",
+						st_shift_cust[i]/1.f, bias_regular[i]/1.f,
+						bias_st[i]/1.f);
+				log_i("OTP value: %7.4f\r\n", ct_shift_prod[i]/1.f);
+			}
+
+			st_shift_ratio[i] = st_shift_cust[i] / ct_shift_prod[i] - 1.f;
+
+			if(debug)
+				log_i("ratio=%7.4f, threshold=%7.4f\r\n", st_shift_ratio[i]/1.f,
+							test.max_accel_var/1.f);
+
+			if (fabs(st_shift_ratio[i]) > test.max_accel_var) {
+				if(debug)
+					log_i("ACCEL Fail Axis = %d\n", i);
+				result |= 1 << i;	//Error condition
+			}
+		}
+	}
+	else {
+		/* Self Test Pass/Fail Criteria B */
+		accel_st_al_min = test.min_g * 65536.f;
+		accel_st_al_max = test.max_g * 65536.f;
+
+		if(debug) {
+			log_i("ACCEL:CRITERIA B\r\n");
+			log_i("Min MG: %7.4f\r\n", accel_st_al_min/1.f);
+			log_i("Max MG: %7.4f\r\n", accel_st_al_max/1.f);
+		}
+
+		for (i = 0; i < 3; i++) {
+			st_shift_cust[i] = bias_st[i] - bias_regular[i];
+
+			if(debug)
+				log_i("Bias_shift=%7.4f, st=%7.4f, reg=%7.4f\n", st_shift_cust[i]/1.f, bias_st[i]/1.f, bias_regular[i]/1.f);
+			if(st_shift_cust[i] < accel_st_al_min || st_shift_cust[i] > accel_st_al_max) {
+				if(debug)
+					log_i("Accel FAIL axis:%d <= 225mg or >= 675mg\n", i);
+				result |= 1 << i;	//Error condition
+			}
+		}
+	}
+
+	if(result == 0) {
+	/* Self Test Pass/Fail Criteria C */
+		accel_offset_max = test.max_g_offset * 65536.f;
+		if(debug)
+			log_i("Accel:CRITERIA C: bias less than %7.4f\n", accel_offset_max/1.f);
+		for (i = 0; i < 3; i++) {
+			if(fabs(bias_regular[i]) > accel_offset_max) {
+				if(debug)
+					log_i("FAILED: Accel axis:%d = %d > 500mg\n", i, bias_regular[i]);
+				result |= 1 << i;	//Error condition
+			}
+		}
+	}
+
+    return result;
+}
+
+static int gyro_6500_self_test(long *bias_regular, long *bias_st, int debug)
+{
+    int i, result = 0, otp_value_zero = 0;
+    float gyro_st_al_max;
+    float st_shift_cust[3], st_shift_ratio[3], ct_shift_prod[3], gyro_offset_max;
+    unsigned char regs[3];
+
+    if (i2c_read(st.hw->addr, REG_6500_XG_ST_DATA, 3, regs)) {
+    	if(debug)
+    		log_i("Reading OTP Register Error.\n");
+        return 0x07;
+    }
+
+    if(debug)
+    	log_i("Gyro OTP:%d, %d, %d\r\n", regs[0], regs[1], regs[2]);
+
+	for (i = 0; i < 3; i++) {
+		if (regs[i] != 0) {
+			ct_shift_prod[i] = mpu_6500_st_tb[regs[i] - 1];
+			ct_shift_prod[i] *= 65536.f;
+			ct_shift_prod[i] /= test.gyro_sens;
+		}
+		else {
+			ct_shift_prod[i] = 0;
+			otp_value_zero = 1;
+		}
+	}
+
+	if(otp_value_zero == 0) {
+		if(debug)
+			log_i("GYRO:CRITERIA A\n");
+		/* Self Test Pass/Fail Criteria A */
+		for (i = 0; i < 3; i++) {
+			st_shift_cust[i] = bias_st[i] - bias_regular[i];
+
+			if(debug) {
+				log_i("Bias_Shift=%7.4f, Bias_Reg=%7.4f, Bias_HWST=%7.4f\r\n",
+						st_shift_cust[i]/1.f, bias_regular[i]/1.f,
+						bias_st[i]/1.f);
+				log_i("OTP value: %7.4f\r\n", ct_shift_prod[i]/1.f);
+			}
+
+			st_shift_ratio[i] = st_shift_cust[i] / ct_shift_prod[i];
+
+			if(debug)
+				log_i("ratio=%7.4f, threshold=%7.4f\r\n", st_shift_ratio[i]/1.f,
+							test.max_gyro_var/1.f);
+
+			if (fabs(st_shift_ratio[i]) < test.max_gyro_var) {
+				if(debug)
+					log_i("Gyro Fail Axis = %d\n", i);
+				result |= 1 << i;	//Error condition
+			}
+		}
+	}
+	else {
+		/* Self Test Pass/Fail Criteria B */
+		gyro_st_al_max = test.max_dps * 65536.f;
+
+		if(debug) {
+			log_i("GYRO:CRITERIA B\r\n");
+			log_i("Max DPS: %7.4f\r\n", gyro_st_al_max/1.f);
+		}
+
+		for (i = 0; i < 3; i++) {
+			st_shift_cust[i] = bias_st[i] - bias_regular[i];
+
+			if(debug)
+				log_i("Bias_shift=%7.4f, st=%7.4f, reg=%7.4f\n", st_shift_cust[i]/1.f, bias_st[i]/1.f, bias_regular[i]/1.f);
+			if(st_shift_cust[i] < gyro_st_al_max) {
+				if(debug)
+					log_i("GYRO FAIL axis:%d greater than 60dps\n", i);
+				result |= 1 << i;	//Error condition
+			}
+		}
+	}
+
+	if(result == 0) {
+	/* Self Test Pass/Fail Criteria C */
+		gyro_offset_max = test.min_dps * 65536.f;
+		if(debug)
+			log_i("Gyro:CRITERIA C: bias less than %7.4f\n", gyro_offset_max/1.f);
+		for (i = 0; i < 3; i++) {
+			if(fabs(bias_regular[i]) > gyro_offset_max) {
+				if(debug)
+					log_i("FAILED: Gyro axis:%d = %d > 20dps\n", i, bias_regular[i]);
+				result |= 1 << i;	//Error condition
+			}
+		}
+	}
+    return result;
+}
+
+static int get_st_6500_biases(long *gyro, long *accel, unsigned char hw_test, int debug)
+{
+    unsigned char data[HWST_MAX_PACKET_LENGTH];
+    unsigned char packet_count, ii;
+    unsigned short fifo_count;
+    int s = 0, read_size = 0, ind;
+
+    data[0] = 0x01;
+    data[1] = 0;
+    if (i2c_write(st.hw->addr, st.reg->pwr_mgmt_1, 2, data))
+        return -1;
+    delay_ms(200);
+    data[0] = 0;
+    if (i2c_write(st.hw->addr, st.reg->int_enable, 1, data))
+        return -1;
+    if (i2c_write(st.hw->addr, st.reg->fifo_en, 1, data))
+        return -1;
+    if (i2c_write(st.hw->addr, st.reg->pwr_mgmt_1, 1, data))
+        return -1;
+    if (i2c_write(st.hw->addr, st.reg->i2c_mst, 1, data))
+        return -1;
+    if (i2c_write(st.hw->addr, st.reg->user_ctrl, 1, data))
+        return -1;
+    data[0] = BIT_FIFO_RST | BIT_DMP_RST;
+    if (i2c_write(st.hw->addr, st.reg->user_ctrl, 1, data))
+        return -1;
+    delay_ms(15);
+    data[0] = st.test->reg_lpf;
+    if (i2c_write(st.hw->addr, st.reg->lpf, 1, data))
+        return -1;
+    data[0] = st.test->reg_rate_div;
+    if (i2c_write(st.hw->addr, st.reg->rate_div, 1, data))
+        return -1;
+    if (hw_test)
+        data[0] = st.test->reg_gyro_fsr | 0xE0;
+    else
+        data[0] = st.test->reg_gyro_fsr;
+    if (i2c_write(st.hw->addr, st.reg->gyro_cfg, 1, data))
+        return -1;
+
+    if (hw_test)
+        data[0] = st.test->reg_accel_fsr | 0xE0;
+    else
+        data[0] = test.reg_accel_fsr;
+    if (i2c_write(st.hw->addr, st.reg->accel_cfg, 1, data))
+        return -1;
+
+    delay_ms(test.wait_ms);  //wait 200ms for sensors to stabilize
+
+    /* Enable FIFO */
+    data[0] = BIT_FIFO_EN;
+    if (i2c_write(st.hw->addr, st.reg->user_ctrl, 1, data))
+        return -1;
+    data[0] = INV_XYZ_GYRO | INV_XYZ_ACCEL;
+    if (i2c_write(st.hw->addr, st.reg->fifo_en, 1, data))
+        return -1;
+
+    //initialize the bias return values
+    gyro[0] = gyro[1] = gyro[2] = 0;
+    accel[0] = accel[1] = accel[2] = 0;
+
+    if(debug)
+    	log_i("Starting Bias Loop Reads\n");
+
+    //start reading samples
+    while (s < test.packet_thresh) {
+    	delay_ms(test.sample_wait_ms); //wait 10ms to fill FIFO
+		if (i2c_read(st.hw->addr, st.reg->fifo_count_h, 2, data))
+			return -1;
+		fifo_count = (data[0] << 8) | data[1];
+		packet_count = fifo_count / MAX_PACKET_LENGTH;
+		if ((test.packet_thresh - s) < packet_count)
+		            packet_count = test.packet_thresh - s;
+		read_size = packet_count * MAX_PACKET_LENGTH;
+
+		//burst read from FIFO
+		if (i2c_read(st.hw->addr, st.reg->fifo_r_w, read_size, data))
+						return -1;
+		ind = 0;
+		for (ii = 0; ii < packet_count; ii++) {
+			short accel_cur[3], gyro_cur[3];
+			accel_cur[0] = ((short)data[ind + 0] << 8) | data[ind + 1];
+			accel_cur[1] = ((short)data[ind + 2] << 8) | data[ind + 3];
+			accel_cur[2] = ((short)data[ind + 4] << 8) | data[ind + 5];
+			accel[0] += (long)accel_cur[0];
+			accel[1] += (long)accel_cur[1];
+			accel[2] += (long)accel_cur[2];
+			gyro_cur[0] = (((short)data[ind + 6] << 8) | data[ind + 7]);
+			gyro_cur[1] = (((short)data[ind + 8] << 8) | data[ind + 9]);
+			gyro_cur[2] = (((short)data[ind + 10] << 8) | data[ind + 11]);
+			gyro[0] += (long)gyro_cur[0];
+			gyro[1] += (long)gyro_cur[1];
+			gyro[2] += (long)gyro_cur[2];
+			ind += MAX_PACKET_LENGTH;
+		}
+		s += packet_count;
+    }
+
+    if(debug)
+    	log_i("Samples: %d\n", s);
+
+    //stop FIFO
+    data[0] = 0;
+    if (i2c_write(st.hw->addr, st.reg->fifo_en, 1, data))
+        return -1;
+
+    gyro[0] = (long)(((long long)gyro[0]<<16) / test.gyro_sens / s);
+    gyro[1] = (long)(((long long)gyro[1]<<16) / test.gyro_sens / s);
+    gyro[2] = (long)(((long long)gyro[2]<<16) / test.gyro_sens / s);
+    accel[0] = (long)(((long long)accel[0]<<16) / test.accel_sens / s);
+    accel[1] = (long)(((long long)accel[1]<<16) / test.accel_sens / s);
+    accel[2] = (long)(((long long)accel[2]<<16) / test.accel_sens / s);
+    /* remove gravity from bias calculation */
+    if (accel[2] > 0L)
+        accel[2] -= 65536L;
+    else
+        accel[2] += 65536L;
+
+
+    if(debug) {
+    	log_i("Accel offset data HWST bit=%d: %7.4f %7.4f %7.4f\r\n", hw_test, accel[0]/65536.f, accel[1]/65536.f, accel[2]/65536.f);
+    	log_i("Gyro offset data HWST bit=%d: %7.4f %7.4f %7.4f\r\n", hw_test, gyro[0]/65536.f, gyro[1]/65536.f, gyro[2]/65536.f);
+    }
+
+    return 0;
+}
 /**
- *  @brief      Trigger gyro/accel/compass self-test.
+ *  @brief      Trigger gyro/accel/compass self-test for MPU6500/MPU9250
  *  On success/error, the self-test returns a mask representing the sensor(s)
  *  that failed. For each bit, a one (1) represents a "pass" case; conversely,
  *  a zero (0) indicates a failure.
@@ -2173,9 +2583,126 @@ static int get_st_biases(long *gyro, long *accel, unsigned char hw_test)
  *  \n Bit 1:   Accel.
  *  \n Bit 2:   Compass.
  *
- *  \n Currently, the hardware self-test is unsupported for MPU6500. However,
- *  this function can still be used to obtain the accel and gyro biases.
- *
+ *  @param[out] gyro        Gyro biases in q16 format.
+ *  @param[out] accel       Accel biases (if applicable) in q16 format.
+ *  @param[in]  debug       Debug flag used to print out more detailed logs. Must first set up logging in Motion Driver.
+ *  @return     Result mask (see above).
+ */
+int mpu_run_6500_self_test(long *gyro, long *accel, unsigned char debug)
+{
+    const unsigned char tries = 2;
+    long gyro_st[3], accel_st[3];
+    unsigned char accel_result, gyro_result;
+#ifdef AK89xx_SECONDARY
+    unsigned char compass_result;
+#endif
+    int ii;
+
+    int result;
+    unsigned char accel_fsr, fifo_sensors, sensors_on;
+    unsigned short gyro_fsr, sample_rate, lpf;
+    unsigned char dmp_was_on;
+
+
+
+    if(debug)
+    	log_i("Starting MPU6500 HWST!\r\n");
+
+    if (st.chip_cfg.dmp_on) {
+        mpu_set_dmp_state(0);
+        dmp_was_on = 1;
+    } else
+        dmp_was_on = 0;
+
+    /* Get initial settings. */
+    mpu_get_gyro_fsr(&gyro_fsr);
+    mpu_get_accel_fsr(&accel_fsr);
+    mpu_get_lpf(&lpf);
+    mpu_get_sample_rate(&sample_rate);
+    sensors_on = st.chip_cfg.sensors;
+    mpu_get_fifo_config(&fifo_sensors);
+
+    if(debug)
+    	log_i("Retrieving Biases\r\n");
+
+    for (ii = 0; ii < tries; ii++)
+        if (!get_st_6500_biases(gyro, accel, 0, debug))
+            break;
+    if (ii == tries) {
+        /* If we reach this point, we most likely encountered an I2C error.
+         * We'll just report an error for all three sensors.
+         */
+        if(debug)
+        	log_i("Retrieving Biases Error - possible I2C error\n");
+
+        result = 0;
+        goto restore;
+    }
+
+    if(debug)
+    	log_i("Retrieving ST Biases\n");
+
+    for (ii = 0; ii < tries; ii++)
+        if (!get_st_6500_biases(gyro_st, accel_st, 1, debug))
+            break;
+    if (ii == tries) {
+
+        if(debug)
+        	log_i("Retrieving ST Biases Error - possible I2C error\n");
+
+        /* Again, probably an I2C error. */
+        result = 0;
+        goto restore;
+    }
+
+    accel_result = accel_6500_self_test(accel, accel_st, debug);
+    if(debug)
+    	log_i("Accel Self Test Results: %d\n", accel_result);
+
+    gyro_result = gyro_6500_self_test(gyro, gyro_st, debug);
+    if(debug)
+    	log_i("Gyro Self Test Results: %d\n", gyro_result);
+
+    result = 0;
+    if (!gyro_result)
+        result |= 0x01;
+    if (!accel_result)
+        result |= 0x02;
+
+#ifdef AK89xx_SECONDARY
+    compass_result = compass_self_test();
+    if(debug)
+    	log_i("Compass Self Test Results: %d\n", compass_result);
+    if (!compass_result)
+        result |= 0x04;
+#else
+    result |= 0x04;
+#endif
+restore:
+	if(debug)
+		log_i("Exiting HWST\n");
+	/* Set to invalid values to ensure no I2C writes are skipped. */
+	st.chip_cfg.gyro_fsr = 0xFF;
+	st.chip_cfg.accel_fsr = 0xFF;
+	st.chip_cfg.lpf = 0xFF;
+	st.chip_cfg.sample_rate = 0xFFFF;
+	st.chip_cfg.sensors = 0xFF;
+	st.chip_cfg.fifo_enable = 0xFF;
+	st.chip_cfg.clk_src = INV_CLK_PLL;
+	mpu_set_gyro_fsr(gyro_fsr);
+	mpu_set_accel_fsr(accel_fsr);
+	mpu_set_lpf(lpf);
+	mpu_set_sample_rate(sample_rate);
+	mpu_set_sensors(sensors_on);
+	mpu_configure_fifo(fifo_sensors);
+
+	if (dmp_was_on)
+		mpu_set_dmp_state(1);
+
+	return result;
+}
+#endif
+ /*
  *  \n This function must be called with the device either face-up or face-down
  *  (z-axis is parallel to gravity).
  *  @param[out] gyro        Gyro biases in q16 format.
@@ -2244,6 +2771,8 @@ int mpu_run_self_test(long *gyro, long *accel)
 #ifdef AK89xx_SECONDARY
     compass_result = compass_self_test();
     if (!compass_result)
+        result |= 0x04;
+#else
         result |= 0x04;
 #endif
 restore:
@@ -2435,11 +2964,10 @@ int mpu_get_dmp_state(unsigned char *enabled)
     return 0;
 }
 
-
+#ifdef AK89xx_SECONDARY
 /* This initialization is similar to the one in ak8975.c. */
 static int setup_compass(void)
 {
-#ifdef AK89xx_SECONDARY
     unsigned char data[4], akm_addr;
 
     mpu_set_bypass(1);
@@ -2537,10 +3065,8 @@ static int setup_compass(void)
 #endif
 
     return 0;
-#else
-    return -1;
-#endif
 }
+#endif
 
 /**
  *  @brief      Read raw compass data.
@@ -2652,12 +3178,14 @@ int mpu_get_compass_fsr(unsigned short *fsr)
 int mpu_lp_motion_interrupt(unsigned short thresh, unsigned char time,
     unsigned char lpa_freq)
 {
-    unsigned char data[3];
-
-    if (lpa_freq) {
-        unsigned char thresh_hw;
 
 #if defined MPU6500
+    unsigned char data[3];
+#endif
+    if (lpa_freq) {
+#if defined MPU6500
+    	unsigned char thresh_hw;
+
         /* 1LSb = 4mg. */
         if (thresh > 1020)
             thresh_hw = 255;
@@ -2673,11 +3201,11 @@ int mpu_lp_motion_interrupt(unsigned short thresh, unsigned char time,
 
 #if defined MPU6500
         if (lpa_freq > 640)
-#endif
             /* At this point, the chip has not been re-configured, so the
              * function can safely exit.
              */
             return -1;
+#endif
 
         if (!st.chip_cfg.int_motion_only) {
             /* Store current settings for later. */
