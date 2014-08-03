@@ -27,15 +27,13 @@
  SOFTWARE.
  */
 
-#ifndef _I2C_WRAP_H_
-#define _I2C_WARP_H_
+#include "i2c_wrap.h"
 
-#include <Arduino.h>
+#include <Wire.h>
 
-#ifdef __cplusplus
+// borrowed from I2Cdev lib
+
 extern "C" {
-#endif
-
 
 /** Read multiple bytes from an 8-bit device register.
  * @param devAddr I2C slave device address
@@ -45,7 +43,31 @@ extern "C" {
  * @param timeout Optional read timeout in milliseconds (0 to disable, leave off to use default class value in I2Cdev::readTimeout)
  * @return Number of bytes read (-1 indicates failure)
  */
-int8_t I2CreadBytes(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *data);
+int8_t i2c_read(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *data) {
+    int8_t count = 0;
+    
+    // Arduino v1.0.1+, Wire library
+    // Adds official support for repeated start condition, yay!
+    
+    // I2C/TWI subsystem uses internal buffer that breaks with large data requests
+    // so if user requests more than BUFFER_LENGTH bytes, we have to do it in
+    // smaller chunks instead of all at once
+    uint8_t k = 0;
+    for (k; k < length; k += min(length, BUFFER_LENGTH)) {
+        Wire.beginTransmission(devAddr);
+        Wire.write(regAddr);
+        Wire.endTransmission();
+        Wire.beginTransmission(devAddr);
+        Wire.requestFrom(devAddr, (uint8_t)min(length - k, BUFFER_LENGTH));
+        
+        for (; Wire.available(); count++) {
+            data[count] = Wire.read();
+        }
+    }
+    if (count != length)
+        return -1;
+    return 0;
+}
 
 /** Write multiple bytes to an 8-bit device register.
  * @param devAddr I2C slave device address
@@ -54,11 +76,20 @@ int8_t I2CreadBytes(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *d
  * @param data Buffer to copy new data from
  * @return Status of operation (true = success)
  */
-bool I2CwriteBytes(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t* data);
- 
-#ifdef __cplusplus
+bool i2c_write(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t* data) {
+    uint8_t status = 0;
+    
+    Wire.beginTransmission(devAddr);
+    Wire.write((uint8_t) regAddr); // send address
+    uint8_t i = 0;
+    for (i; i < length; i++) {
+        Wire.write((uint8_t) data[i]);
+    }
+    
+    Wire.endTransmission();
+    status = Wire.endTransmission();
+    
+    return status == 0;
 }
-#endif
-
-
-#endif _I2C_WRAP_H_
+    
+}

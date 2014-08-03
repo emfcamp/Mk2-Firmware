@@ -32,14 +32,10 @@
 
 #include <Arduino.h>
 
-#include "inv_mpu.h"
-#include "inv_mpu_dmp_motion_driver.h"
-#include "dmpKey.h"
-#include "dmpmap.h"
-#include "i2c_wrap.h"
-
-
-
-
+#include "utility/i2c_wrap.h"
+#include "utility/inv_mpu.h"
+#include "utility/inv_mpu_dmp_motion_driver.h"
+#include "utility/dmpKey.h"
+#include "utility/dmpmap.h"
 
 #endif _MPU6050_H_

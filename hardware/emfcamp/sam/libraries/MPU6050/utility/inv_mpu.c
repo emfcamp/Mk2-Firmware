@@ -108,8 +108,6 @@ static inline int reg_int_cb(struct int_param_s *int_param)
 #include <Arduino.h>
 #include "i2c_wrap.h"
 
-#define i2c_write(a, b, c, d)   I2CwriteBytes(a, b, c, d)
-#define i2c_read(a, b, c, d)    I2CreadBytes(a, b, c, d)
 #define delay_ms delay
 void get_ms(unsigned long* t)
 {
