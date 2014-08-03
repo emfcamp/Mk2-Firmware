@@ -737,7 +737,7 @@ int mpu_init(struct int_param_s *int_param)
     /* Wake up chip. */
     data[0] = 0x00;
     if (i2c_write(st.hw->addr, st.reg->pwr_mgmt_1, 1, data))
-        return -1;
+        return -2;
 
    st.chip_cfg.accel_half = 0;
 
@@ -747,7 +747,7 @@ int mpu_init(struct int_param_s *int_param)
      */
     data[0] = BIT_FIFO_SIZE_1024 | 0x8;
     if (i2c_write(st.hw->addr, st.reg->accel_cfg2, 1, data))
-        return -1;
+        return -3;
 #endif
 
     /* Set to invalid values to ensure no I2C writes are skipped. */
@@ -774,15 +774,15 @@ int mpu_init(struct int_param_s *int_param)
     st.chip_cfg.dmp_sample_rate = 0;
 
     if (mpu_set_gyro_fsr(2000))
-        return -1;
+        return -4;
     if (mpu_set_accel_fsr(2))
-        return -1;
+        return -5;
     if (mpu_set_lpf(42))
-        return -1;
+        return -6;
     if (mpu_set_sample_rate(50))
-        return -1;
+        return -7;
     if (mpu_configure_fifo(0))
-        return -1;
+        return -8;
 
     if (int_param)
         reg_int_cb(int_param);
@@ -790,11 +790,11 @@ int mpu_init(struct int_param_s *int_param)
 #ifdef AK89xx_SECONDARY
     setup_compass();
     if (mpu_set_compass_sample_rate(10))
-        return -1;
+        return -9;
 #else
     /* Already disabled by setup_compass. */
-    if (mpu_set_bypass(0))
-        return -1;
+    if(mpu_set_bypass(0))
+        return -10;
 #endif
 
     mpu_set_sensors(0);
@@ -1905,13 +1905,13 @@ int mpu_set_bypass(unsigned char bypass_on)
     } else {
         /* Enable I2C master mode if compass is being used. */
         if (i2c_read(st.hw->addr, st.reg->user_ctrl, 1, &tmp))
-            return -1;
+            return -2;
         if (st.chip_cfg.sensors & INV_XYZ_COMPASS)
             tmp |= BIT_AUX_IF_EN;
         else
             tmp &= ~BIT_AUX_IF_EN;
         if (i2c_write(st.hw->addr, st.reg->user_ctrl, 1, &tmp))
-            return -1;
+            return -3;
         delay_ms(3);
         if (st.chip_cfg.active_low_int)
             tmp = BIT_ACTL;
@@ -1920,7 +1920,7 @@ int mpu_set_bypass(unsigned char bypass_on)
         if (st.chip_cfg.latched_int)
             tmp |= BIT_LATCH_EN | BIT_ANY_RD_CLR;
         if (i2c_write(st.hw->addr, st.reg->int_pin_cfg, 1, &tmp))
-            return -1;
+            return -4;
     }
     st.chip_cfg.bypass_mode = bypass_on;
     return 0;
