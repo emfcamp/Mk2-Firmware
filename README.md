@@ -2,10 +2,10 @@ TiLDA v2 Firmware
 =================
 
 #### Firmware on the TiLDA v2 Badge
-* To use this code you need Arduino IDE version 1.5.5 or later which can be downloaded [here](http://arduino.cc/en/Main/Software#toc3).
+* To use this code you need Arduino IDE version 1.5.7 or later which can be downloaded [here](http://arduino.cc/en/Main/Software#toc3).
 * The easiest way to work with this repo is to set it as the sketchbook folder in the IDE's File->Prefrences menu (restart the IDE after changing this setting).
 * This way you will not have any conflicts with your existing sketchbook and library folders.
-* N.B. Arduino 1.5.5 stores its preferences in a seperate location to that of the Arduino 1.0.x IDE).
+* N.B. Arduino 1.5.7 stores its preferences in a seperate location to that of the Arduino 1.0.x IDE).
 
 
 * The TiLDA code base if split in 3 distinct sections:

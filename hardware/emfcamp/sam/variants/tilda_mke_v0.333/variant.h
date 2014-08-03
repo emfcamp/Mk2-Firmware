@@ -248,14 +248,14 @@ static const uint8_t CAN1TX = 107;
 #define TP22                  (51u) //D51
 #define TP23                  (64u) //A64
 #define TP24                  (63u) //A63
-#define TP25                  (35u) //D35
+#define TP25                  (33u) //D33
 #define TP26                  (32u) //D32
 #define TP27                  (96u) //UOTGVOBOF
     
 // LCD display v0.2+
 #define LCD_CS                BOARD_SPI_SS2
 #define LCD_POWER             (40u)
-#define LCD_BACKLIGHT         (33u)
+#define LCD_BACKLIGHT         (35u)
 #define LCD_A0                (38u)
 #define LCD_RESET             (34u)
 
@@ -293,14 +293,14 @@ static const uint8_t CAN1TX = 107;
     
 // Radio (SRF)
 #define SRF_SLEEP             (61u)
-#define SRF_AT_COMMAND        (60u)  // should be 43 but seems I forgot to swap with LIGHT
+#define SRF_AT_COMMAND        (43u)
     
 //IR
 #define IR_TX_PWM             (6u)
 #define IR_RX                 (42u)
     
 //Buttons
-#define BUTTON_LIGHT          (43u) // should be 60 but seems I forgot to swap the trace with SRF_AT_COMMAND
+#define BUTTON_LIGHT          (60u)
 #define BUTTON_SCREEN_RIGHT   (46u)
 #define BUTTON_SCREEN_LEFT    (29u)
 #define BUTTON_A              (47u)
@@ -319,7 +319,7 @@ static const uint8_t CAN1TX = 107;
 #define PMIC_CHRG             (62u)
 #define PMIC_ILIM1            (51u)
 #define PMIC_ILIM0            (50u)
-    
+
 //Piezo
 #define PIEZO                 (66u)
 
