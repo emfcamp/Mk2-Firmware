@@ -55,6 +55,15 @@
 #define RADIO_PACKET_WITH_RSSI_LENGTH 58 + 1 + 4
 // Radio message buffer length
 #define RADIO_MAX_MESSAGE_BUFFER_LENGTH 40960
+// Radio discovery channel (in hex)
+#define RADIO_DISCOVERY_CHANNEL "02"
+// Discovery time in ticks
+#define RADIO_DISCOVERY_TIME 1000
+// Sleep between unsuccessful discoverys
+#define RADIO_UNSUCCESSFUL_DISCOVERY_SLEEP 3000
+// Time spend without incoming messages before badge goes back into 
+// discovery mode (in ticks)
+#define RADIO_RECEIVE_TIMEOUT 5000
 
 // EMF2014 Public Key
 const uint8_t EMF_PUBLIC_KEY[40] = {0x8a, 0x5a, 0x14, 0xcc, 0xf8, 0x45, 0x21, 0x59, 0x4c, 0xe1, 

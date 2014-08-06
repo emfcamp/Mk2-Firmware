@@ -38,6 +38,10 @@
 #include "Task.h"
 #include "MessageCheckTask.h"
 
+#define RADIO_STATE_DISCOVERY 0
+#define RADIO_STATE_RECEIVE 1
+#define RADIO_STATE_TRANSMIT 2
+
 class RadioTask: public Task {
 public:
 	String getName();
@@ -49,12 +53,20 @@ private:
 
 	inline uint16_t _bytesToInt(byte b1, byte b2);
 	inline uint32_t _bytesToInt(byte b1, byte b2, byte b3, byte b4);
+	inline String _intToHex(uint8_t input);
 
 	inline void _parsePacketBuffer(byte packetBuffer[], uint8_t& packetBufferLength);
-	inline void _handlePacket(byte packetBuffer[], uint8_t packetBufferLength);
+
+	inline void _handleReceivePacket(byte packetBuffer[], uint8_t packetBufferLength);
+	inline void _handleDiscoveryPacket(byte packetBuffer[], uint8_t packetBufferLength, uint8_t rssi);
 	inline void _verifyMessage();
+	inline void _checkForStateChange();
+	inline void _initialiseDiscoveryState();
+	inline void _initialiseReceiveState();
+	inline void _clearSerialBuffer();
 
 	static const uint16_t NO_CURRENT_MESSAGE = 65535;
+	static const uint8_t NO_CHANNEL_DISCOVERED = 255;
 
 	byte _messageBuffer[RADIO_MAX_MESSAGE_BUFFER_LENGTH];
 	uint16_t _messageBufferPosition;
@@ -62,6 +74,13 @@ private:
 	uint16_t _currentMessageReceiver;
 	byte _currentMessageHash[12];
 	byte _currentMessageSignature[40];
+
+	uint8_t _bestRssi;
+	uint8_t _bestChannel;
+	TickType_t _discoveryFinishingTime;
+	TickType_t _lastMessageReceived;
+
+	uint8_t _radioState;
 };
 
 #endif // _RADIO_TASK_H_

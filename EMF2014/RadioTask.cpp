@@ -41,16 +41,8 @@ void RadioTask::task() {
 	// Setup AT Mode pin
 	pinMode(RADIO_AT_MODE_PIN, OUTPUT);
 
-	// Set general setting for radio
-	_enterAtMode();
-	RADIO_SERIAL.println("ATZD3");  // output format <payload>|<rssi>
-	RADIO_SERIAL.println("ATPK3A"); // 58byte
-	RADIO_SERIAL.println("ATAC");   // apply
-	RADIO_SERIAL.flush(); 
-	_leaveAtMode();
-
-	// Clear serial buffer
-	for (uint8_t i=0; i<32; i++) RADIO_SERIAL.read();
+	_clearSerialBuffer();
+	_initialiseDiscoveryState();
 
 	// Packet
 	byte packetBuffer[RADIO_PACKET_WITH_RSSI_LENGTH];
@@ -72,7 +64,11 @@ void RadioTask::task() {
 			}
 
 			_parsePacketBuffer(packetBuffer, packetBufferLength);
+
+			_lastMessageReceived = xTaskGetTickCount();
 		} 
+
+		_checkForStateChange();
 	}
 }
 
@@ -103,11 +99,11 @@ inline void RadioTask::_parsePacketBuffer(byte packetBuffer[], uint8_t & packetB
 			(packetBuffer[packetBufferLength - 3] - 48) * 100;
 		packetBufferLength -= 5;
 
-		if (packetBufferLength!=58) {
-			debug::log("Found packet that's too short: " + String(packetBufferLength));
+		if (_radioState == RADIO_STATE_DISCOVERY) {
+			_handleDiscoveryPacket(packetBuffer, packetBufferLength, rssi);
+		} else if (_radioState == RADIO_STATE_RECEIVE) {
+			_handleReceivePacket(packetBuffer, packetBufferLength);
 		}
-
-		_handlePacket(packetBuffer, packetBufferLength);
 
 		packetBufferLength = 0;
 	} else if (packetBufferLength == RADIO_PACKET_WITH_RSSI_LENGTH) {
@@ -118,7 +114,23 @@ inline void RadioTask::_parsePacketBuffer(byte packetBuffer[], uint8_t & packetB
 	}
 }
 
-inline void RadioTask::_handlePacket(byte packetBuffer[], uint8_t packetBufferLength) {
+inline void RadioTask::_handleDiscoveryPacket(byte packetBuffer[], uint8_t packetBufferLength, uint8_t rssi) {
+	uint8_t channel = packetBuffer[0];
+	uint32_t timestamp = _bytesToInt(packetBuffer[1], packetBuffer[2], packetBuffer[3], packetBuffer[4]);
+	char identifier[3];
+	identifier[0] = packetBuffer[5];
+	identifier[1] = packetBuffer[6];
+	identifier[2] = packetBuffer[7];
+	if (rssi < _bestRssi) {
+		_bestRssi = rssi;
+		_bestChannel = channel;
+		debug::log("Better channel found: " + String(channel) + " RSSI: -" + String(rssi));
+	
+	}
+	debug::log("Current time: " + String (timestamp));
+}
+
+inline void RadioTask::_handleReceivePacket(byte packetBuffer[], uint8_t packetBufferLength) {
 	// the first two bytes are always describing the receiver
 	int packetReceiver = _bytesToInt(packetBuffer[0], packetBuffer[1]);
 
@@ -181,6 +193,65 @@ inline void RadioTask::_verifyMessage() {
 	MessageCheckTask::addIncomingMessage(message);
 }
 
+inline void RadioTask::_checkForStateChange() {
+	if (_radioState == RADIO_STATE_DISCOVERY) {
+		if (_discoveryFinishingTime <= xTaskGetTickCount()) {
+			if (_bestChannel == NO_CHANNEL_DISCOVERED) {
+				debug::log("No channel discovered during this discovery period. Will sleep for certain time and try again");
+				vTaskDelay(RADIO_UNSUCCESSFUL_DISCOVERY_SLEEP);
+				_initialiseDiscoveryState();
+			} else {
+				_initialiseReceiveState();
+			}
+		}
+	} else if (_radioState == RADIO_STATE_RECEIVE) {
+		if (_lastMessageReceived + RADIO_RECEIVE_TIMEOUT <= xTaskGetTickCount()) {
+			debug::log("Main channel timeout - Going back to disovery");
+			_initialiseDiscoveryState();
+		}
+	}	
+}
+
+inline void RadioTask::_initialiseDiscoveryState() {
+	debug::log("Radio: Starting discovery state");
+	_bestRssi = 255;
+	_bestChannel = NO_CHANNEL_DISCOVERED;
+	_radioState = RADIO_STATE_DISCOVERY;
+	_discoveryFinishingTime = xTaskGetTickCount() + RADIO_DISCOVERY_TIME;
+
+	_enterAtMode();
+	RADIO_SERIAL.println("ATZD3");  // output format <payload>|<rssi>
+	RADIO_SERIAL.println("ATPK08"); // 8byte packet length
+	RADIO_SERIAL.println(String("ATCN") + String(RADIO_DISCOVERY_CHANNEL)); // Discovery Channel
+	RADIO_SERIAL.println("ATAC");   // apply
+	RADIO_SERIAL.flush(); 
+	_leaveAtMode();
+
+	_clearSerialBuffer();
+}
+
+inline void RadioTask::_initialiseReceiveState() {
+	debug::log("Starting to receive on channel " + String(_bestChannel));
+
+	_enterAtMode();
+	RADIO_SERIAL.println("ATZD3");  // output format <payload>|<rssi>
+	RADIO_SERIAL.println("ATPK3A"); // 58byte packet length
+	RADIO_SERIAL.println("ATCN" + _intToHex(_bestChannel)); // Channel
+	RADIO_SERIAL.println("ATAC");   // apply
+	RADIO_SERIAL.flush(); 
+	_leaveAtMode();
+
+	_radioState = RADIO_STATE_RECEIVE;
+
+	_clearSerialBuffer();
+}
+
+inline void RadioTask::_clearSerialBuffer() {
+	while (RADIO_SERIAL.available()) RADIO_SERIAL.read();
+}
+
+
+// ToDo: These could probably live somewhere else
 inline uint16_t RadioTask::_bytesToInt(byte b1, byte b2) {
 	int result = 0;
 	result = (result << 8) + b1;
@@ -194,4 +265,7 @@ inline uint32_t RadioTask::_bytesToInt(byte b1, byte b2, byte b3, byte b4) {
 	result = (result << 8) + b3;
 	result = (result << 8) + b4;
 	return result;
+}
+inline String RadioTask::_intToHex(uint8_t input) {
+	return String("0123456789abcdef"[input>>4]) + String("0123456789abcdef"[input&0xf]);
 }

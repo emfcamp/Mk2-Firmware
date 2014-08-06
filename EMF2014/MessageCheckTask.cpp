@@ -31,6 +31,7 @@
 #include <uECC.h> 
 #include <Sha1.h>
 #include "DebugTask.h"
+#include "DataStore.h"
 
 QueueHandle_t MessageCheckTask::incomingMessages;
 
@@ -73,10 +74,14 @@ void MessageCheckTask::task() {
 			} else {
 
 			    // Check ECC
+			    TickType_t start = xTaskGetTickCount();
 			    if (!uECC_verify(EMF_PUBLIC_KEY, digest, message->signature)) {
 			        debug::log("Can't validate message, ecc doesn't check out.");
 			    } else {
-			    	debug::log("Received message: " + String((char*)message->content));
+			    	DataStore::addContent(message->receiver, message->content, message->length);
+			    	TickType_t end = xTaskGetTickCount();
+			    	TickType_t duration = end - start;
+			    	debug::log("Duration: " + String(duration) + "ms");
 			    }
 			}
 			free(message->content);
