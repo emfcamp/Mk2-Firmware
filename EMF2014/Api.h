@@ -1,7 +1,12 @@
 /*
  TiLDA Mk2
 
- ButtonTask
+ TiLDA public api
+
+ Please pack all the public API stuff in here and make sure it's documented. If a function is too 
+ complexe just proxy it through to another class
+
+ All functions should be static to make usage as easy as possible
 
  The MIT License (MIT)
 
@@ -21,37 +26,21 @@
  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- LIABILITY, WHETHER IN AN ACTIOSoftwareN OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  SOFTWARE.
  */
 
-#include "ButtonTask.h"
-#include "DebugTask.h"
-#include <FreeRTOS_ARM.h>
+#ifndef _API_H_
+#define _API_H_
+
+
+#include "EMF2014Config.h"
 #include "ButtonSubscription.h"
-#include "Api.h"
 
-/** 
- * Button Task class
- */
-String ButtonTask::getName() {
-    return "ButtonTask";
+namespace tilda {
+    static ButtonSubscription createButtonSubscription(const int buttons);
+    static inline void delay(const TimeInTicks time);
 }
 
-void ButtonTask::task() {
-    ButtonSubscription allButtons = tilda::createButtonSubscription(LIGHT | A | B | UP | DOWN | LEFT | RIGHT | CENTER);
-
-    while(true) {
-        Button button = allButtons.waitForPress(1000);
-        if (button != NONE) {
-            // ToDo: Add some activity tracking in here for backlight etc..
-            debug::log("Button pressed: " + String(button));
-        }
-
-        tilda::delay(1000);
-    }
-}
-
-
-
+#endif // _API_H_

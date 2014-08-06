@@ -43,7 +43,7 @@ void ButtonSubscription::addButtons(int buttons) {
     addQueueToButtons(buttons, _queue);
 }
 
-Button ButtonSubscription::waitForPress(TickType_t ticksToWait) {
+Button ButtonSubscription::waitForPress(TimeInTicks ticksToWait) {
     Button button;
     if(xQueueReceive( _queue, &button, ticksToWait) == pdTRUE) {
         return button;
