@@ -119,7 +119,7 @@ void DebugTask::task() {
     while(true) {
         // Not sure what to do here
         debug::log("Still alive.");
-        vTaskDelay( 50000 );
+        vTaskDelay((5000/portTICK_PERIOD_MS));
     }
 }
 

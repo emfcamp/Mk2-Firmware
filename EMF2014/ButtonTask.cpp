@@ -49,7 +49,7 @@ void ButtonTask::task() {
             debug::log("Button pressed: " + String(button));
         }
 
-        vTaskDelay(1000);
+        vTaskDelay((1000/portTICK_PERIOD_MS));
     }
 }
 

@@ -57,6 +57,6 @@ void RGBTask::task() {
     while(true) {
         // ToDo: Do something here that turn the led of when inactivity occurs 
         // ToDo: Add some logic for blinking, fading, sending morse code, ...
-        vTaskDelay(1000);
+        vTaskDelay((1000/portTICK_PERIOD_MS));
     }
 }

@@ -115,13 +115,13 @@ extern "C"{
 	(x==BOARD_SPI_SS1 ? 1 : \
 	(x==BOARD_SPI_SS2 ? 2 : 3)))
 
-#define SS   BOARD_SPI_SS0
-#define SS1  BOARD_SPI_SS1
-#define SS2  BOARD_SPI_SS2
-#define SS3  BOARD_SPI_SS3
-#define MOSI PIN_SPI_MOSI
-#define MISO PIN_SPI_MISO
-#define SCK  PIN_SPI_SCK
+static const uint8_t SS   = BOARD_SPI_SS0;
+static const uint8_t SS1  = BOARD_SPI_SS1;
+static const uint8_t SS2  = BOARD_SPI_SS2;
+static const uint8_t SS3  = BOARD_SPI_SS3;
+static const uint8_t MOSI = PIN_SPI_MOSI;
+static const uint8_t MISO = PIN_SPI_MISO;
+static const uint8_t SCK  = PIN_SPI_SCK;
 
 /*
  * Wire Interfaces
@@ -162,29 +162,29 @@ extern "C"{
 /*
  * Analog pins
  */
-#define A0    54
-#define A1    55
-#define A2    56
-#define A3    57
-#define A4    58
-#define A5    59
-#define A6    60
-#define A7    61
-#define A8    62
-#define A9    63
-#define A10   64
-#define A11   65
-#define DAC0  66
-#define DAC1  67
-#define CANRX 68
-#define CANTX 69
+static const uint8_t A0  = 54;
+static const uint8_t A1  = 55;
+static const uint8_t A2  = 56;
+static const uint8_t A3  = 57;
+static const uint8_t A4  = 58;
+static const uint8_t A5  = 59;
+static const uint8_t A6  = 60;
+static const uint8_t A7  = 61;
+static const uint8_t A8  = 62;
+static const uint8_t A9  = 63;
+static const uint8_t A10 = 64;
+static const uint8_t A11 = 65;
+static const uint8_t DAC0 = 66;
+static const uint8_t DAC1 = 67;
+static const uint8_t CANRX = 68;
+static const uint8_t CANTX = 69;
 #define ADC_RESOLUTION		12
 
 /*
  * Complementary CAN pins
  */
-#define CAN1RX 106
-#define CAN1TX 107
+static const uint8_t CAN1RX = 106;
+static const uint8_t CAN1TX = 107;
 
 // CAN0
 #define PINS_CAN0            (108u)
@@ -242,6 +242,25 @@ extern "C"{
 #define TP12                  (17u) //Serial2 RXD
 #define TP15                  (14u) //Serial3 TXD
 #define TP16                  (15u) //Serial3 RXD
+// v0.2+ aditional pads
+#define TP20                  (29u) //SCREEN_LEFT
+#define TP21                  (46u) //SCREEN_RIGHT
+#define TP22                  (51u) //D51
+#define TP23                  (64u) //A64
+#define TP24                  (63u) //A63
+#define TP25                  (35u) //D35
+#define TP26                  (32u) //D32
+#define TP27                  (96u) //UOTGVOBOF
+    
+// LCD display v0.2+
+#define LCD_CS                BOARD_SPI_SS2
+#define LCD_POWER             (40u)
+#define LCD_BACKLIGHT         (33u)
+#define LCD_A0                (38u)
+#define LCD_RESET             (34u)
+
+// MCP73831 v0.2+
+#define MCP_STAT              (62u)
     
 // RGB LED's
 #define LED1_RED              (37u)
@@ -251,7 +270,7 @@ extern "C"{
 #define LED2_GREEN            (44u)
 #define LED2_BLUE             (45u)
     
-// epaper display
+// epaper display v0.1
 #define EPD_CS                BOARD_SPI_SS2
 #define EPD_BUSY              (38u)
 #define EPD_RESET             (34u)
@@ -300,6 +319,9 @@ extern "C"{
 #define PMIC_CHRG             (62u)
 #define PMIC_ILIM1            (51u)
 #define PMIC_ILIM0            (50u)
+    
+//Piezo
+#define PIEZO                 (66u)
 
 #ifdef __cplusplus
 }

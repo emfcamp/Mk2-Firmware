@@ -37,11 +37,11 @@ String HomeScreenApp::getName() {
 void HomeScreenApp::task() {
     while(true) {
         _rgbTask.setColor({255, 0, 0});
-        vTaskDelay(300);
+        vTaskDelay((300/portTICK_PERIOD_MS));
         _rgbTask.setColor({0, 255, 0});
-        vTaskDelay(300);
+        vTaskDelay((300/portTICK_PERIOD_MS));
         _rgbTask.setColor({0, 0, 255});
-        vTaskDelay(300);
+        vTaskDelay((300/portTICK_PERIOD_MS));
     }
 }
 

@@ -45,7 +45,7 @@ void Task::taskCaller() {
 
     while(true) {
         debug::log("Please make sure that no task ever returns. Task: " + getName());
-        vTaskDelay(1000);
+        vTaskDelay((1000/portTICK_PERIOD_MS));
     }
 }
 
