@@ -42,6 +42,8 @@
 
 namespace debug {
 	void setup();
+	void logByteArray(const byte hash[], int len);
+	void logHWM();
     void log(String text);
     void logFromISR(String text);
     void stopWithMessage(String text);

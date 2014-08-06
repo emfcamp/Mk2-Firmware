@@ -36,10 +36,15 @@
  */
 
 #include <FreeRTOS_ARM.h>
+#include <Sha1.h>
+#include "uECC.h"
+#include <Arduino.h>
 #include "EMF2014Config.h"
 #include "DebugTask.h"
 #include "RGBTask.h"
 #include "ButtonTask.h"
+#include "RadioTask.h"
+#include "MessageCheckTask.h"
 #include "AppOpenerTask.h"
 #include "AppManager.h"
 #include "FlashLightApp.h"
@@ -55,6 +60,8 @@
 DebugTask debugTask;
 RGBTask rgbTask;
 ButtonTask buttonTask;
+MessageCheckTask messageCheckTask;
+RadioTask radioTask;
 AppOpenerTask appOpenerTask;
 
 FlashLightApp flashLightApp(rgbTask);
@@ -67,7 +74,7 @@ void setup() {
     // This will require you to send a character over serial before unblocking 
     // the startup
     debug::waitForKey();
-    
+
     tildaButtonSetup();
     tildaButtonAttachInterrupts();
     tildaButtonInterruptPriority();
@@ -76,6 +83,8 @@ void setup() {
     debugTask.start();
     rgbTask.start();
     buttonTask.start();
+    messageCheckTask.start();
+    radioTask.start();
     appOpenerTask.start();
 
     // Applications

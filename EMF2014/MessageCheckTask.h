@@ -1,23 +1,24 @@
 /*
  TiLDA Mk2
+ 
+ MessageCheckTask
 
- FlashLightApp
- Torch Mode - Press the light button and both RGB LEDs light up.
+ This is a consumer task that checks messages received by the radio task for validity
 
  The MIT License (MIT)
-
+ 
  Copyright (c) 2014 Electromagnetic Field LTD
-
+ 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
  in the Software without restriction, including without limitation the rights
  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  copies of the Software, and to permit persons to whom the Software is
  furnished to do so, subject to the following conditions:
-
+ 
  The above copyright notice and this permission notice shall be included in all
  copies or substantial portions of the Software.
-
+ 
  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -27,29 +28,32 @@
  SOFTWARE.
  */
 
-#ifndef _FLASH_LIGHT_APP_H_
-#define _FLASH_LIGHT_APP_H_
+#ifndef _MESSAGE_CHECK_TASK_H_
+#define _MESSAGE_CHECK_TASK_H_
 
 #include <Arduino.h>
 #include <FreeRTOS_ARM.h>
 #include "EMF2014Config.h"
-#include "App.h"
-#include "RGBTask.h"
-#include "ButtonSubscription.h"
+#include "Task.h"
 
-class FlashLightApp: public App {
-public:
-	FlashLightApp(RGBTask rgbTask): _rgbTask(rgbTask), _lightLevel(8) {};
-	String getName();
-protected:
-    void task();
-    void afterSuspension();
-    void beforeResume();
-private:
-	void updateLeds();
-	RGBTask _rgbTask;
-	unsigned char _lightLevel;
-	ButtonSubscription *_pbuttons;
+struct IncomingRadioMessage {
+	byte* content;
+	uint32_t length;
+	byte hash[12];
+	byte signature[40];
+	uint16_t receiver;
 };
 
-#endif // _FLASH_LIGHT_APP_H_
+class MessageCheckTask: public Task {
+public:
+	String getName();
+
+	static void addIncomingMessage(IncomingRadioMessage *message);
+protected:
+	void task();
+
+private:
+	static QueueHandle_t incomingMessages;
+};
+
+#endif // _MESSAGE_CHECK_TASK_H_
