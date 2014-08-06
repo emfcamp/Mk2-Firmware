@@ -31,7 +31,7 @@
 
 #include <Wire.h>
 
-// borrowed from I2Cdev lib
+// Borrowed from I2Cdev lib http://www.i2cdevlib.com
 
 extern "C" {
 
@@ -40,7 +40,6 @@ extern "C" {
  * @param regAddr First register regAddr to read from
  * @param length Number of bytes to read
  * @param data Buffer to store read data in
- * @param timeout Optional read timeout in milliseconds (0 to disable, leave off to use default class value in I2Cdev::readTimeout)
  * @return Number of bytes read (-1 indicates failure)
  */
 int8_t i2c_read(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *data) {
@@ -74,7 +73,8 @@ int8_t i2c_read(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *data)
  * @param regAddr First register address to write to
  * @param length Number of bytes to write
  * @param data Buffer to copy new data from
- * @return Status of operation (true = success)
+ * @return Status of operation (0:success, 1:data too long to fit in transmit buffer, 2:received NACK on transmit of address, 3:received NACK on transmit of data, 4:other error)
+)
  */
 bool i2c_write(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t* data) {
     uint8_t status = 0;
@@ -89,7 +89,7 @@ bool i2c_write(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t* data) 
     Wire.endTransmission();
     status = Wire.endTransmission();
     
-    return status == 0;
+    return status;
 }
     
 }

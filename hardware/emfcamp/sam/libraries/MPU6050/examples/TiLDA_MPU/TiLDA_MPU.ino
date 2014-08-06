@@ -282,7 +282,7 @@ static inline void run_self_test(void)
 
 static void handle_input(void)
 {
-  //  Serial.println("Handle input");
+    //  Serial.println("Handle input");
     char c;
     const unsigned char header[4] = "inv";
     unsigned long pedo_packet[2];
@@ -493,8 +493,8 @@ void setup() {
     pinMode(PMIC_ENOTG, OUTPUT);
     digitalWrite(PMIC_ENOTG, LOW);
     
+    Wire. begin();
     
-
     Serial.println("Var Setup");
     /* Set up gyro.
      * Every function preceded by mpu_ is a driver function and can be found
@@ -504,9 +504,9 @@ void setup() {
     int_param.pin = MPU_INT;
     int_param.arg = FALLING;
     
-   Serial.print("MPU init : ");
+    Serial.print("MPU init : ");
     result = mpu_init(&int_param);
-  //  Serial.println(result);
+    //  Serial.println(result);
     
     /* Get/set hardware configuration. Start gyro. */
     /* Wake up all sensors. */
@@ -586,7 +586,7 @@ void setup() {
     
     /* Wait for enumeration. */
     while (!Serial);
- //   Serial.println("Started");
+    //   Serial.println("Started");
 }
 
 void loop() {
@@ -619,7 +619,7 @@ void loop() {
     }
     
     if (hal.new_gyro && hal.dmp_on) {
-        Serial.print(".");
+        //  Serial.print(".");
         short gyro[3], accel[3], sensors;
         unsigned char more;
         long quat[4];
@@ -674,4 +674,3 @@ void loop() {
     }
     
 }
-

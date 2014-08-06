@@ -42,7 +42,7 @@ struct int_param_s {
     // TODO: define struct for interrupt setup details
     // copied UC3L0 for now
     unsigned long pin;
-    void (*cb)();
+    void (*cb)(void);
     uint32_t arg;
 #endif
 };
