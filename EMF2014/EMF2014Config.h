@@ -31,8 +31,6 @@
 #ifndef _EMF2014_CONFIG_H_
 #define _EMF2014_CONFIG_H_
 
-#include <FreeRTOS_ARM.h>
-
 // Enable debug task and output
 #define DEBUG 1
 // send the debug output out over the USB Serial line
@@ -73,8 +71,6 @@ const uint8_t EMF_PUBLIC_KEY[40] = {0x8a, 0x5a, 0x14, 0xcc, 0xf8, 0x45, 0x21, 0x
                                     0xf6, 0xd2, 0x4b, 0xd7, 0x50, 0xc1, 0x76, 0x5c, 0xc2, 0x58, 
                                     0x8f, 0x1d, 0x82, 0x68, 0xec, 0x37, 0x1f, 0xcd, 0xe7, 0x24};
 
-// Give TickType_t a nicer name
-typedef TickType_t TimeInTicks;
 
 enum Button {
     NONE         = 0,
@@ -87,5 +83,6 @@ enum Button {
     RIGHT        = 64,
     CENTER       = 128
 };
+
 
 #endif // _EMF2014_CONFIG_H_

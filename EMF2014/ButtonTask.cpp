@@ -21,7 +21,7 @@
  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- LIABILITY, WHETHER IN AN ACTIOSoftwareN OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  SOFTWARE.
  */
@@ -30,7 +30,6 @@
 #include "DebugTask.h"
 #include <FreeRTOS_ARM.h>
 #include "ButtonSubscription.h"
-#include "Api.h"
 
 /** 
  * Button Task class
@@ -40,16 +39,17 @@ String ButtonTask::getName() {
 }
 
 void ButtonTask::task() {
-    ButtonSubscription allButtons = tilda::createButtonSubscription(LIGHT | A | B | UP | DOWN | LEFT | RIGHT | CENTER);
+    ButtonSubscription allButtons;
+    allButtons.addButtons(LIGHT | A | B | UP | DOWN | LEFT | RIGHT | CENTER);
 
     while(true) {
-        Button button = allButtons.waitForPress(1000);
+        Button button = allButtons.waitForPress(( TickType_t ) 1000);
         if (button != NONE) {
             // ToDo: Add some activity tracking in here for backlight etc..
             debug::log("Button pressed: " + String(button));
         }
 
-        tilda::delay(1000);
+        vTaskDelay((1000/portTICK_PERIOD_MS));
     }
 }
 
