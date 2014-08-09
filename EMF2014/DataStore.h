@@ -37,6 +37,7 @@
 #include "EMF2014Config.h"
 
 uint16_t static const CONTENT_RID_WEATHER_FORECAST = 40962;
+uint16_t static const CONTENT_RID_SCHEDULE_FRIDAY = 40963;
 
 // This maps to http://www.metoffice.gov.uk/datapoint/support/documentation/code-definitions
 enum class WeatherType : uint64_t {
@@ -75,12 +76,12 @@ enum class WeatherType : uint64_t {
 
 struct WeatherForecastPeriod {
 	WeatherType weatherType;
-	uint64_t timestamp;
-	uint64_t temperature;
-	uint64_t feelsLikeTemperature;
-	uint64_t windSpeed;
-	uint64_t screenRelativeHumidity;
-	uint64_t precipitationProbability;
+	uint32_t timestamp;
+	int8_t temperature;
+	int8_t feelsLikeTemperature;
+	uint8_t windSpeed;
+	uint8_t screenRelativeHumidity;
+	uint8_t precipitationProbability;
 };
 
 struct WeatherForecast {
@@ -102,6 +103,7 @@ private:
 	static WeatherForecast _weatherForecast;
 
 	static void _addWeatherForecastRaw(const byte* content, uint16_t length);
+	static void _addScheduleFridayRaw(const byte* content, uint16_t length);
 };
 
 #endif // _DATA_STORE_H_

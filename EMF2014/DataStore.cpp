@@ -34,11 +34,15 @@
 WeatherForecast DataStore::_weatherForecast;
 
 void DataStore::addContent(uint16_t rid, byte* content, uint16_t length) {
-	if (rid == CONTENT_RID_WEATHER_FORECAST && length == 6 * 6) {
-		_addWeatherForecastRaw(content, length);
+	if (rid == CONTENT_RID_WEATHER_FORECAST) {
+		//_addWeatherForecastRaw(content, length);
+	} else if (rid == CONTENT_RID_SCHEDULE_FRIDAY) {
+		//_addScheduleFridayRaw(content, length);
+		debug::log("friday");
 	} else {
 		debug::log("Rid or length not supported: " + String(rid) + " " + String(length));
 	}
+	debug::logHWM();
 }
 
 WeatherForecast DataStore::getWeatherForecast() {
@@ -46,12 +50,12 @@ WeatherForecast DataStore::getWeatherForecast() {
 }
 
 void unpack(WeatherForecastPeriod& period, const msgpack_object& object) {
-	period.timestamp = object.via.array.ptr[0].via.u64;
-	period.temperature = object.via.array.ptr[1].via.u64;
-	period.feelsLikeTemperature = object.via.array.ptr[2].via.u64;
-	period.windSpeed = object.via.array.ptr[3].via.u64;
-	period.screenRelativeHumidity = object.via.array.ptr[4].via.u64;
-	period.precipitationProbability = object.via.array.ptr[5].via.u64;
+	period.timestamp = (uint32_t)object.via.array.ptr[0].via.u64;
+	period.temperature = (int8_t)object.via.array.ptr[1].via.u64;
+	period.feelsLikeTemperature = (int8_t)object.via.array.ptr[2].via.u64;
+	period.windSpeed = (uint8_t)object.via.array.ptr[3].via.u64;
+	period.screenRelativeHumidity = (uint8_t)object.via.array.ptr[4].via.u64;
+	period.precipitationProbability = (uint8_t)object.via.array.ptr[5].via.u64;
 }
 
 void DataStore::_addWeatherForecastRaw(const byte* content, uint16_t length) {
@@ -75,3 +79,17 @@ void DataStore::_addWeatherForecastRaw(const byte* content, uint16_t length) {
 	debug::log("Stored weather forecast: " + String(_weatherForecast.current.temperature) + "deg, Weather type: " + String((uint8_t) _weatherForecast.current.weatherType));
 }
 
+void DataStore::_addScheduleFridayRaw(const byte* content, uint16_t length) {
+	/*msgpack_zone mempool;
+	msgpack_zone_init(&mempool, 2048);
+
+	msgpack_object deserialized;
+	msgpack_unpack((char*)content, length, NULL, &mempool, &deserialized);
+
+	uint8_t stage = (uint8_t)deserialized.via.array.ptr[0].via.array.ptr[0].via.u64;
+	debug::log("Stored schedule friday: Stage " + String(stage));
+
+
+	msgpack_zone_destroy(&mempool);*/
+
+}
