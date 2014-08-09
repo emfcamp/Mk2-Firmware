@@ -77,8 +77,10 @@ void setup() {
     // Uncomment this if you want to see serial output during startup
     // This will require you to send a character over serial before unblocking 
     // the startup
-    //debug::waitForKey();
-
+    debug::waitForKey();
+    
+    lcdTask.Init();
+    
     tildaButtonSetup();
     tildaButtonAttachInterrupts();
     tildaButtonInterruptPriority();
@@ -101,9 +103,10 @@ void setup() {
 
     // Boot into home screen
     AppManager::open("HomeScreen");
+    GLCD.DrawBitmap(logo, 0,  (64-46)/2); 
 
-    // Start scheduler
     debug::log("Start Scheduler");
+    // Start scheduler
     vTaskStartScheduler();
 
     debug::log("Insufficient RAM");

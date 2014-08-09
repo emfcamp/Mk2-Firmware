@@ -37,7 +37,6 @@ String HomeScreenApp::getName() {
 }
 
 void HomeScreenApp::task() {
-    //GLCD.DrawBitmap(logo, 0,  (64-46)/2); 
     while(true) {
         _rgbTask.setColor({255, 0, 0});
         vTaskDelay((300/portTICK_PERIOD_MS));

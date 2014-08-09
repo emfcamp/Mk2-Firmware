@@ -85,7 +85,21 @@ The functions affected are:
 #include "glcd.h"
 #include "DebugTask.h"
 
-LCDTask::LCDTask(){}
+LCDTask::LCDTask(){
+
+}
+
+void LCDTask::Init()
+{
+  debug::log("Starting LCD Init");
+  pinMode(LCD_POWER, OUTPUT);
+  digitalWrite(LCD_POWER, LOW);
+  pinMode(LCD_BACKLIGHT, OUTPUT);
+  digitalWrite(LCD_BACKLIGHT, LOW);
+
+  debug::log("Call _init");
+  _init();
+}
 
 void LCDTask::_command(uint8_t c) {
   //debug::log("Write command '" + String(c) + "'");
@@ -95,7 +109,7 @@ void LCDTask::_command(uint8_t c) {
 }
 
 void LCDTask::_data(uint8_t c) {
-  debug::log("Write screen data '" + String(c) + "'");
+  //debug::log("Write screen data '" + String(c) + "'");
   digitalWrite(LCD_A0, HIGH);
   SPI.transfer(LCD_CS,c);
 }
@@ -107,50 +121,75 @@ void LCDTask::_set_brightness(uint8_t val) {
 
 void LCDTask::_init(void) {
   // set pin directions
+  debug::log("Set Pin Direction");
   pinMode(LCD_A0, OUTPUT);
   pinMode(LCD_RESET, OUTPUT);
   pinMode(LCD_CS, OUTPUT);
 
   // Reset Sequence LCD must not be selected, but in command mode
+  debug::log("A0 LOW");
   digitalWrite(LCD_A0, LOW);
+  
+  debug::log("CS HIGH");
   digitalWrite(LCD_CS, HIGH);
-
+  debug::logHWM();
+  debug::log("RESET LOW");  
   digitalWrite(LCD_RESET, LOW);
   delay(200);
+  debug::log("RESET HIGH");
   digitalWrite(LCD_RESET, HIGH);
-  digitalWrite(LCD_CS, LOW);
+  
+  debug::log("CS HIGH");
+  digitalWrite(LCD_CS, HIGH);
 
+  debug::log("Setup SPI");
   // Setup Hardware SPI
   SPI.begin(LCD_CS);
+  debug::log("Set SPI bit order");
   SPI.setBitOrder(LCD_CS, MSBFIRST);
 
+  debug::log("Set LCD BIAS");
   // LCD bias select
   _command(CMD_SET_BIAS_9);
+  
+  debug::log("Set LCD ADC");
   // ADC select
   _command(CMD_SET_ADC_REVERSE);
+  
+   debug::log("Set LCD SHL");
   // SHL select
   _command(CMD_SET_COM_NORMAL);
 
+  debug::log("Set LCD STATIC");
   // Static Off
   _command(CMD_SET_STATIC_OFF);
+  
+  debug::log("Set LCD START LINE");
   // Initial display line
   _command(CMD_SET_DISP_START_LINE);
 
+  debug::log("LCD VC On");
   // turn on voltage converter (VC=1, VR=0, VF=0)
   _command(CMD_SET_POWER_CONTROL | 0x4);
   // wait for 50% rising
-  vTaskDelay((50/portTICK_PERIOD_MS));
-
+  //vTaskDelay((50/portTICK_PERIOD_MS));
+  delay(50); 
+  
+  debug::log("LCD VR On");
   // turn on voltage regulator (VC=1, VR=1, VF=0)
   _command(CMD_SET_POWER_CONTROL | 0x6);
   // wait >=50ms
-  vTaskDelay((50/portTICK_PERIOD_MS));
-
+  //vTaskDelay((50/portTICK_PERIOD_MS));
+  delay(50);
+  
+  debug::log("LCD VF On");
   // turn on voltage follower (VC=1, VR=1, VF=1)
   _command(CMD_SET_POWER_CONTROL | 0x7);
   // wait
-  vTaskDelay((10/portTICK_PERIOD_MS));
-
+  //vTaskDelay((10/portTICK_PERIOD_MS));
+  delay(50);
+  
+  debug::log("LCD RESISTOR RATIO");
   // set lcd operating voltage (regulator resistor, ref voltage resistor)
   _command(CMD_SET_RESISTOR_RATIO | 0x7);
 
@@ -159,20 +198,27 @@ void LCDTask::_init(void) {
   _x = 0;
   _y = 0;
 
+
+  debug::log("LCD ALLPTS On");
   // Power on Display
   _command(CMD_SET_ALLPTS_NORMAL);
+  
+  debug::log("LCD Display On");
   _command(CMD_DISPLAY_ON);
   //st7565_set_brightness(contrast);
+  
+  debug::log("LCD Contrast");
   _set_brightness(0x08);
-
+  
+  debug::log("Clear display ram");
   // Ensure display is cleared
   memset(_framebuffer,0xff,sizeof(_framebuffer));
-  _display();
+  //_display();
 }
 
 void LCDTask::_display(void) {
   uint8_t col, maxcol, p;
-  //if (xSemaphoreTake(frameBufferMutex, ( TickType_t ) 10) == pdTRUE ) {
+  if (xSemaphoreTake(frameBufferMutex, ( TickType_t ) 10) == pdTRUE ) {
     for(p = 0; p < 8; p++) {
       _command(CMD_SET_PAGE | pagemap[p]);
       // start at the beginning of the row
@@ -186,14 +232,14 @@ void LCDTask::_display(void) {
         _data(_framebuffer[pagemap[p]][col]);
       }
     }
-    //xSemaphoreGive(frameBufferMutex);
-  //}
+    xSemaphoreGive(frameBufferMutex);
+  }
 }
 
 void LCDTask::_updateDisplay() {
   debug::log("Queue display update");
   char discard = '*';
-  //xQueueOverwrite(_updateWaiting,&discard);
+  xQueueOverwrite(_updateWaiting,&discard);
 }
 
 void LCDTask::GotoXY(uint8_t x, uint8_t y) {
@@ -208,26 +254,26 @@ void LCDTask::GotoXY(uint8_t x, uint8_t y) {
 uint8_t LCDTask::ReadData()
 {
   uint8_t  data;
-  //if (xSemaphoreTake(frameBufferMutex, ( TickType_t ) 10) == pdTRUE ) {
+  if (xSemaphoreTake(frameBufferMutex, ( TickType_t ) 10) == pdTRUE ) {
     if(_x >= DISPLAY_WIDTH) {
-      //xSemaphoreGive(frameBufferMutex);
+      xSemaphoreGive(frameBufferMutex);
       return(0);
     }
     //Read from the frame buffer
     data = _framebuffer[_y/8][_x];
-    //xSemaphoreGive(frameBufferMutex);
+    xSemaphoreGive(frameBufferMutex);
     return(data);
-  //}
+  }
   return(0);
 }
 
 void LCDTask::WriteData(uint8_t data) {
   uint8_t displayData, yOffset, chip;
-  //if (xSemaphoreTake(frameBufferMutex, ( TickType_t ) 10) == pdTRUE ) {   
+  if (xSemaphoreTake(frameBufferMutex, ( TickType_t ) 10) == pdTRUE ) {   
     debug::log("Write Data: " + String(data) + " x,y: " + String (_x) + "," + String(_y));
   
     if(_x >= DISPLAY_WIDTH) {
-      //xSemaphoreGive(frameBufferMutex);
+      xSemaphoreGive(frameBufferMutex);
       return;
     }
     yOffset = _y%8;
@@ -253,7 +299,7 @@ void LCDTask::WriteData(uint8_t data) {
       uint8_t ysave = _y;
       if(((ysave+8) & ~7) >= DISPLAY_HEIGHT) {
         _x++;
-        //xSemaphoreGive(frameBufferMutex);
+        xSemaphoreGive(frameBufferMutex);
         return;
       }
   
@@ -279,8 +325,8 @@ void LCDTask::WriteData(uint8_t data) {
     }
     //_updateDisplay();
     debug::log("WriteData end");
-    //xSemaphoreGive(frameBufferMutex);
-  //}
+    xSemaphoreGive(frameBufferMutex);
+  }
 }
 
 String LCDTask::getName() {
@@ -288,16 +334,13 @@ String LCDTask::getName() {
 }
 
 void LCDTask::task() {
+  debug::log("Create mutex");
+  frameBufferMutex = xSemaphoreCreateMutex();
+  debug::log("create queue");
   _updateWaiting = xQueueCreate(1,sizeof(char));
-  //frameBufferMutex = xSemaphoreCreateMutex();
-  pinMode(LCD_POWER, OUTPUT);
-  digitalWrite(LCD_POWER, LOW);
-  pinMode(LCD_BACKLIGHT, OUTPUT);
-  digitalWrite(LCD_BACKLIGHT, LOW);
-  _init();
   while(true) {
     char discard; // We don't actually care about the message, just that it is there
-    //xQueueReceive(_updateWaiting, &discard, 1000/portTICK_PERIOD_MS); // Sleep until there is a message
+    xQueueReceive(_updateWaiting, &discard, 1000/portTICK_PERIOD_MS); // Sleep until there is a message
     debug::log("Updating display");
 
     // Write framebuffer to display

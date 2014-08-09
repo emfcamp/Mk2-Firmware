@@ -75,6 +75,7 @@ public:
   LCDTask();
   String getName();
   void task();
+  void Init();
   uint8_t ReadData(void);
   void WriteData(uint8_t data);
   void GotoXY(uint8_t x, uint8_t y);
