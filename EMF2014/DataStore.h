@@ -39,7 +39,7 @@
 uint16_t static const CONTENT_RID_WEATHER_FORECAST = 40962;
 
 // This maps to http://www.metoffice.gov.uk/datapoint/support/documentation/code-definitions
-enum class WeatherType : uint8_t {
+enum class WeatherType : uint64_t {
 	WEATHER_TYPE_NOT_AVAILABLE = 31,
 	WEATHER_TYPE_CLEAR_NIGHT = 0,
 	WEATHER_TYPE_SUNNY_NIGHT = 1,
@@ -75,11 +75,12 @@ enum class WeatherType : uint8_t {
 
 struct WeatherForecastPeriod {
 	WeatherType weatherType;
-	int8_t temperature;
-	int8_t feelsLikeTemperature;
-	uint8_t windSpeed;
-	uint8_t screenRelativeHumidity;
-	uint8_t precipitationProbability;
+	uint64_t timestamp;
+	uint64_t temperature;
+	uint64_t feelsLikeTemperature;
+	uint64_t windSpeed;
+	uint64_t screenRelativeHumidity;
+	uint64_t precipitationProbability;
 };
 
 struct WeatherForecast {
@@ -100,7 +101,7 @@ public:
 private:
 	static WeatherForecast _weatherForecast;
 
-	static void _addWeatherForecastRaw(byte* content);
+	static void _addWeatherForecastRaw(const byte* content, uint16_t length);
 };
 
 #endif // _DATA_STORE_H_

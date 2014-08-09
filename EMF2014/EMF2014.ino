@@ -37,6 +37,7 @@
 
 #include <FreeRTOS_ARM.h>
 #include <Sha1.h>
+#include <msgpack.h>
 #include "uECC.h"
 #include <Arduino.h>
 #include "EMF2014Config.h"

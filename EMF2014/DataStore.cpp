@@ -26,6 +26,8 @@
  SOFTWARE.
  */
 
+#include <msgpack.h>
+
 #include "DataStore.h"
 #include "DebugTask.h"
 
@@ -33,7 +35,7 @@ WeatherForecast DataStore::_weatherForecast;
 
 void DataStore::addContent(uint16_t rid, byte* content, uint16_t length) {
 	if (rid == CONTENT_RID_WEATHER_FORECAST && length == 6 * 6) {
-		_addWeatherForecastRaw(content);
+		_addWeatherForecastRaw(content, length);
 	} else {
 		debug::log("Rid or length not supported: " + String(rid) + " " + String(length));
 	}
@@ -43,50 +45,32 @@ WeatherForecast DataStore::getWeatherForecast() {
 	return _weatherForecast;
 }
 
-void DataStore::_addWeatherForecastRaw(byte* content) {
+void unpack(WeatherForecastPeriod& period, const msgpack_object& object) {
+	period.timestamp = object.via.array.ptr[0].via.u64;
+	period.temperature = object.via.array.ptr[1].via.u64;
+	period.feelsLikeTemperature = object.via.array.ptr[2].via.u64;
+	period.windSpeed = object.via.array.ptr[3].via.u64;
+	period.screenRelativeHumidity = object.via.array.ptr[4].via.u64;
+	period.precipitationProbability = object.via.array.ptr[5].via.u64;
+}
+
+void DataStore::_addWeatherForecastRaw(const byte* content, uint16_t length) {
 	_weatherForecast.valid = true;
 
-	_weatherForecast.current.weatherType = (WeatherType)content[0];
-	_weatherForecast.current.temperature = content[1];
-	_weatherForecast.current.feelsLikeTemperature = content[2];
-	_weatherForecast.current.windSpeed = content[3];
-	_weatherForecast.current.screenRelativeHumidity = content[4];
-	_weatherForecast.current.precipitationProbability = content[5];
+	msgpack_zone mempool;
+	msgpack_zone_init(&mempool, 2048);
 
-	_weatherForecast.in3Hours.weatherType = (WeatherType)content[6];
-	_weatherForecast.in3Hours.temperature = content[7];
-	_weatherForecast.in3Hours.feelsLikeTemperature = content[8];
-	_weatherForecast.in3Hours.windSpeed = content[9];
-	_weatherForecast.in3Hours.screenRelativeHumidity = content[10];
-	_weatherForecast.in3Hours.precipitationProbability = content[11];
+	msgpack_object deserialized;
+	msgpack_unpack((char*)content, length, NULL, &mempool, &deserialized);
 
-	_weatherForecast.in6Hours.weatherType = (WeatherType)content[12];
-	_weatherForecast.in6Hours.temperature = content[13];
-	_weatherForecast.in6Hours.feelsLikeTemperature = content[14];
-	_weatherForecast.in6Hours.windSpeed = content[15];
-	_weatherForecast.in6Hours.screenRelativeHumidity = content[16];
-	_weatherForecast.in6Hours.precipitationProbability = content[17];
+	unpack(_weatherForecast.current, deserialized.via.array.ptr[0]);
+	unpack(_weatherForecast.in3Hours, deserialized.via.array.ptr[1]);
+	unpack(_weatherForecast.in6Hours, deserialized.via.array.ptr[2]);
+	unpack(_weatherForecast.in12Hours, deserialized.via.array.ptr[3]);
+	unpack(_weatherForecast.in24Hours, deserialized.via.array.ptr[4]);
+	unpack(_weatherForecast.in48Hours, deserialized.via.array.ptr[5]);
 
-	_weatherForecast.in12Hours.weatherType = (WeatherType)content[18];
-	_weatherForecast.in12Hours.temperature = content[19];
-	_weatherForecast.in12Hours.feelsLikeTemperature = content[20];
-	_weatherForecast.in12Hours.windSpeed = content[21];
-	_weatherForecast.in12Hours.screenRelativeHumidity = content[22];
-	_weatherForecast.in12Hours.precipitationProbability = content[23];
-
-	_weatherForecast.in24Hours.weatherType = (WeatherType)content[24];
-	_weatherForecast.in24Hours.temperature = content[25];
-	_weatherForecast.in24Hours.feelsLikeTemperature = content[26];
-	_weatherForecast.in24Hours.windSpeed = content[27];
-	_weatherForecast.in24Hours.screenRelativeHumidity = content[28];
-	_weatherForecast.in24Hours.precipitationProbability = content[29];
-
-	_weatherForecast.in48Hours.weatherType = (WeatherType)content[30];
-	_weatherForecast.in48Hours.temperature = content[31];
-	_weatherForecast.in48Hours.feelsLikeTemperature = content[32];
-	_weatherForecast.in48Hours.windSpeed = content[33];
-	_weatherForecast.in48Hours.screenRelativeHumidity = content[34];
-	_weatherForecast.in48Hours.precipitationProbability = content[35];
+	msgpack_zone_destroy(&mempool);
 
 	debug::log("Stored weather forecast: " + String(_weatherForecast.current.temperature) + "deg, Weather type: " + String((uint8_t) _weatherForecast.current.weatherType));
 }
