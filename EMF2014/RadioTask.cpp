@@ -28,6 +28,8 @@
 
 #include "RadioTask.h"
 #include "DebugTask.h"
+#include "IncomingRadioMessage.h"
+
 #include <FreeRTOS_ARM.h>
 
 String RadioTask::getName() {
@@ -178,17 +180,12 @@ inline void RadioTask::_verifyMessage() {
 	// on to the MessageCheckTask 
 	uint32_t messageLength = _messageBufferPosition;
 
-	// Create a message object. We must rememeber to free the memory used
-	// afterwards
-	IncomingRadioMessage *message = new IncomingRadioMessage();
-	message->content = (byte*) malloc(messageLength);
-	for (uint16_t i=0; i<messageLength; i++) {
-    	message->content[i]=_messageBuffer[i]; 
-    }
-	message->length = messageLength;
-	memcpy(message->hash, _currentMessageHash, 12);
-	memcpy(message->signature, _currentMessageSignature, 40);
-	message->receiver = _currentMessageReceiver;
+	// Create a message object.
+	IncomingRadioMessage *message = new IncomingRadioMessage(messageLength,
+																_messageBuffer,
+																_currentMessageHash,
+																_currentMessageSignature,
+																_currentMessageReceiver);
 
 	MessageCheckTask::addIncomingMessage(message);
 }

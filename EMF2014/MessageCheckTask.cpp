@@ -29,7 +29,6 @@
 #include "MessageCheckTask.h"
 
 #include <uECC.h> 
-#include <Sha1.h>
 #include "DebugTask.h"
 #include "DataStore.h"
 
@@ -45,8 +44,7 @@ void MessageCheckTask::addIncomingMessage(IncomingRadioMessage *message) {
 	} else {
 		if(xQueueSendToBack(incomingMessages, (void *) &message, (TickType_t) 0) != pdPASS) {
 	        debug::log("Could not queue incoming message");
-	        free(message->content);
-	        free(message);
+	        delete message;
 	    }
 	}
 }
@@ -56,36 +54,28 @@ void MessageCheckTask::task() {
 
 	while(true) {
 		IncomingRadioMessage *message;
-		if(xQueueReceive(incomingMessages, &(message), portMAX_DELAY) == pdTRUE) {
+		if(xQueueReceive(incomingMessages, &message, portMAX_DELAY) == pdTRUE) {
             // Create SHA1 digest
-			Sha1.init();
-			char receiverHi = message->receiver >> 8;
-			char receiverLo = message->receiver & 0xFF;
-		 	Sha1.print(receiverHi);
-			Sha1.print(receiverLo);
-			for (uint32_t i=0; i<message->length; i++) {
-				Sha1.print((char)message->content[i]);
-			}
-			byte* digest = Sha1.result();	
+			byte* digest = message->Sha1Result();	
 			
 			// Check our digest against the one send in the header
-			if (memcmp(digest, message->hash, 12) != 0) {
+			if (memcmp(digest, message->hash(), 12) != 0) {
 				debug::log("Can't validate message, checksum doesn't match.");
 			} else {
 
 			    // Check ECC
 			    TickType_t start = xTaskGetTickCount();
-			    if (!uECC_verify(EMF_PUBLIC_KEY, digest, message->signature)) {
+			    if (!uECC_verify(EMF_PUBLIC_KEY, digest, message->signature())) {
 			        debug::log("Can't validate message, ecc doesn't check out.");
 			    } else {
-			    	DataStore::addContent(message->receiver, message->content, message->length);
+			    	DataStore::addContent(message->receiver(), message->content(), message->length());
 			    	TickType_t end = xTaskGetTickCount();
 			    	TickType_t duration = end - start;
 			    	debug::log("Duration: " + String(duration) + "ms");
 			    }
 			}
-			free(message->content);
-		    free(message);
+
+			delete message;
         }
 	}
 }
