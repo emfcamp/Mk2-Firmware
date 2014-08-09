@@ -16,7 +16,7 @@ TiLDA v2 Firmware
 
 
 #### hardware/
-* This folder contains _TiLDA Mk2_ board definition for use with the Arduino IDE (version -> 1.5.5).
+* This folder contains _TiLDA Mk2_ board definition for use with the Arduino IDE (version -> 1.5.7).
 * To use: copy the **emfcamp** folder to your **~/sketchbook/hardware/** folder.
 * You can then select _TiLDA Mk2_ from the _Tools->Board_ menu.
 * To use the **FTDI** upload port you will need to manually erase the board before uploading a new sketch (short the **Erase** pins for 1 second).
