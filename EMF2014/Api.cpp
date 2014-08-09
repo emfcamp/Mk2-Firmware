@@ -1,7 +1,7 @@
 /*
  TiLDA Mk2
 
- ButtonTask
+ ButtonSubscription
 
  The MIT License (MIT)
 
@@ -26,32 +26,25 @@
  SOFTWARE.
  */
 
-#include "ButtonTask.h"
+#include "Api.h"
 #include "DebugTask.h"
 #include <FreeRTOS_ARM.h>
+#include "TiLDAButtonInterrupts.h"
 #include "ButtonSubscription.h"
-#include "Api.h"
 
-/** 
- * Button Task class
- */
-String ButtonTask::getName() {
-    return "ButtonTask";
+ButtonSubscription Tilda::createButtonSubscription(const int buttons) {
+    ButtonSubscription result;
+    result.addButtons(buttons);
+    return result;
 }
 
-void ButtonTask::task() {
-    ButtonSubscription allButtons = Tilda::createButtonSubscription(LIGHT | A | B | UP | DOWN | LEFT | RIGHT | CENTER);
-
-    while(true) {
-        Button button = allButtons.waitForPress(( TickType_t ) 1000);
-        if (button != NONE) {
-            // ToDo: Add some activity tracking in here for backlight etc..
-            debug::log("Button pressed: " + String(button));
-        }
-
-        Tilda::delay(1000);
-    }
+void Tilda::delay(const TimeInTicks timeInTicks) {
+    vTaskDelay(timeInTicks);
 }
+
+
+
+
 
 
 

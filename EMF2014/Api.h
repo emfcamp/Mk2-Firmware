@@ -1,7 +1,12 @@
 /*
  TiLDA Mk2
 
- ButtonTask
+ TiLDA public api
+
+ Please pack all the public API stuff in here and make sure it's documented. If a function is too 
+ complexe just proxy it through to another class
+
+ All functions should be static to make usage as easy as possible
 
  The MIT License (MIT)
 
@@ -26,32 +31,17 @@
  SOFTWARE.
  */
 
-#include "ButtonTask.h"
-#include "DebugTask.h"
-#include <FreeRTOS_ARM.h>
+#ifndef _API_H_
+#define _API_H_
+
 #include "ButtonSubscription.h"
-#include "Api.h"
 
-/** 
- * Button Task class
- */
-String ButtonTask::getName() {
-    return "ButtonTask";
-}
+typedef TickType_t TimeInTicks;
 
-void ButtonTask::task() {
-    ButtonSubscription allButtons = Tilda::createButtonSubscription(LIGHT | A | B | UP | DOWN | LEFT | RIGHT | CENTER);
+class Tilda {
+public:
+    static ButtonSubscription createButtonSubscription(const int buttons);
+    static void delay(const TimeInTicks time);
+};
 
-    while(true) {
-        Button button = allButtons.waitForPress(( TickType_t ) 1000);
-        if (button != NONE) {
-            // ToDo: Add some activity tracking in here for backlight etc..
-            debug::log("Button pressed: " + String(button));
-        }
-
-        Tilda::delay(1000);
-    }
-}
-
-
-
+#endif // _API_H_
