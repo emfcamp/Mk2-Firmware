@@ -106,9 +106,18 @@ static inline int reg_int_cb(struct int_param_s *int_param)
 /* Arduino DUE platform setup
  */
 #include <Arduino.h>
+#include <FreeRTOS_ARM.h>
 #include "i2c_wrap.h"
 
-#define delay_ms delay
+// TODO: need to wrap this delay for RTOS!!
+void delay_ms(unsigned long ms)
+{
+    if (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING)
+        vTaskDelay((ms/portTICK_PERIOD_MS));
+    else
+        delay(ms);
+}
+
 void get_ms(unsigned long* t)
 {
     return millis();
@@ -709,6 +718,41 @@ int mpu_read_reg(unsigned char reg, unsigned char *data)
     if (reg >= st.hw->num_reg)
         return -1;
     return i2c_read(st.hw->addr, reg, 1, data);
+}
+
+/**
+ *  @brief      Froce a reset.
+ *  borrowed from the Nav6 porject by Kauai Labs which is under the MIT license
+ *  TODO: <link>
+ *  
+ */
+void mpu_force_reset(void)
+{
+    unsigned char data[6];
+	data[0] = BIT_RESET;
+	int i;
+    for ( i = 0; i < 100; i++ )
+	{
+		if (i2c_write(st.hw->addr, st.reg->pwr_mgmt_1, 1, data) == 0)
+		{
+			delay_ms(100);
+            
+			/* Wake up chip. */
+			data[0] = 0x00;
+			if (i2c_write(st.hw->addr, st.reg->pwr_mgmt_1, 1, data)==0)
+			{
+				break;
+			}
+			else
+			{
+				delay_ms(10);
+			}
+		}
+		else
+		{
+			delay_ms(10);
+		}
+	}
 }
 
 /**
@@ -2819,19 +2863,19 @@ int mpu_write_mem(unsigned short mem_addr, unsigned short length,
     if (!data)
         return -1;
     if (!st.chip_cfg.sensors)
-        return -1;
+        return -2;
 
     tmp[0] = (unsigned char)(mem_addr >> 8);
     tmp[1] = (unsigned char)(mem_addr & 0xFF);
 
     /* Check bank boundaries. */
     if (tmp[1] + length > st.hw->bank_size)
-        return -1;
+        return -3;
 
     if (i2c_write(st.hw->addr, st.reg->bank_sel, 2, tmp))
-        return -1;
+        return -4;
     if (i2c_write(st.hw->addr, st.reg->mem_r_w, length, data))
-        return -1;
+        return -5;
     return 0;
 }
 
@@ -2852,19 +2896,19 @@ int mpu_read_mem(unsigned short mem_addr, unsigned short length,
     if (!data)
         return -1;
     if (!st.chip_cfg.sensors)
-        return -1;
+        return -2;
 
     tmp[0] = (unsigned char)(mem_addr >> 8);
     tmp[1] = (unsigned char)(mem_addr & 0xFF);
 
     /* Check bank boundaries. */
     if (tmp[1] + length > st.hw->bank_size)
-        return -1;
+        return -3;
 
     if (i2c_write(st.hw->addr, st.reg->bank_sel, 2, tmp))
-        return -1;
+        return -4;
     if (i2c_read(st.hw->addr, st.reg->mem_r_w, length, data))
-        return -1;
+        return -5;
     return 0;
 }
 
@@ -2890,22 +2934,23 @@ int mpu_load_firmware(unsigned short length, const unsigned char *firmware,
         return -1;
 
     if (!firmware)
-        return -1;
+        return -2;
+
     for (ii = 0; ii < length; ii += this_write) {
         this_write = min(LOAD_CHUNK, length - ii);
         if (mpu_write_mem(ii, this_write, (unsigned char*)&firmware[ii]))
-            return -1;
+            return -3;
         if (mpu_read_mem(ii, this_write, cur))
-            return -1;
+            return -4;
         if (memcmp(firmware+ii, cur, this_write))
-            return -2;
+            return -5;
     }
 
     /* Set program start address. */
     tmp[0] = start_addr >> 8;
     tmp[1] = start_addr & 0xFF;
     if (i2c_write(st.hw->addr, st.reg->prgm_start_h, 2, tmp))
-        return -1;
+        return -6;
 
     st.chip_cfg.dmp_loaded = 1;
     st.chip_cfg.dmp_sample_rate = sample_rate;

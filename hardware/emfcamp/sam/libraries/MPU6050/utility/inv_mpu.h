@@ -67,6 +67,7 @@ extern "C" {
 #endif
 
 /* Set up APIs */
+void mpu_force_reset(void);
 int mpu_init(struct int_param_s *int_param);
 int mpu_init_slave(void);
 int mpu_set_bypass(unsigned char bypass_on);

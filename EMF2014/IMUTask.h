@@ -34,9 +34,40 @@
 #define _IMU_TASK_H_
 
 #include <Arduino.h>
+
 #include <FreeRTOS_ARM.h>
 #include "EMF2014Config.h"
+#include "Task.h"
 
 
+// callback
+static void IMU_interrupt(void);
+static void IMU_tap_cb(unsigned char direction, unsigned char count);
+static void IMU_android_orient_cb(unsigned char orientation);
+    
+
+class IMUTask: public Task {
+public:
+    String getName();
+    void setup();
+    int8_t setSampleRate(TickType_t ms);
+    EventGroupHandle_t eventGroup;
+protected:
+    void task();
+private:
+    // variables
+    TickType_t sampleRate = 1000;
+    uint8_t dmp_state;
+    
+    // functions
+    int8_t MPUSetup();
+    static inline unsigned short inv_orientation_matrix_to_scalar(const signed char *mtx);
+    static unsigned short inv_row_2_scale(const signed char *row);
+    int8_t enable_dmp();
+    int8_t disable_dmp();
+    
+};
+
+extern IMUTask imuTask;
 
 #endif // _IMU_TASK_H_

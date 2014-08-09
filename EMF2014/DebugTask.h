@@ -41,7 +41,7 @@
 #include "Task.h"
 
 namespace debug {
-	void setup();
+    void setup();
     void log(String text);
     void logFromISR(String text);
     void stopWithMessage(String text);

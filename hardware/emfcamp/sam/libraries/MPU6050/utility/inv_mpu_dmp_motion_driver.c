@@ -66,8 +66,10 @@
 /* Arduino DUE platform setup
  */
 #include <Arduino.h>
-#define delay_ms delay
-#define get_ms(t)  ( t = millis() )
+#include <FreeRTOS_ARM.h>
+
+
+
 #define log_i       Serial.println
 #define log_e       Serial.println
 
@@ -542,7 +544,7 @@ int dmp_set_orientation(unsigned short orient)
     if (mpu_write_mem(FCFG_1, 3, gyro_regs))
         return -1;
     if (mpu_write_mem(FCFG_2, 3, accel_regs))
-        return -1;
+        return -2;
 
     memcpy(gyro_regs, gyro_sign, 3);
     memcpy(accel_regs, accel_sign, 3);
@@ -561,9 +563,9 @@ int dmp_set_orientation(unsigned short orient)
 
     /* Chip-to-body, sign only. */
     if (mpu_write_mem(FCFG_3, 3, gyro_regs))
-        return -1;
+        return -3;
     if (mpu_write_mem(FCFG_7, 3, accel_regs))
-        return -1;
+        return -4;
     dmp.orient = orient;
     return 0;
 }

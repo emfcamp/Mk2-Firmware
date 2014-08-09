@@ -36,6 +36,8 @@
  */
 
 #include <FreeRTOS_ARM.h>
+#include <Wire.h>
+#include <MPU6050.h>
 #include "EMF2014Config.h"
 #include "DebugTask.h"
 #include "RGBTask.h"
@@ -45,6 +47,7 @@
 #include "FlashLightApp.h"
 #include "HomeScreenApp.h"
 #include "TiLDAButtonInterrupts.h"
+#include "IMUTask.h"
 
 
 /*
@@ -61,6 +64,13 @@ FlashLightApp flashLightApp(rgbTask);
 HomeScreenApp homeScreenApp(rgbTask);
 
 void setup() {
+    
+    pinMode(PIN_LED_TXL, OUTPUT);
+    pinMode(PIN_LED_RXL, OUTPUT);
+    digitalWrite(PIN_LED_TXL, HIGH);
+    digitalWrite(PIN_LED_RXL, HIGH);
+    
+   
     debug::setup();
 
     // Uncomment this if you want to see serial output during startup
@@ -74,6 +84,7 @@ void setup() {
 
     // Background tasks
     debugTask.start();
+    imuTask.start();
     rgbTask.start();
     buttonTask.start();
     appOpenerTask.start();
