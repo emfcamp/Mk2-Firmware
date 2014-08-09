@@ -71,7 +71,7 @@ void MessageCheckTask::task() {
 			    	DataStore::addContent(message->receiver(), message->content(), message->length());
 			    	TickType_t end = xTaskGetTickCount();
 			    	TickType_t duration = end - start;
-			    	debug::log("Duration: " + String(duration) + "ms");
+			    	//debug::log("Duration for SHA1 and ECC verify: " + String(duration) + "ms");
 			    }
 			}
 

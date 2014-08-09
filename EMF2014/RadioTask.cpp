@@ -125,11 +125,8 @@ inline void RadioTask::_handleDiscoveryPacket(byte packetBuffer[], uint8_t packe
 	identifier[2] = packetBuffer[7];
 	if (rssi < _bestRssi) {
 		_bestRssi = rssi;
-		_bestChannel = channel;
-		debug::log("Better channel found: " + String(channel) + " RSSI: -" + String(rssi));
-	
+		_bestChannel = channel;	
 	}
-	debug::log("Current time: " + String (timestamp));
 }
 
 inline void RadioTask::_handleReceivePacket(byte packetBuffer[], uint8_t packetBufferLength) {

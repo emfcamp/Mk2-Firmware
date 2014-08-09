@@ -52,7 +52,6 @@
 #include "HomeScreenApp.h"
 #include "TiLDAButtonInterrupts.h"
 
-
 /*
  * Setup is the main entry point for an Arduino sketch.
  * Here is where we will do a lot of work in getting the system running

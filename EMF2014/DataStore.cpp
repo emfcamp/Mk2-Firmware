@@ -36,13 +36,13 @@ WeatherForecast DataStore::_weatherForecast;
 void DataStore::addContent(uint16_t rid, byte* content, uint16_t length) {
 	if (rid == CONTENT_RID_WEATHER_FORECAST) {
 		//_addWeatherForecastRaw(content, length);
+		debug::log("forecast");
 	} else if (rid == CONTENT_RID_SCHEDULE_FRIDAY) {
 		//_addScheduleFridayRaw(content, length);
 		debug::log("friday");
 	} else {
-		debug::log("Rid or length not supported: " + String(rid) + " " + String(length));
+		debug::log("Rid not supported: " + String(rid) + " " + String(length));
 	}
-	debug::logHWM();
 }
 
 WeatherForecast DataStore::getWeatherForecast() {
