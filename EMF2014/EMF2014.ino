@@ -38,6 +38,7 @@
 #include <FreeRTOS_ARM.h>
 #include <Sha1.h>
 #include "uECC.h"
+#include "SPI.h"
 #include <Arduino.h>
 #include "EMF2014Config.h"
 #include "DebugTask.h"
@@ -50,6 +51,9 @@
 #include "FlashLightApp.h"
 #include "HomeScreenApp.h"
 #include "TiLDAButtonInterrupts.h"
+#include "LCDTask.h"
+#include "glcd.h"
+#include "allBitmaps.h"
 
 
 /*
@@ -63,17 +67,17 @@ ButtonTask buttonTask;
 MessageCheckTask messageCheckTask;
 RadioTask radioTask;
 AppOpenerTask appOpenerTask;
+LCDTask lcdTask;
 
 FlashLightApp flashLightApp(rgbTask);
 HomeScreenApp homeScreenApp(rgbTask);
-
 void setup() {
     debug::setup();
 
     // Uncomment this if you want to see serial output during startup
     // This will require you to send a character over serial before unblocking 
     // the startup
-    debug::waitForKey();
+    //debug::waitForKey();
 
     tildaButtonSetup();
     tildaButtonAttachInterrupts();
@@ -85,6 +89,10 @@ void setup() {
     buttonTask.start();
     messageCheckTask.start();
     radioTask.start();
+    lcdTask.start();
+    GLCD.setLCD(lcdTask);
+
+    
     appOpenerTask.start();
 
     // Applications

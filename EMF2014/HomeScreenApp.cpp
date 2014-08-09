@@ -27,14 +27,17 @@
  */
 #include <FreeRTOS_ARM.h>
 #include "DebugTask.h"
-
+#include "glcd.h"
 #include "HomeScreenApp.h"
+
+#include "allBitmaps.h"
 
 String HomeScreenApp::getName() {
     return "HomeScreen";
 }
 
 void HomeScreenApp::task() {
+    //GLCD.DrawBitmap(logo, 0,  (64-46)/2); 
     while(true) {
         _rgbTask.setColor({255, 0, 0});
         vTaskDelay((300/portTICK_PERIOD_MS));
