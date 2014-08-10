@@ -31,5 +31,5 @@
 
 bool SettingsStore::_getUniqueId(uint32_t unique_id[]) {
     return flash_init(FLASH_ACCESS_MODE_128, 4) == FLASH_RC_OK &&
-           flash_read_unique_id(unique_id, 4) = FLASH_RC_OK;
+           flash_read_unique_id(unique_id, 4) == FLASH_RC_OK;
 }
