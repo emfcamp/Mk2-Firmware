@@ -3,9 +3,9 @@ TiLDA v2 Firmware
 
 #### Firmware on the TiLDA v2 Badge
 * To use this code you need Arduino IDE version 1.5.7 or later which can be downloaded [here](http://arduino.cc/en/Main/Software#toc3).
-* The easiest way to work with this repo is to set it as the sketchbook folder in the IDE's File->Prefrences menu (restart the IDE after changing this setting).
+* The easiest way to work with this repo is to set it as the sketchbook folder in the IDE's File->Preferences menu (restart the IDE after changing this setting).
 * This way you will not have any conflicts with your existing sketchbook and library folders.
-* N.B. Arduino 1.5.7 stores its preferences in a seperate location to that of the Arduino 1.0.x IDE).
+* N.B. Arduino 1.5.7 stores its preferences in a separate location to that of the Arduino 1.0.x IDE).
 
 
 * The TiLDA code base if split in 3 distinct sections:
@@ -29,5 +29,10 @@ TiLDA v2 Firmware
 
 
 #### frRGBTask/
-* This is the first fully fuctional test of the RGB Task.
+* This is the first fully functional test of the RGB Task.
 * Some of the buttons are set up to test the different RGB modes.
+
+
+#### Contributing
+* If you wish to work on code please fork our repo, do your work in a bracnh and sumbit a pull request for review
+* Please do not commit to master
