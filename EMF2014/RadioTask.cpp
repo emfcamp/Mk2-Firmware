@@ -123,7 +123,7 @@ inline void RadioTask::_parsePacketBuffer(byte packetBuffer[], uint8_t & packetB
 
 		packetBufferLength = 0;
 	} else if (packetBufferLength == RADIO_PACKET_WITH_RSSI_LENGTH) {
-		debug::log("Packet does not conform");
+		debug::log("RadioTask: Packet does not conform");
 		//debug::logByteArray(packetBuffer, 58);
 		// Something's wrong, we received enough bytes but it's not formated correctly.
 		packetBufferLength = 0;
@@ -148,7 +148,7 @@ inline void RadioTask::_handleReceivePacket(byte packetBuffer[], uint8_t packetB
 	int packetReceiver = _bytesToInt(packetBuffer[0], packetBuffer[1]);
 
 	/*if (_currentMessageReceiver != packetReceiver) {
-		debug::log("Still waiting for packets, but got new receiver. Was waiting for " + String(_remainingMessageLength) + " bytes");
+		debug::log("RadioTask: Still waiting for packets, but got new receiver. Was waiting for " + String(_remainingMessageLength) + " bytes");
 	}*/
 
 	// parsing the packet - is it payload or header?
@@ -208,7 +208,7 @@ inline void RadioTask::_checkForStateChange() {
 	if (_radioState == RADIO_STATE_DISCOVERY) {
 		if (_discoveryFinishingTime <= xTaskGetTickCount()) {
 			if (_bestChannel == NO_CHANNEL_DISCOVERED) {
-				debug::log("No channel discovered during this discovery period. Will sleep for certain time and try again");
+				debug::log("RadioTask: No channel discovered during this discovery period. Will sleep for certain time and try again");
 				vTaskDelay(RADIO_UNSUCCESSFUL_DISCOVERY_SLEEP);
 				_initialiseDiscoveryState();
 			} else {
@@ -217,14 +217,14 @@ inline void RadioTask::_checkForStateChange() {
 		}
 	} else if (_radioState == RADIO_STATE_RECEIVE) {
 		if (_lastMessageReceived + RADIO_RECEIVE_TIMEOUT <= xTaskGetTickCount()) {
-			debug::log("Main channel timeout - Going back to disovery");
+			debug::log("RadioTask: Main channel timeout - Going back to disovery");
 			_initialiseDiscoveryState();
 		}
 	}
 }
 
 inline void RadioTask::_initialiseDiscoveryState() {
-	debug::log("Radio: Starting discovery state");
+	debug::log("RadioTask: Starting discovery state");
 	_bestRssi = 255;
 	_bestChannel = NO_CHANNEL_DISCOVERED;
 	_radioState = RADIO_STATE_DISCOVERY;
@@ -242,7 +242,7 @@ inline void RadioTask::_initialiseDiscoveryState() {
 }
 
 inline void RadioTask::_initialiseReceiveState() {
-	debug::log("Starting to receive on channel " + String(_bestChannel));
+	debug::log("RadioTask: Starting to receive on channel " + String(_bestChannel));
 
 	_enterAtMode();
 	RADIO_SERIAL.println("ATZD3");  // output format <payload>|<rssi>
@@ -264,7 +264,7 @@ inline void RadioTask::_clearSerialBuffer() {
 inline void RadioTask::_sendOutgoingBuffer() {
 	RADIO_SERIAL.write(_outgoingPacketBuffer, RADIO_PACKET_LENGTH);
 	RADIO_SERIAL.flush();
-	debug::log("Outgoing message sent");
+	debug::log("RadioTask: Outgoing message sent");
 	//_outgoingPacketAvailable = false;
 }
 

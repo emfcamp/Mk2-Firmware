@@ -46,10 +46,10 @@ String MessageCheckTask::getName() {
 
 void MessageCheckTask::addIncomingMessage(IncomingRadioMessage *message) {
 	if( mIncomingMessages == 0 ) {
-		debug::log("incomingMessages queue has not been created");
+		debug::log("MessageCheckTask: incomingMessages queue has not been created");
 	} else {
 		if(xQueueSendToBack(mIncomingMessages, (void *) &message, (TickType_t) 0) != pdPASS) {
-	        debug::log("Could not queue incoming message");
+	        debug::log("MessageCheckTask: Could not queue incoming message");
 	        delete message;
 	    }
 	}
@@ -66,18 +66,18 @@ void MessageCheckTask::task() {
 			
 			// Check our digest against the one send in the header
 			if (memcmp(digest, message->hash(), 12) != 0) {
-				debug::log("Can't validate message, checksum doesn't match.");
+				debug::log("MessageCheckTask: Can't validate message, checksum doesn't match.");
 			} else {
 
 			    // Check ECC
 			    TickType_t start = xTaskGetTickCount();
 			    if (!uECC_verify(EMF_PUBLIC_KEY, digest, message->signature())) {
-			        debug::log("Can't validate message, ecc doesn't check out.");
+			        debug::log("MessageCheckTask: Can't validate message, ecc doesn't check out.");
 			    } else {
 			    	mDataStore->addContent(message->receiver(), message->content(), message->length());
 			    	TickType_t end = xTaskGetTickCount();
 			    	TickType_t duration = end - start;
-			    	//debug::log("Duration for SHA1 and ECC verify: " + String(duration) + "ms");
+			    	//debug::log("MessageCheckTask: Duration for SHA1 and ECC verify: " + String(duration) + "ms");
 			    }
 			}
 

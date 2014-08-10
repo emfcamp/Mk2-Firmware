@@ -47,7 +47,7 @@ void DataStore::addContent(uint16_t rid, byte* content, uint16_t length) {
 	} else if (rid == CONTENT_RID_SCHEDULE_FRIDAY) {
 		_addScheduleFridayRaw(content, length);
 	} else {
-		debug::log("Rid not supported: " + String(rid) + " " + String(length));
+		debug::log("DataStore: Rid not supported: " + String(rid) + " " + String(length));
 	}
 }
 
@@ -91,7 +91,7 @@ void DataStore::_addWeatherForecastRaw(const byte* content, uint16_t length) {
 	_unpackWeatherForecastPeriod(mWeatherForecast.in24Hours, mReader);
 	_unpackWeatherForecastPeriod(mWeatherForecast.in48Hours, mReader);
 
-	debug::log("Stored weather forecast: " +
+	debug::log("DataStore: Stored weather forecast: " +
 				String(mWeatherForecast.current.temperature) + "deg, Weather type: " + String((uint8_t) mWeatherForecast.current.weatherType));
 }
 
@@ -112,5 +112,5 @@ void DataStore::_addScheduleFridayRaw(const byte* content, uint16_t length) {
 		mSchedule.events[i].title = _getString(mReader);
 	}
 
-	debug::log("Got schedule: " + String(mSchedule.numEvents) + " events");
+	debug::log("DataStore: Got schedule: " + String(mSchedule.numEvents) + " events");
 }
