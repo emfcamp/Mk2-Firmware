@@ -93,8 +93,6 @@ void setup() {
     radioTask.start();
     lcdTask.start();
     GLCD.setLCD(lcdTask);
-
-    
     appOpenerTask.start();
 
     // Applications
@@ -103,7 +101,6 @@ void setup() {
 
     // Boot into home screen
     AppManager::open("HomeScreen");
-    GLCD.DrawBitmap(logo, 0,  (64-46)/2); 
 
     debug::log("Start Scheduler");
     // Start scheduler

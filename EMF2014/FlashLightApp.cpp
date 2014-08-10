@@ -33,6 +33,7 @@
 #include "DebugTask.h"
 #include "RGBTask.h"
 #include "AppManager.h"
+#include "glcd.h"
 
 // ToDo: Add all the fancy features from https://github.com/emfcamp/Mk2-Firmware/blob/master/frRGBTask/frRGBTask.ino
 String FlashLightApp::getName() {
@@ -51,7 +52,7 @@ void FlashLightApp::task() {
     ButtonSubscription _buttons;
     _pbuttons =& _buttons;
     _buttons.addButtons(UP | DOWN);
-
+    GLCD.DrawHLine(0,0,10);
     updateLeds();
     while(true) {
         Button button = _buttons.waitForPress(( TickType_t ) 1000);
