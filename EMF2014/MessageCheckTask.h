@@ -37,17 +37,26 @@
 #include "IncomingRadioMessage.h"
 #include "EMF2014Config.h"
 #include "Task.h"
+#include "DataStore.h"
 
 class MessageCheckTask: public Task {
 public:
+    MessageCheckTask();
+    ~MessageCheckTask();
+
 	String getName();
 
-	static void addIncomingMessage(IncomingRadioMessage *message);
+	void addIncomingMessage(IncomingRadioMessage *message);
+
+private:
+    MessageCheckTask(const MessageCheckTask&) {}
+
 protected:
 	void task();
 
 private:
-	static QueueHandle_t incomingMessages;
+	QueueHandle_t mIncomingMessages;
+    DataStore* mDataStore;
 };
 
 #endif // _MESSAGE_CHECK_TASK_H_

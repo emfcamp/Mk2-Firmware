@@ -37,7 +37,7 @@
 
 #include <FreeRTOS_ARM.h>
 #include <Sha1.h>
-#include <msgpack.h>
+#include <TinyPacks.h>
 #include "uECC.h"
 #include <Arduino.h>
 #include "EMF2014Config.h"
@@ -61,7 +61,7 @@ DebugTask debugTask;
 RGBTask rgbTask;
 ButtonTask buttonTask;
 MessageCheckTask messageCheckTask;
-RadioTask radioTask;
+RadioTask radioTask(messageCheckTask);
 AppOpenerTask appOpenerTask;
 
 FlashLightApp flashLightApp(rgbTask);

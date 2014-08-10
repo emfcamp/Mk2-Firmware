@@ -26,17 +26,19 @@
  SOFTWARE.
  */
 
-#include <msgpack.h>
-
 #include "DataStore.h"
 #include "DebugTask.h"
 
-WeatherForecast DataStore::_weatherForecast;
+DataStore::DataStore() {
+	mWeatherForecast.valid = false;
+}
+ 
+DataStore::~DataStore() {
+}
 
 void DataStore::addContent(uint16_t rid, byte* content, uint16_t length) {
 	if (rid == CONTENT_RID_WEATHER_FORECAST) {
-		//_addWeatherForecastRaw(content, length);
-		debug::log("forecast");
+		_addWeatherForecastRaw(content, length);
 	} else if (rid == CONTENT_RID_SCHEDULE_FRIDAY) {
 		//_addScheduleFridayRaw(content, length);
 		debug::log("friday");
@@ -45,51 +47,46 @@ void DataStore::addContent(uint16_t rid, byte* content, uint16_t length) {
 	}
 }
 
-WeatherForecast DataStore::getWeatherForecast() {
-	return _weatherForecast;
+WeatherForecast& DataStore::getWeatherForecast() {
+	return mWeatherForecast;
 }
 
-void unpack(WeatherForecastPeriod& period, const msgpack_object& object) {
-	period.timestamp = (uint32_t)object.via.array.ptr[0].via.u64;
-	period.temperature = (int8_t)object.via.array.ptr[1].via.u64;
-	period.feelsLikeTemperature = (int8_t)object.via.array.ptr[2].via.u64;
-	period.windSpeed = (uint8_t)object.via.array.ptr[3].via.u64;
-	period.screenRelativeHumidity = (uint8_t)object.via.array.ptr[4].via.u64;
-	period.precipitationProbability = (uint8_t)object.via.array.ptr[5].via.u64;
+tp_integer_t DataStore::_getInteger(PackReader& reader) {
+	reader.next();
+	return reader.getInteger();
+}
+
+void DataStore::_unpackWeatherForecastPeriod(WeatherForecastPeriod& period, PackReader& reader) {
+	period.timestamp = (uint32_t)_getInteger(reader);
+	period.weatherType = (WeatherType)_getInteger(reader);
+	period.temperature = (int8_t)_getInteger(reader);
+	period.windSpeed = (uint8_t)_getInteger(reader);
+	period.screenRelativeHumidity = (uint8_t)_getInteger(reader);
+	period.precipitationProbability = (uint8_t)_getInteger(reader);
 }
 
 void DataStore::_addWeatherForecastRaw(const byte* content, uint16_t length) {
-	_weatherForecast.valid = true;
+	mWeatherForecast.valid = true;
 
-	msgpack_zone mempool;
-	msgpack_zone_init(&mempool, 2048);
+	mReader.setBuffer((unsigned char*)content, length);
+	_unpackWeatherForecastPeriod(mWeatherForecast.current, mReader);
+	_unpackWeatherForecastPeriod(mWeatherForecast.in3Hours, mReader);
+	_unpackWeatherForecastPeriod(mWeatherForecast.in6Hours, mReader);
+	_unpackWeatherForecastPeriod(mWeatherForecast.in12Hours, mReader);
+	_unpackWeatherForecastPeriod(mWeatherForecast.in24Hours, mReader);
+	_unpackWeatherForecastPeriod(mWeatherForecast.in48Hours, mReader);
 
-	msgpack_object deserialized;
-	msgpack_unpack((char*)content, length, NULL, &mempool, &deserialized);
-
-	unpack(_weatherForecast.current, deserialized.via.array.ptr[0]);
-	unpack(_weatherForecast.in3Hours, deserialized.via.array.ptr[1]);
-	unpack(_weatherForecast.in6Hours, deserialized.via.array.ptr[2]);
-	unpack(_weatherForecast.in12Hours, deserialized.via.array.ptr[3]);
-	unpack(_weatherForecast.in24Hours, deserialized.via.array.ptr[4]);
-	unpack(_weatherForecast.in48Hours, deserialized.via.array.ptr[5]);
-
-	msgpack_zone_destroy(&mempool);
-
-	debug::log("Stored weather forecast: " + String(_weatherForecast.current.temperature) + "deg, Weather type: " + String((uint8_t) _weatherForecast.current.weatherType));
+	debug::log("Stored weather forecast: " +
+				String(mWeatherForecast.current.temperature) + "deg, Weather type: " + String((uint8_t) mWeatherForecast.current.weatherType));
 }
 
 void DataStore::_addScheduleFridayRaw(const byte* content, uint16_t length) {
-	/*msgpack_zone mempool;
-	msgpack_zone_init(&mempool, 2048);
-
-	msgpack_object deserialized;
-	msgpack_unpack((char*)content, length, NULL, &mempool, &deserialized);
-
-	uint8_t stage = (uint8_t)deserialized.via.array.ptr[0].via.array.ptr[0].via.u64;
-	debug::log("Stored schedule friday: Stage " + String(stage));
-
-
-	msgpack_zone_destroy(&mempool);*/
-
+	/*
+	stageId,
+	typeId,
+	startTimestamp,
+	endTimestamp,
+	speaker,
+	event['title'],
+	*/
 }

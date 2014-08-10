@@ -32,17 +32,23 @@
 #include "DebugTask.h"
 #include "DataStore.h"
 
-QueueHandle_t MessageCheckTask::incomingMessages;
+MessageCheckTask::MessageCheckTask() {
+	mDataStore = new DataStore;
+}
+
+MessageCheckTask::~MessageCheckTask() {
+	delete mDataStore;
+}
 
 String MessageCheckTask::getName() {
 	return "MessageCheckTask";
 }
 
 void MessageCheckTask::addIncomingMessage(IncomingRadioMessage *message) {
-	if( incomingMessages == 0 ) {
+	if( mIncomingMessages == 0 ) {
 		debug::log("incomingMessages queue has not been created");
 	} else {
-		if(xQueueSendToBack(incomingMessages, (void *) &message, (TickType_t) 0) != pdPASS) {
+		if(xQueueSendToBack(mIncomingMessages, (void *) &message, (TickType_t) 0) != pdPASS) {
 	        debug::log("Could not queue incoming message");
 	        delete message;
 	    }
@@ -50,11 +56,11 @@ void MessageCheckTask::addIncomingMessage(IncomingRadioMessage *message) {
 }
 
 void MessageCheckTask::task() {
-	incomingMessages = xQueueCreate(10, sizeof(struct IncomingRadioMessage *));
+	mIncomingMessages = xQueueCreate(10, sizeof(struct IncomingRadioMessage *));
 
 	while(true) {
 		IncomingRadioMessage *message;
-		if(xQueueReceive(incomingMessages, &message, portMAX_DELAY) == pdTRUE) {
+		if(xQueueReceive(mIncomingMessages, &message, portMAX_DELAY) == pdTRUE) {
             // Create SHA1 digest
 			byte* digest = message->Sha1Result();	
 			
@@ -68,7 +74,7 @@ void MessageCheckTask::task() {
 			    if (!uECC_verify(EMF_PUBLIC_KEY, digest, message->signature())) {
 			        debug::log("Can't validate message, ecc doesn't check out.");
 			    } else {
-			    	DataStore::addContent(message->receiver(), message->content(), message->length());
+			    	mDataStore->addContent(message->receiver(), message->content(), message->length());
 			    	TickType_t end = xTaskGetTickCount();
 			    	TickType_t duration = end - start;
 			    	//debug::log("Duration for SHA1 and ECC verify: " + String(duration) + "ms");

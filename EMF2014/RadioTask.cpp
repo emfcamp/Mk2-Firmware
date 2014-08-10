@@ -32,6 +32,11 @@
 
 #include <FreeRTOS_ARM.h>
 
+RadioTask::RadioTask(MessageCheckTask& aMessageCheckTask)
+	:mMessageCheckTask(aMessageCheckTask)
+{
+}
+
 String RadioTask::getName() {
 	return "RadioTask";
 }
@@ -176,7 +181,7 @@ inline void RadioTask::_handleReceivePacket(byte packetBuffer[], uint8_t packetB
 		_verifyMessage();
 
 		// Temporary: Just send a message back.
-		_sendOutgoingBuffer();
+		//_sendOutgoingBuffer();
 
 		// Reset for next message
 		_messageBufferPosition = 0;
@@ -196,7 +201,7 @@ inline void RadioTask::_verifyMessage() {
 																_currentMessageSignature,
 																_currentMessageReceiver);
 
-	MessageCheckTask::addIncomingMessage(message);
+	mMessageCheckTask.addIncomingMessage(message);
 }
 
 inline void RadioTask::_checkForStateChange() {
