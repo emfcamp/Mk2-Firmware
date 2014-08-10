@@ -1,7 +1,7 @@
 /*
  TiLDA Mk2
  
- MessageCheckTask
+ Incoming Radio Message
 
  This is a consumer task that checks messages received by the radio task for validity
 
@@ -28,35 +28,35 @@
  SOFTWARE.
  */
 
-#ifndef _MESSAGE_CHECK_TASK_H_
-#define _MESSAGE_CHECK_TASK_H_
+#pragma once
 
 #include <Arduino.h>
-#include <FreeRTOS_ARM.h>
 
-#include "IncomingRadioMessage.h"
-#include "EMF2014Config.h"
-#include "Task.h"
-#include "DataStore.h"
-
-class MessageCheckTask: public Task {
+class IncomingRadioMessage {
 public:
-    MessageCheckTask();
-    ~MessageCheckTask();
+    IncomingRadioMessage(uint32_t aLength,
+                            const byte* aBuffer,
+                            const byte* aHash,
+                            const byte* aSignature,
+                            uint16_t aReciever);
+    ~IncomingRadioMessage();
 
-	String getName();
+    byte* Sha1Result() const;
 
-	void addIncomingMessage(IncomingRadioMessage *message);
+    byte* content() const;
+    uint32_t length() const;
+    const byte* hash() const;
+    const byte* signature() const;
+    uint16_t receiver() const;
 
 private:
-    MessageCheckTask(const MessageCheckTask&) {}
-
-protected:
-	void task();
+    IncomingRadioMessage(){;}
+    IncomingRadioMessage(const IncomingRadioMessage&){;}
 
 private:
-	QueueHandle_t mIncomingMessages;
-    DataStore* mDataStore;
+    byte* mContent;
+    uint32_t mLength;
+    byte mHash[12];
+    byte mSignature[40];
+    uint16_t mReceiver;
 };
-
-#endif // _MESSAGE_CHECK_TASK_H_

@@ -1,10 +1,12 @@
 /*
  TiLDA Mk2
  
- MessageCheckTask
-
- This is a consumer task that checks messages received by the radio task for validity
-
+ Schedule 
+ 
+ This handles the periodic wake of the radio for all our need communication with the gateway's.
+ Incoming request are passed back to the TiLDATask
+ Outgoing request from TiLDATask are sent at the next opportunity.
+ 
  The MIT License (MIT)
  
  Copyright (c) 2014 Electromagnetic Field LTD
@@ -28,35 +30,18 @@
  SOFTWARE.
  */
 
-#ifndef _MESSAGE_CHECK_TASK_H_
-#define _MESSAGE_CHECK_TASK_H_
+#pragma once
 
-#include <Arduino.h>
-#include <FreeRTOS_ARM.h>
-
-#include "IncomingRadioMessage.h"
-#include "EMF2014Config.h"
-#include "Task.h"
-#include "DataStore.h"
-
-class MessageCheckTask: public Task {
-public:
-    MessageCheckTask();
-    ~MessageCheckTask();
-
-	String getName();
-
-	void addIncomingMessage(IncomingRadioMessage *message);
-
-private:
-    MessageCheckTask(const MessageCheckTask&) {}
-
-protected:
-	void task();
-
-private:
-	QueueHandle_t mIncomingMessages;
-    DataStore* mDataStore;
+struct Event {
+    uint8_t stageId;
+    uint8_t typeId;
+    uint32_t startTimestamp;
+    uint32_t endTimestamp;
+    String speaker;
+    String title;
 };
 
-#endif // _MESSAGE_CHECK_TASK_H_
+struct Schedule {
+    Event* events;
+    tp_integer_t numEvents;
+};

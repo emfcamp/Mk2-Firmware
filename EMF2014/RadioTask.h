@@ -44,6 +44,8 @@
 
 class RadioTask: public Task {
 public:
+	RadioTask(MessageCheckTask& aMessageCheckTask);
+
 	String getName();
 protected:
 	void task();
@@ -64,9 +66,12 @@ private:
 	inline void _initialiseDiscoveryState();
 	inline void _initialiseReceiveState();
 	inline void _clearSerialBuffer();
+	inline void _sendOutgoingBuffer();
 
 	static const uint16_t NO_CURRENT_MESSAGE = 65535;
 	static const uint8_t NO_CHANNEL_DISCOVERED = 255;
+
+	MessageCheckTask& mMessageCheckTask;
 
 	byte _messageBuffer[RADIO_MAX_MESSAGE_BUFFER_LENGTH];
 	uint16_t _messageBufferPosition;
@@ -79,6 +84,9 @@ private:
 	uint8_t _bestChannel;
 	TickType_t _discoveryFinishingTime;
 	TickType_t _lastMessageReceived;
+
+	byte _outgoingPacketBuffer[RADIO_PACKET_LENGTH];
+	bool _outgoingPacketAvailable;
 
 	uint8_t _radioState;
 };

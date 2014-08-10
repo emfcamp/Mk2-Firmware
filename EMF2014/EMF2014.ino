@@ -37,6 +37,7 @@
 
 #include <FreeRTOS_ARM.h>
 #include <Sha1.h>
+#include <TinyPacks.h>
 #include "uECC.h"
 #include <Arduino.h>
 #include "EMF2014Config.h"
@@ -51,7 +52,6 @@
 #include "HomeScreenApp.h"
 #include "TiLDAButtonInterrupts.h"
 
-
 /*
  * Setup is the main entry point for an Arduino sketch.
  * Here is where we will do a lot of work in getting the system running
@@ -61,7 +61,7 @@ DebugTask debugTask;
 RGBTask rgbTask;
 ButtonTask buttonTask;
 MessageCheckTask messageCheckTask;
-RadioTask radioTask;
+RadioTask radioTask(messageCheckTask);
 AppOpenerTask appOpenerTask;
 
 FlashLightApp flashLightApp(rgbTask);
@@ -73,6 +73,7 @@ void setup() {
     // Uncomment this if you want to see serial output during startup
     // This will require you to send a character over serial before unblocking 
     // the startup
+
     debug::waitForKey();
 
     tildaButtonSetup();
