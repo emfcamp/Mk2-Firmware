@@ -40,7 +40,7 @@
 
 class SettingsStore {
 public:
-    void getUniqueId(uint32_t unique_id[]);
+    bool getUniqueId(uint32_t *unique_id);
 
 };
 
