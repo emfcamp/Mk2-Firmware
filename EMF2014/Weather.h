@@ -1,7 +1,8 @@
 /*
  TiLDA Mk2
  
- RadioTask
+ Weather 
+
  This handles the periodic wake of the radio for all our need communication with the gateway's.
  Incoming request are passed back to the TiLDATask
  Outgoing request from TiLDATask are sent at the next opportunity.
@@ -28,7 +29,9 @@
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  SOFTWARE.
  */
- 
+
+#pragma once
+
 // This maps to http://www.metoffice.gov.uk/datapoint/support/documentation/code-definitions
 enum class WeatherType : uint8_t {
     WEATHER_TYPE_NOT_AVAILABLE = 31,

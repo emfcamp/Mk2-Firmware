@@ -29,8 +29,13 @@
 #include "DataStore.h"
 #include "DebugTask.h"
 
+uint16_t static const CONTENT_RID_WEATHER_FORECAST = 40962;
+uint16_t static const CONTENT_RID_SCHEDULE_FRIDAY = 40963;
+
 DataStore::DataStore() {
 	mWeatherForecast.valid = false;
+	mSchedule.events = new Event[0];
+	mSchedule.numEvents = 0;
 }
  
 DataStore::~DataStore() {
@@ -40,8 +45,7 @@ void DataStore::addContent(uint16_t rid, byte* content, uint16_t length) {
 	if (rid == CONTENT_RID_WEATHER_FORECAST) {
 		_addWeatherForecastRaw(content, length);
 	} else if (rid == CONTENT_RID_SCHEDULE_FRIDAY) {
-		//_addScheduleFridayRaw(content, length);
-		debug::log("friday");
+		_addScheduleFridayRaw(content, length);
 	} else {
 		debug::log("Rid not supported: " + String(rid) + " " + String(length));
 	}
@@ -51,9 +55,20 @@ WeatherForecast& DataStore::getWeatherForecast() {
 	return mWeatherForecast;
 }
 
+Schedule& DataStore::getSchedule() {
+	return mSchedule;
+}
+
 tp_integer_t DataStore::_getInteger(PackReader& reader) {
 	reader.next();
 	return reader.getInteger();
+}
+
+String DataStore::_getString(PackReader& reader) {
+	reader.next();
+	char string[160];
+	tp_length_t legnth = reader.getString(string, 160);
+	return String(string);
 }
 
 void DataStore::_unpackWeatherForecastPeriod(WeatherForecastPeriod& period, PackReader& reader) {
@@ -81,12 +96,21 @@ void DataStore::_addWeatherForecastRaw(const byte* content, uint16_t length) {
 }
 
 void DataStore::_addScheduleFridayRaw(const byte* content, uint16_t length) {
-	/*
-	stageId,
-	typeId,
-	startTimestamp,
-	endTimestamp,
-	speaker,
-	event['title'],
-	*/
+	mReader.setBuffer((unsigned char*)content, length);
+
+	// get the length and create a new array of events
+	mSchedule.numEvents = _getInteger(mReader);
+	delete[] mSchedule.events;
+	mSchedule.events = new Event[mSchedule.numEvents];
+
+	for (int i = 0 ; i < mSchedule.numEvents ; ++i) {
+		mSchedule.events[i].stageId = (uint8_t)_getInteger(mReader);
+		mSchedule.events[i].typeId = (uint8_t)_getInteger(mReader);
+		mSchedule.events[i].startTimestamp = (uint32_t)_getInteger(mReader);
+		mSchedule.events[i].endTimestamp = (uint32_t)_getInteger(mReader);
+		mSchedule.events[i].speaker = _getString(mReader);
+		mSchedule.events[i].title = _getString(mReader);
+	}
+
+	debug::log("Got schedule: " + String(mSchedule.numEvents) + " events");
 }

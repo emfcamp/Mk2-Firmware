@@ -1,11 +1,12 @@
 /*
  TiLDA Mk2
  
- DataStore
-
- This is a helper class that knows how to de-serialise and store data send via 
- radio. Other apps/tasks can look up data 
-
+ Schedule 
+ 
+ This handles the periodic wake of the radio for all our need communication with the gateway's.
+ Incoming request are passed back to the TiLDATask
+ Outgoing request from TiLDATask are sent at the next opportunity.
+ 
  The MIT License (MIT)
  
  Copyright (c) 2014 Electromagnetic Field LTD
@@ -29,39 +30,18 @@
  SOFTWARE.
  */
 
-#ifndef _DATA_STORE_H_
-#define _DATA_STORE_H_
+#pragma once
 
-#include <Arduino.h>
-#include <FreeRTOS_ARM.h>
-#include <TinyPacks.h>
-
-#include "Weather.h"
-#include "Schedule.h"
-#include "EMF2014Config.h"
-
-class DataStore {
-public:
-	DataStore();
-	~DataStore();
-
-	void addContent(uint16_t rid, byte* content, uint16_t length);
-	WeatherForecast& getWeatherForecast();
-	Schedule& getSchedule();
-
-private:
-	void _addWeatherForecastRaw(const byte* content, uint16_t length);
-	void _addScheduleFridayRaw(const byte* content, uint16_t length);
-
-	static void _unpackWeatherForecastPeriod(WeatherForecastPeriod& period, PackReader& reader);
-	static tp_integer_t _getInteger(PackReader& reader);
-	static String _getString(PackReader& reader);
-
-private:
-	WeatherForecast mWeatherForecast;
-	Schedule mSchedule;
-
-	PackReader mReader;
+struct Event {
+    uint8_t stageId;
+    uint8_t typeId;
+    uint32_t startTimestamp;
+    uint32_t endTimestamp;
+    String speaker;
+    String title;
 };
 
-#endif // _DATA_STORE_H_
+struct Schedule {
+    Event* events;
+    tp_integer_t numEvents;
+};
