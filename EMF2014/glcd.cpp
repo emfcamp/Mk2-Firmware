@@ -305,7 +305,7 @@ void glcd::DrawRoundRect(uint8_t x, uint8_t y, uint8_t width, uint8_t height, ui
  */
 
 void glcd::FillRect(uint8_t x, uint8_t y, uint8_t width, uint8_t height, uint8_t color) {
-    this->SetPixels(x,y,x+width,y+height,color);
+    this->SetPixels(x,y,x+width-1,y+height-1,color);
 }
 
 /**

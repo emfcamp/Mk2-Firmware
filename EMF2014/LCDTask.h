@@ -61,15 +61,16 @@ private:
   void _set_brightness(uint8_t);
   void _display();
   void _init();
-  uint8_t _x;
-  uint8_t _y;
-  uint8_t _framebuffer[DISPLAY_HEIGHT/8][DISPLAY_WIDTH];
+  static uint8_t _x;
+  static uint8_t _y;
+  static uint8_t _framebuffer[DISPLAY_HEIGHT/8][DISPLAY_WIDTH];
   static QueueHandle_t _updateWaiting;
   void _updateDisplay();
   static SemaphoreHandle_t frameBufferMutex;
   void _do_display();
   uint8_t _do_ReadData(void);
   void _do_WriteData(uint8_t data);
+  void _spiwrite(uint8_t c);
 
 protected:
 

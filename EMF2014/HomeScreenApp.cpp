@@ -38,8 +38,10 @@ String HomeScreenApp::getName() {
 
 void HomeScreenApp::task() {
     int phase=0;
-    debug::log("[HomeScreenApp::task()] Address of GLCD:" + String((long)&GLCD));
-    GLCD.FillRect(0,48,128,8);
+         GLCD.FillRect(0,0,128,8);
+         GLCD.FillRect(0,16,128,8);
+         GLCD.FillRect(0,32,128,8);
+         GLCD.FillRect(0,48,128,8);
     while(true) {
        /*
         _rgbTask.setColor({255, 0, 0});
@@ -49,7 +51,7 @@ void HomeScreenApp::task() {
         _rgbTask.setColor({0, 0, 255});
         vTaskDelay((300/portTICK_PERIOD_MS));
         */
-        /*
+       /* 
        if (phase==0)
        {
          GLCD.FillRect(0,0,128,8);
@@ -63,8 +65,10 @@ void HomeScreenApp::task() {
          GLCD.FillRect(0,40,128,8);
          GLCD.FillRect(0,56,128,8);
          phase=0;
-       }*/
+       }
+       
        vTaskDelay((1000/portTICK_PERIOD_MS));
+       */
     }
 }
 

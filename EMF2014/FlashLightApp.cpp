@@ -52,7 +52,6 @@ void FlashLightApp::task() {
     ButtonSubscription _buttons;
     _pbuttons =& _buttons;
     _buttons.addButtons(UP | DOWN);
-    GLCD.DrawHLine(0,0,10);
     updateLeds();
     while(true) {
         Button button = _buttons.waitForPress(( TickType_t ) 1000);

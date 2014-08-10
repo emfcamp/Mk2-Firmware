@@ -84,13 +84,17 @@ The functions affected are:
 #include "SPI.h"
 #include "glcd.h"
 #include "DebugTask.h"
+#include "allBitmaps.h"
+#include <FreeRTOS_ARM.h>
+
 
 QueueHandle_t LCDTask::_updateWaiting;
 SemaphoreHandle_t LCDTask::frameBufferMutex;
+uint8_t LCDTask::_framebuffer[DISPLAY_HEIGHT/8][DISPLAY_WIDTH];
+uint8_t LCDTask::_x;
+uint8_t LCDTask::_y;
 
-LCDTask::LCDTask(){
-
-}
+LCDTask::LCDTask(){}
 
 void LCDTask::Init()
 {
@@ -101,14 +105,20 @@ void LCDTask::Init()
   _init();
 }
 
+void LCDTask::_spiwrite(uint8_t c) {
+
+  SPI.transfer(LCD_CS,c);
+
+}
+
 void LCDTask::_command(uint8_t c) {
   digitalWrite(LCD_A0, LOW);
-  SPI.transfer(LCD_CS,c);
+  _spiwrite(c);
 }
 
 void LCDTask::_data(uint8_t c) {
   digitalWrite(LCD_A0, HIGH);
-  SPI.transfer(LCD_CS,c);
+  _spiwrite(c);
 }
 
 void LCDTask::_set_brightness(uint8_t val) {
@@ -187,14 +197,13 @@ void LCDTask::_init(void) {
   _set_brightness(0x08);
   
   // Ensure display is cleared
-  debug::log("[LCDTask::_init()] Address of framebuffer:" + String((long)this->_framebuffer));
   memset(this->_framebuffer,0x00,sizeof(_framebuffer));
 }
 
 // Never call this directly, as it has no mutex
 void LCDTask::_do_display() {
-  
-  debug::log("[LCDTask::_do_display()] Address of framebuffer:" + String((long)this->_framebuffer));
+  bool suspend = 0;
+
 
   uint8_t col, maxcol, p;
   for(p = 0; p < 8; p++) {
@@ -202,14 +211,20 @@ void LCDTask::_do_display() {
     // start at the beginning of the row
     col = 0;
     maxcol = DISPLAY_WIDTH-1;
-    //debug::log("[LCDTask::_do_display] page: " + String(p));
-    //debug::logByteArray(_framebuffer[pagemap[p]],128);    
     _command(CMD_SET_COLUMN_LOWER | ((col+ST7565_STARTBYTES) & 0xf));
     _command(CMD_SET_COLUMN_UPPER | (((col+ST7565_STARTBYTES) >> 4) & 0x0F));
     _command(CMD_RMW);
+    debug::logByteArray(_framebuffer[pagemap[p]],128);
+    if (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING) {
+      vTaskSuspendAll();
+      suspend=1;
+    }
     for(; col <= maxcol; col++) {
       _data(this->_framebuffer[pagemap[p]][col]);
     }
+    if (suspend == 1 ) {
+      xTaskResumeAll(); 
+    } 
   }  
 }
 
@@ -219,9 +234,11 @@ void LCDTask::_display(void) {
     if (frameBufferMutex == 0) {
       frameBufferMutex = xSemaphoreCreateMutex();
     }
-    if (xSemaphoreTake(frameBufferMutex, ( TickType_t ) 10) == pdTRUE ) {
+    if (xSemaphoreTake(frameBufferMutex, ( TickType_t ) 100) == pdTRUE ) {
       _do_display();
       xSemaphoreGive(frameBufferMutex);
+    } else {
+      debug::log("[LCDTask::_display] Failed to get framebuffer mutex");
     }
   } else {
     _do_display();  
@@ -251,8 +268,6 @@ void LCDTask::GotoXY(uint8_t x, uint8_t y) {
 
 // Never call this directly, as it has no mutex
 uint8_t LCDTask::_do_ReadData(){
-  debug::log("[LCDTask::_do_ReadData()] Address of framebuffer:" + String((long)this->_framebuffer));
-
   if(_x >= DISPLAY_WIDTH) {
     return(0);
   }
@@ -267,10 +282,12 @@ uint8_t LCDTask::ReadData()
     if (frameBufferMutex == 0) {
       frameBufferMutex = xSemaphoreCreateMutex();
     }
-    if (xSemaphoreTake(frameBufferMutex, ( TickType_t ) 10) == pdTRUE ) {
+    if (xSemaphoreTake(frameBufferMutex, ( TickType_t ) 100) == pdTRUE ) {
       data = _do_ReadData();
       xSemaphoreGive(frameBufferMutex);
       return data;
+    }else {
+      debug::log("[LCDTask::ReadData] Failed to get framebuffer mutex");
     }
   } else {
     return _do_ReadData(); 
@@ -280,9 +297,7 @@ uint8_t LCDTask::ReadData()
 // Never call this directly, as it has no mutex
 void LCDTask::_do_WriteData(uint8_t data) {
   uint8_t displayData, yOffset, chip;
-  debug::log("[LCDTask::_do_WriteData] Address of framebuffer:" + String((long)_framebuffer));
-
-  
+  debug::log("[LCDTask::_do_WriteData] data: " + String(data));
   if(_x >= DISPLAY_WIDTH) {
     return;
   }
@@ -298,8 +313,6 @@ void LCDTask::_do_WriteData(uint8_t data) {
     //displayData &= (_BV(yOffset)-1);
     
     displayData |= data << yOffset;
-         
-    //debug::log("Write Data: " + String(displayData) + " x,page: " + String (_x) + "," + String(_y/8));  
     this->_framebuffer[_y/8][_x] = displayData; // save to read cache
     
     // second page
@@ -322,14 +335,11 @@ void LCDTask::_do_WriteData(uint8_t data) {
     displayData &= ~(_BV(yOffset)-1);
     
     displayData |= data >> (8-yOffset);
-    
-     //debug::log("Write Data: " + String(displayData) + " x,page: " + String (_x) + "," + String(_y/8));  
     this->_framebuffer[_y/8][_x] = displayData; // save to read cache
     _x++;
     _y=ysave;
   } else {  
     // just this code gets executed if the write is on a single page
-     //debug::log("Write Data: " + String(data) + " x,page: " + String (_x) + "," + String(_y/8));  
     this->_framebuffer[_y/8][_x] = data; // save to read cache
     _x++;
   }
@@ -340,9 +350,11 @@ void LCDTask::WriteData(uint8_t data) {
     if (frameBufferMutex == 0) {
       frameBufferMutex = xSemaphoreCreateMutex();
     }
-    if (xSemaphoreTake(frameBufferMutex, ( TickType_t ) 10) == pdTRUE ) {  
+    if (xSemaphoreTake(frameBufferMutex, ( TickType_t ) 100) == pdTRUE ) {  
       _do_WriteData(data);
       xSemaphoreGive(frameBufferMutex);
+    }else {
+      debug::log("[LCDTask::WriteData] Failed to get framebuffer mutex");
     }
   } else {
     _do_WriteData(data);   
@@ -369,6 +381,7 @@ void LCDTask::task() {
         debug::log("LCDTask::task() Error Creating queue");
       }
       // Write framebuffer to display
+      debug::log("[LCDTask::task()] call _display");
       _display();
       // Sleep for 40ms, to limit updates to 25fps
       vTaskDelay((40/portTICK_PERIOD_MS));
