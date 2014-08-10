@@ -29,8 +29,7 @@
  SOFTWARE.
  */
 
-#ifndef _DATA_STORE_H_
-#define _DATA_STORE_H_
+#pragma once
 
 #include <Arduino.h>
 #include <FreeRTOS_ARM.h>
@@ -45,9 +44,9 @@ public:
 	DataStore();
 	~DataStore();
 
-	void addContent(uint16_t rid, byte* content, uint16_t length);
-	WeatherForecast& getWeatherForecast();
-	Schedule& getSchedule();
+	void addContent(uint16_t rid, const byte* content, uint16_t length);
+	const WeatherForecast& getWeatherForecast() const;
+	const Schedule& getSchedule() const;
 
 private:
 	void _addWeatherForecastRaw(const byte* content, uint16_t length);
@@ -63,5 +62,3 @@ private:
 
 	PackReader mReader;
 };
-
-#endif // _DATA_STORE_H_

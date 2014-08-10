@@ -57,12 +57,15 @@
  * Here is where we will do a lot of work in getting the system running
  * and in FreeRTOS we will start the scheduler
  */
+
+AppManager appManager;
+
 DebugTask debugTask;
 RGBTask rgbTask;
 ButtonTask buttonTask;
 MessageCheckTask messageCheckTask;
 RadioTask radioTask(messageCheckTask);
-AppOpenerTask appOpenerTask;
+AppOpenerTask appOpenerTask(appManager);
 
 FlashLightApp flashLightApp(rgbTask);
 HomeScreenApp homeScreenApp(rgbTask);
@@ -89,11 +92,11 @@ void setup() {
     appOpenerTask.start();
 
     // Applications
-    AppManager::add(homeScreenApp);
-    AppManager::add(flashLightApp);
+    appManager.add(homeScreenApp);
+    appManager.add(flashLightApp);
 
     // Boot into home screen
-    AppManager::open("HomeScreen");
+    appManager.open("HomeScreen");
 
     // Start scheduler
     debug::log("Start Scheduler");

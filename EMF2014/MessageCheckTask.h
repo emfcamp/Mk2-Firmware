@@ -28,8 +28,7 @@
  SOFTWARE.
  */
 
-#ifndef _MESSAGE_CHECK_TASK_H_
-#define _MESSAGE_CHECK_TASK_H_
+#pragma once
 
 #include <Arduino.h>
 #include <FreeRTOS_ARM.h>
@@ -44,7 +43,7 @@ public:
     MessageCheckTask();
     ~MessageCheckTask();
 
-	String getName();
+	String getName() const;
 
 	void addIncomingMessage(IncomingRadioMessage *message);
 
@@ -58,5 +57,3 @@ private:
 	QueueHandle_t mIncomingMessages;
     DataStore* mDataStore;
 };
-
-#endif // _MESSAGE_CHECK_TASK_H_

@@ -32,12 +32,15 @@
 
 #include <FreeRTOS_ARM.h>
 
+#define NO_CURRENT_MESSAGE 65535
+#define NO_CHANNEL_DISCOVERED 255
+
 RadioTask::RadioTask(MessageCheckTask& aMessageCheckTask)
 	:mMessageCheckTask(aMessageCheckTask)
 {
 }
 
-String RadioTask::getName() {
+String RadioTask::getName() const {
 	return "RadioTask";
 }
 
@@ -79,7 +82,7 @@ void RadioTask::task() {
 				}
 			}
 
-			_parsePacketBuffer(packetBuffer, packetBufferLength);
+			packetBufferLength = _parsePacketBuffer(packetBuffer, packetBufferLength);
 
 			_lastMessageReceived = xTaskGetTickCount();
 		}
@@ -97,7 +100,7 @@ inline void RadioTask::_leaveAtMode() {
 	digitalWrite(RADIO_AT_MODE_PIN, HIGH);
 }
 
-inline void RadioTask::_parsePacketBuffer(byte packetBuffer[], uint8_t & packetBufferLength) {
+inline uint8_t RadioTask::_parsePacketBuffer(byte packetBuffer[], uint8_t packetBufferLength) {
 	// Have we received a whole packet yet?
 	bool receivedWholePacket =
 		packetBufferLength >= 5 + 1 && // Has to have at least one byte payload
@@ -128,6 +131,8 @@ inline void RadioTask::_parsePacketBuffer(byte packetBuffer[], uint8_t & packetB
 		// Something's wrong, we received enough bytes but it's not formated correctly.
 		packetBufferLength = 0;
 	}
+
+	return packetBufferLength;
 }
 
 inline void RadioTask::_handleDiscoveryPacket(byte packetBuffer[], uint8_t packetBufferLength, uint8_t rssi) {

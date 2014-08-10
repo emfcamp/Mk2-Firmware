@@ -32,8 +32,7 @@
  SOFTWARE.
  */
 
-#ifndef _DEBUG_TASK_H_
-#define _DEBUG_TASK_H_
+#pragma once
 
 #include <Arduino.h>
 #include <FreeRTOS_ARM.h>
@@ -52,11 +51,10 @@ namespace debug {
 
 class DebugTask: public Task {
 public:
-	String getName();
+	String getName() const;
 protected:
 	void task();
 };
 
 void vApplicationStackOverflowHook( TaskHandle_t xTask, signed char *pcTaskName );
 
-#endif // _DEBUG_TASK_H_

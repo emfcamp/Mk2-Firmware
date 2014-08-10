@@ -28,20 +28,24 @@
  SOFTWARE.
  */
 
-#ifndef _APP_OPENER_TASK_H_
-#define _APP_OPENER_TASK_H_
+#pragma once
 
 #include <Arduino.h>
 #include <FreeRTOS_ARM.h>
+
+#include "AppManager.h"
 #include "EMF2014Config.h"
 #include "Task.h"
 #include "AppManager.h"
 
 class AppOpenerTask: public Task {
 public:
-	String getName();
+    AppOpenerTask(AppManager& aAppManager);
+
+	String getName() const;
 protected:
     void task();
-};
 
-#endif // _APP_OPENER_TASK_H_
+private:
+    AppManager& mAppManager;
+};

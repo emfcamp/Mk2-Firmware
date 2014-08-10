@@ -30,7 +30,7 @@
 
 #include "HomeScreenApp.h"
 
-String HomeScreenApp::getName() {
+String HomeScreenApp::getName() const {
     return "HomeScreen";
 }
 
