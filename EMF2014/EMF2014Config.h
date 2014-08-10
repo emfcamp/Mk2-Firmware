@@ -28,8 +28,7 @@
  SOFTWARE.
  */
 
-#ifndef _EMF2014_CONFIG_H_
-#define _EMF2014_CONFIG_H_
+#pragma once
 
 // Enable debug task and output
 #define DEBUG 1
@@ -83,6 +82,3 @@ enum Button {
     RIGHT        = 64,
     CENTER       = 128
 };
-
-
-#endif // _EMF2014_CONFIG_H_

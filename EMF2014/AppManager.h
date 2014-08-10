@@ -27,8 +27,7 @@
  SOFTWARE.
  */
 
-#ifndef _APP_MANAGER_H_
-#define _APP_MANAGER_H_
+#pragma once
 
 #include <Arduino.h>
 #include <FreeRTOS_ARM.h>
@@ -37,11 +36,16 @@
 
 class AppManager {
 public:
-	static void add(App &app);
-	static void open(String app);
-	static void open(App &app);
-	static App & getByName(String name); 
-	static String getActiveAppName();
-};
+    AppManager();
+    ~AppManager();
 
-#endif // _APP_MANAGER_H_
+	void add(App& app);
+	void open(const String& app);
+	void open(App& app);
+	App& getByName(const String& name) const; 
+	String getActiveAppName() const;
+
+private:
+    App* _apps[MAX_APPS];
+    App* activeApp;
+};

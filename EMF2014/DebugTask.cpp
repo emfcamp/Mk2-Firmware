@@ -117,7 +117,7 @@ namespace debug {
     }
 }
 
-String DebugTask::getName() {
+String DebugTask::getName() const {
     return "DebugTask";
 }
 

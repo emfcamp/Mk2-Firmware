@@ -32,6 +32,9 @@
 #include <string>
 #include <FreeRTOS_ARM.h>
 
+RGBTask::RGBTask() {
+}
+
 void RGBTask::setColor(RGBLed led, RGBColor color) {
     if (led == LED1 || led == BOTH) {
         analogWrite(LED1_RED, 255 - color.red);
@@ -49,7 +52,7 @@ void RGBTask::setColor(RGBColor color) {
     setColor(BOTH, color);
 }
 
-String RGBTask::getName() {
+String RGBTask::getName() const {
     return "RGBTask";
 }
 

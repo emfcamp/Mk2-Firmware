@@ -29,8 +29,10 @@
 #include "DataStore.h"
 #include "DebugTask.h"
 
-uint16_t static const CONTENT_RID_WEATHER_FORECAST = 40962;
-uint16_t static const CONTENT_RID_SCHEDULE_FRIDAY = 40963;
+#define CONTENT_RID_WEATHER_FORECAST 40962
+#define CONTENT_RID_SCHEDULE_FRIDAY 40963
+
+#define MAX_TEXT_LENGTH 160
 
 DataStore::DataStore() {
 	mWeatherForecast.valid = false;
@@ -41,7 +43,7 @@ DataStore::DataStore() {
 DataStore::~DataStore() {
 }
 
-void DataStore::addContent(uint16_t rid, byte* content, uint16_t length) {
+void DataStore::addContent(uint16_t rid, const byte* content, uint16_t length) {
 	if (rid == CONTENT_RID_WEATHER_FORECAST) {
 		_addWeatherForecastRaw(content, length);
 	} else if (rid == CONTENT_RID_SCHEDULE_FRIDAY) {
@@ -51,11 +53,11 @@ void DataStore::addContent(uint16_t rid, byte* content, uint16_t length) {
 	}
 }
 
-WeatherForecast& DataStore::getWeatherForecast() {
+const WeatherForecast& DataStore::getWeatherForecast() const {
 	return mWeatherForecast;
 }
 
-Schedule& DataStore::getSchedule() {
+const Schedule& DataStore::getSchedule() const {
 	return mSchedule;
 }
 
@@ -66,8 +68,8 @@ tp_integer_t DataStore::_getInteger(PackReader& reader) {
 
 String DataStore::_getString(PackReader& reader) {
 	reader.next();
-	char string[160];
-	tp_length_t legnth = reader.getString(string, 160);
+	char string[MAX_TEXT_LENGTH];
+	tp_length_t legnth = reader.getString(string, MAX_TEXT_LENGTH);
 	return String(string);
 }
 

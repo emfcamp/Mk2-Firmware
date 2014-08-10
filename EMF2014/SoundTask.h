@@ -28,13 +28,9 @@
  SOFTWARE.
  */
 
-#ifndef _SOUND_TASK_H_
-#define _SOUND_TASK_H_
+#pragma once
 
 #include <Arduino.h>
 #include <FreeRTOS_ARM.h>
 #include "EMF2014Config.h"
 
-
-
-#endif // _SOUND_TASK_H_

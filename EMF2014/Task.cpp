@@ -30,6 +30,9 @@
 
 #include "Task.h"
 
+Task::~Task() {
+}
+
 void Task::start() {
     BaseType_t taskHolder;
     taskHolder = xTaskCreate(_task, "TASKNAME", ( uint8_t ) 255, static_cast<void*>(this), 2, &taskHandle);

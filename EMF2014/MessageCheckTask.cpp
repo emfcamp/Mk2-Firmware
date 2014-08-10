@@ -40,7 +40,7 @@ MessageCheckTask::~MessageCheckTask() {
 	delete mDataStore;
 }
 
-String MessageCheckTask::getName() {
+String MessageCheckTask::getName() const {
 	return "MessageCheckTask";
 }
 
