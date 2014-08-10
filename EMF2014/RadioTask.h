@@ -64,6 +64,7 @@ private:
 	inline void _initialiseDiscoveryState();
 	inline void _initialiseReceiveState();
 	inline void _clearSerialBuffer();
+	inline void _sendOutgoingBuffer();
 
 	static const uint16_t NO_CURRENT_MESSAGE = 65535;
 	static const uint8_t NO_CHANNEL_DISCOVERED = 255;
@@ -79,6 +80,9 @@ private:
 	uint8_t _bestChannel;
 	TickType_t _discoveryFinishingTime;
 	TickType_t _lastMessageReceived;
+
+	byte _outgoingPacketBuffer[RADIO_PACKET_LENGTH];
+	bool _outgoingPacketAvailable;
 
 	uint8_t _radioState;
 };

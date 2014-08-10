@@ -1,22 +1,22 @@
 /*
  TiLDA Mk2
- 
+
  RadioTask
 
  The MIT License (MIT)
- 
+
  Copyright (c) 2014 Electromagnetic Field LTD
- 
+
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
  in the Software without restriction, including without limitation the rights
  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  copies of the Software, and to permit persons to whom the Software is
  furnished to do so, subject to the following conditions:
- 
+
  The above copyright notice and this permission notice shall be included in all
  copies or substantial portions of the Software.
- 
+
  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -37,6 +37,15 @@ String RadioTask::getName() {
 }
 
 void RadioTask::task() {
+
+	// Temporary: Remove me soon!
+	_outgoingPacketBuffer[0] = 0x90;
+	_outgoingPacketBuffer[1] = 0x03; // ping service
+	for (uint8_t i=2; i<RADIO_PACKET_LENGTH; i++) {
+		_outgoingPacketBuffer[i] = i - 2;
+	}
+	_outgoingPacketAvailable = true;
+
 	// Setup radio communitcation
 	RADIO_SERIAL.begin(RADIO_SERIAL_BAUD);
 
@@ -68,24 +77,24 @@ void RadioTask::task() {
 			_parsePacketBuffer(packetBuffer, packetBufferLength);
 
 			_lastMessageReceived = xTaskGetTickCount();
-		} 
+		}
 
 		_checkForStateChange();
 	}
 }
 
 inline void RadioTask::_enterAtMode() {
-	digitalWrite(RADIO_AT_MODE_PIN, LOW); 
+	digitalWrite(RADIO_AT_MODE_PIN, LOW);
 }
 
 inline void RadioTask::_leaveAtMode() {
 	vTaskDelay(10);
-	digitalWrite(RADIO_AT_MODE_PIN, HIGH); 
-} 
+	digitalWrite(RADIO_AT_MODE_PIN, HIGH);
+}
 
 inline void RadioTask::_parsePacketBuffer(byte packetBuffer[], uint8_t & packetBufferLength) {
 	// Have we received a whole packet yet?
-	bool receivedWholePacket = 
+	bool receivedWholePacket =
 		packetBufferLength >= 5 + 1 && // Has to have at least one byte payload
 		packetBuffer[packetBufferLength - 1] >= 48 && packetBuffer[packetBufferLength - 1] <= 57 && // Digit
 		packetBuffer[packetBufferLength - 2] >= 48 && packetBuffer[packetBufferLength - 2] <= 57 && // Digit
@@ -111,7 +120,7 @@ inline void RadioTask::_parsePacketBuffer(byte packetBuffer[], uint8_t & packetB
 	} else if (packetBufferLength == RADIO_PACKET_WITH_RSSI_LENGTH) {
 		debug::log("Packet does not conform");
 		//debug::logByteArray(packetBuffer, 58);
-		// Something's wrong, we received enough bytes but it's not formated correctly. 
+		// Something's wrong, we received enough bytes but it's not formated correctly.
 		packetBufferLength = 0;
 	}
 }
@@ -125,7 +134,7 @@ inline void RadioTask::_handleDiscoveryPacket(byte packetBuffer[], uint8_t packe
 	identifier[2] = packetBuffer[7];
 	if (rssi < _bestRssi) {
 		_bestRssi = rssi;
-		_bestChannel = channel;	
+		_bestChannel = channel;
 	}
 }
 
@@ -138,7 +147,7 @@ inline void RadioTask::_handleReceivePacket(byte packetBuffer[], uint8_t packetB
 	}*/
 
 	// parsing the packet - is it payload or header?
-	bool couldBeMessageHeader = 
+	bool couldBeMessageHeader =
 		_currentMessageReceiver == NO_CURRENT_MESSAGE || // First message or first packet after successfully finished message
 		_currentMessageReceiver != packetReceiver;  // or something has gone wrong (e.g. packet lost)
 
@@ -152,7 +161,7 @@ inline void RadioTask::_handleReceivePacket(byte packetBuffer[], uint8_t packetB
 		memcpy(_currentMessageSignature, packetBuffer + 18, 40);
 	} else {
 		if (_messageBufferPosition + packetBufferLength > RADIO_MAX_MESSAGE_BUFFER_LENGTH) {
-			// buffer overflow protection. a message should never be this long. 
+			// buffer overflow protection. a message should never be this long.
 			_messageBufferPosition = 0;
 		}
 
@@ -166,15 +175,18 @@ inline void RadioTask::_handleReceivePacket(byte packetBuffer[], uint8_t packetB
 	if (_remainingMessageLength == 0 && _currentMessageReceiver != NO_CURRENT_MESSAGE) {
 		_verifyMessage();
 
+		// Temporary: Just send a message back.
+		_sendOutgoingBuffer();
+
 		// Reset for next message
 		_messageBufferPosition = 0;
 		_currentMessageReceiver = NO_CURRENT_MESSAGE;
-	}	
+	}
 }
 
 inline void RadioTask::_verifyMessage() {
 	// We're not actually verifying messages in this task, they're passed
-	// on to the MessageCheckTask 
+	// on to the MessageCheckTask
 	uint32_t messageLength = _messageBufferPosition;
 
 	// Create a message object.
@@ -203,7 +215,7 @@ inline void RadioTask::_checkForStateChange() {
 			debug::log("Main channel timeout - Going back to disovery");
 			_initialiseDiscoveryState();
 		}
-	}	
+	}
 }
 
 inline void RadioTask::_initialiseDiscoveryState() {
@@ -218,7 +230,7 @@ inline void RadioTask::_initialiseDiscoveryState() {
 	RADIO_SERIAL.println("ATPK08"); // 8byte packet length
 	RADIO_SERIAL.println(String("ATCN") + String(RADIO_DISCOVERY_CHANNEL)); // Discovery Channel
 	RADIO_SERIAL.println("ATAC");   // apply
-	RADIO_SERIAL.flush(); 
+	RADIO_SERIAL.flush();
 	_leaveAtMode();
 
 	_clearSerialBuffer();
@@ -232,7 +244,7 @@ inline void RadioTask::_initialiseReceiveState() {
 	RADIO_SERIAL.println("ATPK3A"); // 58byte packet length
 	RADIO_SERIAL.println("ATCN" + _intToHex(_bestChannel)); // Channel
 	RADIO_SERIAL.println("ATAC");   // apply
-	RADIO_SERIAL.flush(); 
+	RADIO_SERIAL.flush();
 	_leaveAtMode();
 
 	_radioState = RADIO_STATE_RECEIVE;
@@ -244,6 +256,12 @@ inline void RadioTask::_clearSerialBuffer() {
 	while (RADIO_SERIAL.available()) RADIO_SERIAL.read();
 }
 
+inline void RadioTask::_sendOutgoingBuffer() {
+	RADIO_SERIAL.write(_outgoingPacketBuffer, RADIO_PACKET_LENGTH);
+	RADIO_SERIAL.flush();
+	debug::log("Outgoing message sent");
+	//_outgoingPacketAvailable = false;
+}
 
 // ToDo: These could probably live somewhere else
 inline uint16_t RadioTask::_bytesToInt(byte b1, byte b2) {
