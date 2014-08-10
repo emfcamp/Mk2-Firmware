@@ -34,5 +34,5 @@ TiLDA v2 Firmware
 
 
 #### Contributing
-* If you wish to work on code please fork our repo, do your work in a bracnh and sumbit a pull request for review
+* If you wish to work on code please fork our repo, do your work in a branch and sumbit a pull request for review
 * Please do not commit to master
