@@ -30,7 +30,6 @@
 #include "DebugTask.h"
 #include <FreeRTOS_ARM.h>
 #include "ButtonSubscription.h"
-#include "Api.h"
 
 /** 
  * Button Task class
@@ -40,7 +39,8 @@ String ButtonTask::getName() {
 }
 
 void ButtonTask::task() {
-    ButtonSubscription allButtons = Tilda::createButtonSubscription(LIGHT | A | B | UP | DOWN | LEFT | RIGHT | CENTER);
+    ButtonSubscription allButtons;
+    allButtons.addButtons(LIGHT | A | B | UP | DOWN | LEFT | RIGHT | CENTER);
 
     while(true) {
         Button button = allButtons.waitForPress(( TickType_t ) 1000);
@@ -49,7 +49,7 @@ void ButtonTask::task() {
             debug::log("Button pressed: " + String(button));
         }
 
-        Tilda::delay(1000);
+        vTaskDelay((1000/portTICK_PERIOD_MS));
     }
 }
 
