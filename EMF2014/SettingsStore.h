@@ -38,12 +38,19 @@
 #include <FreeRTOS_ARM.h>
 #include "EMF2014Config.h"
 
+
+
 class SettingsStore {
 public:
+    SettingsStore();
+
     bool getUniqueId(uint32_t *unique_id);
 
     uint16_t getBadgeId();
-    void setBadgeId(uint16_t);
+    void setBadgeId(uint16_t badgeId);
+    bool hasBadgeId();
+
+    static const uint16_t BADGE_ID_UNKOWN;
 private:
     uint16_t _badgeId;
 };
