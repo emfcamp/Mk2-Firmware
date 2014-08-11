@@ -42,6 +42,10 @@ class SettingsStore {
 public:
     bool getUniqueId(uint32_t *unique_id);
 
+    uint16_t getBadgeId();
+    void setBadgeId(uint16_t);
+private:
+    uint16_t _badgeId;
 };
 
 #endif // _SETTINGS_STORE_H_
