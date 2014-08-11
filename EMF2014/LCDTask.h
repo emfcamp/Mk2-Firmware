@@ -71,6 +71,7 @@ private:
   uint8_t _do_ReadData(void);
   void _do_WriteData(uint8_t data);
   void _spiwrite(uint8_t c);
+  static uint8_t LCDDataDoneFlag;
 
 protected:
 

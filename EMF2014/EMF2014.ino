@@ -93,6 +93,7 @@ void setup() {
     radioTask.start();
     lcdTask.start();
     GLCD.setLCD(lcdTask);
+
     appOpenerTask.start();
 
     // Applications

@@ -93,8 +93,10 @@ SemaphoreHandle_t LCDTask::frameBufferMutex;
 uint8_t LCDTask::_framebuffer[DISPLAY_HEIGHT/8][DISPLAY_WIDTH];
 uint8_t LCDTask::_x;
 uint8_t LCDTask::_y;
-
 LCDTask::LCDTask(){}
+
+uint8_t LCDDataDoneFlag;
+
 
 void LCDTask::Init()
 {
@@ -126,6 +128,10 @@ void LCDTask::_set_brightness(uint8_t val) {
   _command(CMD_SET_VOLUME_SECOND | (val & 0x3f));
 }
 
+void spiDMADoneCallback(void) {
+    LCDDataDoneFlag = 1;
+}
+
 void LCDTask::_init(void) {
   // set pin directions
   pinMode(LCD_A0, OUTPUT);
@@ -133,69 +139,55 @@ void LCDTask::_init(void) {
   pinMode(LCD_CS, OUTPUT);
 
   // Reset Sequence LCD must not be selected, but in command mode
-  digitalWrite(LCD_A0, LOW);
-  
+  digitalWrite(LCD_A0, LOW);  
   digitalWrite(LCD_CS, HIGH);
   digitalWrite(LCD_RESET, LOW);
   delay(200);
-  digitalWrite(LCD_RESET, HIGH);
-  
+  digitalWrite(LCD_RESET, HIGH);  
   digitalWrite(LCD_CS, HIGH);
 
   // Setup Hardware SPI
   SPI.begin(LCD_CS);
   SPI.setBitOrder(LCD_CS, MSBFIRST);
-
-  // LCD bias select
-  _command(CMD_SET_BIAS_9);
+  SPI.configureDMA();
+  SPI.registerDMACallback(spiDMADoneCallback);
   
+  // LCD bias select
+  _command(CMD_SET_BIAS_9);  
   // ADC select
   _command(CMD_SET_ADC_REVERSE);
-  
   // SHL select
   _command(CMD_SET_COM_NORMAL);
-
   // Static Off
   _command(CMD_SET_STATIC_OFF);
-  
   // Initial display line
   _command(CMD_SET_DISP_START_LINE);
-
   // turn on voltage converter (VC=1, VR=0, VF=0)
   _command(CMD_SET_POWER_CONTROL | 0x4);
   // wait for 50% rising
-  //vTaskDelay((50/portTICK_PERIOD_MS));
-  delay(50); 
-  
+  delay(50);
   // turn on voltage regulator (VC=1, VR=1, VF=0)
   _command(CMD_SET_POWER_CONTROL | 0x6);
   // wait >=50ms
-  //vTaskDelay((50/portTICK_PERIOD_MS));
   delay(50);
-  
   // turn on voltage follower (VC=1, VR=1, VF=1)
   _command(CMD_SET_POWER_CONTROL | 0x7);
   // wait
-  //vTaskDelay((10/portTICK_PERIOD_MS));
   delay(50);
   
   // set lcd operating voltage (regulator resistor, ref voltage resistor)
   _command(CMD_SET_RESISTOR_RATIO | 0x7);
 
-
   // Library Initialisation
   _x = 0;
   _y = 0;
 
-
   // Power on Display
   _command(CMD_SET_ALLPTS_NORMAL);
-  
   _command(CMD_DISPLAY_ON);
   //st7565_set_brightness(contrast);
   
   _set_brightness(0x08);
-  
   // Ensure display is cleared
   memset(this->_framebuffer,0x00,sizeof(_framebuffer));
 }
@@ -203,7 +195,6 @@ void LCDTask::_init(void) {
 // Never call this directly, as it has no mutex
 void LCDTask::_do_display() {
   bool suspend = 0;
-
 
   uint8_t col, maxcol, p;
   for(p = 0; p < 8; p++) {
@@ -215,19 +206,27 @@ void LCDTask::_do_display() {
     _command(CMD_SET_COLUMN_UPPER | (((col+ST7565_STARTBYTES) >> 4) & 0x0F));
     _command(CMD_RMW);
     debug::logByteArray(_framebuffer[pagemap[p]],128);
-    if (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING) {
-      vTaskSuspendAll();
-      suspend=1;
-    }
-    for(; col <= maxcol; col++) {
+    //if (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING) {
+    //  vTaskSuspendAll();
+    //  suspend=1;
+    //}
+    /*for(; col <= maxcol; col++) {
       _data(this->_framebuffer[pagemap[p]][col]);
-    }
+    }*/
+    uint8_t rxBuffer[128];
+    debug::log("Starting SPI DAM Transfer");
+    ::LCDDataDoneFlag = 0;
+    SPI.transferDMA(FLASH_CS, _framebuffer[pagemap[p]], rxBuffer, 128, SPI_LAST);
+    while (::LCDDataDoneFlag == 0)
+    { vTaskDelay(10); }
+    ::LCDDataDoneFlag = 0;
+   
+    debug::log("SPI DMA Transfer Complete");
     if (suspend == 1 ) {
       xTaskResumeAll(); 
     } 
-  }  
+  }    
 }
-
 
 void LCDTask::_display(void) {
   if (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING) {
@@ -297,7 +296,7 @@ uint8_t LCDTask::ReadData()
 // Never call this directly, as it has no mutex
 void LCDTask::_do_WriteData(uint8_t data) {
   uint8_t displayData, yOffset, chip;
-  debug::log("[LCDTask::_do_WriteData] data: " + String(data));
+  //debug::log("[LCDTask::_do_WriteData] data: " + String(data));
   if(_x >= DISPLAY_WIDTH) {
     return;
   }
@@ -369,6 +368,7 @@ String LCDTask::getName() {
 void LCDTask::task() {
   frameBufferMutex = 0;
   _updateWaiting = 0;
+
   while(true) {
     uint8_t discard; // We don't actually care about the message, just that it is there
     if (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING) {
@@ -386,7 +386,7 @@ void LCDTask::task() {
       // Sleep for 40ms, to limit updates to 25fps
       vTaskDelay((40/portTICK_PERIOD_MS));
       } else {
-      delay(100); // Scheduler not running (why are we??, wait 1/10th second)
+        delay(100); // Scheduler not running (why are we??, wait 1/10th second)
     }
   }
 }
