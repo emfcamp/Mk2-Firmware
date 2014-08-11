@@ -29,65 +29,90 @@
 #include "DataStore.h"
 #include "DebugTask.h"
 
-WeatherForecast DataStore::_weatherForecast;
+#define CONTENT_RID_WEATHER_FORECAST 40962
+#define CONTENT_RID_SCHEDULE_FRIDAY 40963
 
-void DataStore::addContent(uint16_t rid, byte* content, uint16_t length) {
-	if (rid == CONTENT_RID_WEATHER_FORECAST && length == 6 * 6) {
-		_addWeatherForecastRaw(content);
+#define MAX_TEXT_LENGTH 160
+
+DataStore::DataStore() {
+	mWeatherForecast.valid = false;
+	mSchedule.events = new Event[0];
+	mSchedule.numEvents = 0;
+}
+ 
+DataStore::~DataStore() {
+}
+
+void DataStore::addContent(uint16_t rid, const byte* content, uint16_t length) {
+	if (rid == CONTENT_RID_WEATHER_FORECAST) {
+		_addWeatherForecastRaw(content, length);
+	} else if (rid == CONTENT_RID_SCHEDULE_FRIDAY) {
+		_addScheduleFridayRaw(content, length);
 	} else {
-		debug::log("Rid or length not supported: " + String(rid) + " " + String(length));
+		debug::log("DataStore: Rid not supported: " + String(rid) + " " + String(length));
 	}
 }
 
-WeatherForecast DataStore::getWeatherForecast() {
-	return _weatherForecast;
+const WeatherForecast& DataStore::getWeatherForecast() const {
+	return mWeatherForecast;
 }
 
-void DataStore::_addWeatherForecastRaw(byte* content) {
-	_weatherForecast.valid = true;
-
-	_weatherForecast.current.weatherType = (WeatherType)content[0];
-	_weatherForecast.current.temperature = content[1];
-	_weatherForecast.current.feelsLikeTemperature = content[2];
-	_weatherForecast.current.windSpeed = content[3];
-	_weatherForecast.current.screenRelativeHumidity = content[4];
-	_weatherForecast.current.precipitationProbability = content[5];
-
-	_weatherForecast.in3Hours.weatherType = (WeatherType)content[6];
-	_weatherForecast.in3Hours.temperature = content[7];
-	_weatherForecast.in3Hours.feelsLikeTemperature = content[8];
-	_weatherForecast.in3Hours.windSpeed = content[9];
-	_weatherForecast.in3Hours.screenRelativeHumidity = content[10];
-	_weatherForecast.in3Hours.precipitationProbability = content[11];
-
-	_weatherForecast.in6Hours.weatherType = (WeatherType)content[12];
-	_weatherForecast.in6Hours.temperature = content[13];
-	_weatherForecast.in6Hours.feelsLikeTemperature = content[14];
-	_weatherForecast.in6Hours.windSpeed = content[15];
-	_weatherForecast.in6Hours.screenRelativeHumidity = content[16];
-	_weatherForecast.in6Hours.precipitationProbability = content[17];
-
-	_weatherForecast.in12Hours.weatherType = (WeatherType)content[18];
-	_weatherForecast.in12Hours.temperature = content[19];
-	_weatherForecast.in12Hours.feelsLikeTemperature = content[20];
-	_weatherForecast.in12Hours.windSpeed = content[21];
-	_weatherForecast.in12Hours.screenRelativeHumidity = content[22];
-	_weatherForecast.in12Hours.precipitationProbability = content[23];
-
-	_weatherForecast.in24Hours.weatherType = (WeatherType)content[24];
-	_weatherForecast.in24Hours.temperature = content[25];
-	_weatherForecast.in24Hours.feelsLikeTemperature = content[26];
-	_weatherForecast.in24Hours.windSpeed = content[27];
-	_weatherForecast.in24Hours.screenRelativeHumidity = content[28];
-	_weatherForecast.in24Hours.precipitationProbability = content[29];
-
-	_weatherForecast.in48Hours.weatherType = (WeatherType)content[30];
-	_weatherForecast.in48Hours.temperature = content[31];
-	_weatherForecast.in48Hours.feelsLikeTemperature = content[32];
-	_weatherForecast.in48Hours.windSpeed = content[33];
-	_weatherForecast.in48Hours.screenRelativeHumidity = content[34];
-	_weatherForecast.in48Hours.precipitationProbability = content[35];
-
-	debug::log("Stored weather forecast: " + String(_weatherForecast.current.temperature) + "deg, Weather type: " + String((uint8_t) _weatherForecast.current.weatherType));
+const Schedule& DataStore::getSchedule() const {
+	return mSchedule;
 }
 
+tp_integer_t DataStore::_getInteger(PackReader& reader) {
+	reader.next();
+	return reader.getInteger();
+}
+
+String DataStore::_getString(PackReader& reader) {
+	reader.next();
+	char string[MAX_TEXT_LENGTH];
+	tp_length_t legnth = reader.getString(string, MAX_TEXT_LENGTH);
+	return String(string);
+}
+
+void DataStore::_unpackWeatherForecastPeriod(WeatherForecastPeriod& period, PackReader& reader) {
+	period.timestamp = (uint32_t)_getInteger(reader);
+	period.weatherType = (WeatherType)_getInteger(reader);
+	period.temperature = (int8_t)_getInteger(reader);
+	period.windSpeed = (uint8_t)_getInteger(reader);
+	period.screenRelativeHumidity = (uint8_t)_getInteger(reader);
+	period.precipitationProbability = (uint8_t)_getInteger(reader);
+}
+
+void DataStore::_addWeatherForecastRaw(const byte* content, uint16_t length) {
+	mWeatherForecast.valid = true;
+
+	mReader.setBuffer((unsigned char*)content, length);
+	_unpackWeatherForecastPeriod(mWeatherForecast.current, mReader);
+	_unpackWeatherForecastPeriod(mWeatherForecast.in3Hours, mReader);
+	_unpackWeatherForecastPeriod(mWeatherForecast.in6Hours, mReader);
+	_unpackWeatherForecastPeriod(mWeatherForecast.in12Hours, mReader);
+	_unpackWeatherForecastPeriod(mWeatherForecast.in24Hours, mReader);
+	_unpackWeatherForecastPeriod(mWeatherForecast.in48Hours, mReader);
+
+	debug::log("DataStore: Stored weather forecast: " +
+				String(mWeatherForecast.current.temperature) + "deg, Weather type: " + String((uint8_t) mWeatherForecast.current.weatherType));
+}
+
+void DataStore::_addScheduleFridayRaw(const byte* content, uint16_t length) {
+	mReader.setBuffer((unsigned char*)content, length);
+
+	// get the length and create a new array of events
+	mSchedule.numEvents = _getInteger(mReader);
+	delete[] mSchedule.events;
+	mSchedule.events = new Event[mSchedule.numEvents];
+
+	for (int i = 0 ; i < mSchedule.numEvents ; ++i) {
+		mSchedule.events[i].stageId = (uint8_t)_getInteger(mReader);
+		mSchedule.events[i].typeId = (uint8_t)_getInteger(mReader);
+		mSchedule.events[i].startTimestamp = (uint32_t)_getInteger(mReader);
+		mSchedule.events[i].endTimestamp = (uint32_t)_getInteger(mReader);
+		mSchedule.events[i].speaker = _getString(mReader);
+		mSchedule.events[i].title = _getString(mReader);
+	}
+
+	debug::log("DataStore: Got schedule: " + String(mSchedule.numEvents) + " events");
+}

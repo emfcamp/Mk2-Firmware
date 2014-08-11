@@ -29,8 +29,7 @@
  SOFTWARE.
  */
 
-#ifndef _RGB_TASK_H_
-#define _RGB_TASK_H_
+#pragma once
 
 #include <Arduino.h>
 #include <FreeRTOS_ARM.h>
@@ -59,11 +58,15 @@ private:
 
 class RGBTask: public Task {
 public:
-    String getName();
+    RGBTask();
+
+    String getName() const;
     void setColor(RGBLed led, RGBColor color);
     void setColor(RGBColor color);
+
+private:
+    RGBTask(const RGBTask&) {}
+
 protected:
     void task();
 };
-
-#endif // _RGB_TASK_H_

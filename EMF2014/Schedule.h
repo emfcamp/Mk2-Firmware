@@ -1,8 +1,12 @@
 /*
  TiLDA Mk2
  
- TiLDATask
-
+ Schedule 
+ 
+ This handles the periodic wake of the radio for all our need communication with the gateway's.
+ Incoming request are passed back to the TiLDATask
+ Outgoing request from TiLDATask are sent at the next opportunity.
+ 
  The MIT License (MIT)
  
  Copyright (c) 2014 Electromagnetic Field LTD
@@ -28,7 +32,16 @@
 
 #pragma once
 
-#include <Arduino.h>
-#include <FreeRTOS_ARM.h>
-#include "EMF2014Config.h"
+struct Event {
+    uint8_t stageId;
+    uint8_t typeId;
+    uint32_t startTimestamp;
+    uint32_t endTimestamp;
+    String speaker;
+    String title;
+};
 
+struct Schedule {
+    Event* events;
+    tp_integer_t numEvents;
+};

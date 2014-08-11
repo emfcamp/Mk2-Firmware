@@ -30,13 +30,9 @@
  SOFTWARE.
  */
 
-#ifndef _IMU_TASK_H_
-#define _IMU_TASK_H_
+#pragma once
 
 #include <Arduino.h>
 #include <FreeRTOS_ARM.h>
 #include "EMF2014Config.h"
 
-
-
-#endif // _IMU_TASK_H_

@@ -29,14 +29,11 @@
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  SOFTWARE.
  */
-
-#ifndef _FLASH_TASK_H_
-#define _FLASH_TASK_H_
+ 
+#pragma once
 
 #include <Arduino.h>
 #include <FreeRTOS_ARM.h>
 #include "EMF2014Config.h"
 
 
-
-#endif // _FLASH_TASK_H_

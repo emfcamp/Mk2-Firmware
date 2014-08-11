@@ -29,63 +29,59 @@
 #include "MessageCheckTask.h"
 
 #include <uECC.h> 
-#include <Sha1.h>
 #include "DebugTask.h"
 #include "DataStore.h"
 
-QueueHandle_t MessageCheckTask::incomingMessages;
+MessageCheckTask::MessageCheckTask() {
+	mDataStore = new DataStore;
+}
 
-String MessageCheckTask::getName() {
+MessageCheckTask::~MessageCheckTask() {
+	delete mDataStore;
+}
+
+String MessageCheckTask::getName() const {
 	return "MessageCheckTask";
 }
 
 void MessageCheckTask::addIncomingMessage(IncomingRadioMessage *message) {
-	if( incomingMessages == 0 ) {
-		debug::log("incomingMessages queue has not been created");
+	if( mIncomingMessages == 0 ) {
+		debug::log("MessageCheckTask: incomingMessages queue has not been created");
 	} else {
-		if(xQueueSendToBack(incomingMessages, (void *) &message, (TickType_t) 0) != pdPASS) {
-	        debug::log("Could not queue incoming message");
-	        free(message->content);
-	        free(message);
+		if(xQueueSendToBack(mIncomingMessages, (void *) &message, (TickType_t) 0) != pdPASS) {
+	        debug::log("MessageCheckTask: Could not queue incoming message");
+	        delete message;
 	    }
 	}
 }
 
 void MessageCheckTask::task() {
-	incomingMessages = xQueueCreate(10, sizeof(struct IncomingRadioMessage *));
+	mIncomingMessages = xQueueCreate(10, sizeof(struct IncomingRadioMessage *));
 
 	while(true) {
 		IncomingRadioMessage *message;
-		if(xQueueReceive(incomingMessages, &(message), portMAX_DELAY) == pdTRUE) {
+		if(xQueueReceive(mIncomingMessages, &message, portMAX_DELAY) == pdTRUE) {
             // Create SHA1 digest
-			Sha1.init();
-			char receiverHi = message->receiver >> 8;
-			char receiverLo = message->receiver & 0xFF;
-		 	Sha1.print(receiverHi);
-			Sha1.print(receiverLo);
-			for (uint32_t i=0; i<message->length; i++) {
-				Sha1.print((char)message->content[i]);
-			}
-			byte* digest = Sha1.result();	
+			byte* digest = message->Sha1Result();	
 			
 			// Check our digest against the one send in the header
-			if (memcmp(digest, message->hash, 12) != 0) {
-				debug::log("Can't validate message, checksum doesn't match.");
+			if (memcmp(digest, message->hash(), 12) != 0) {
+				debug::log("MessageCheckTask: Can't validate message, checksum doesn't match.");
 			} else {
 
 			    // Check ECC
 			    TickType_t start = xTaskGetTickCount();
-			    if (!uECC_verify(EMF_PUBLIC_KEY, digest, message->signature)) {
-			        debug::log("Can't validate message, ecc doesn't check out.");
+			    if (!uECC_verify(EMF_PUBLIC_KEY, digest, message->signature())) {
+			        debug::log("MessageCheckTask: Can't validate message, ecc doesn't check out.");
 			    } else {
-			    	DataStore::addContent(message->receiver, message->content, message->length);
+			    	mDataStore->addContent(message->receiver(), message->content(), message->length());
 			    	TickType_t end = xTaskGetTickCount();
 			    	TickType_t duration = end - start;
-			    	debug::log("Duration: " + String(duration) + "ms");
+			    	//debug::log("MessageCheckTask: Duration for SHA1 and ECC verify: " + String(duration) + "ms");
 			    }
 			}
-			free(message->content);
-		    free(message);
+
+			delete message;
         }
 	}
 }

@@ -38,6 +38,7 @@
 #include <FreeRTOS_ARM.h>
 #include <Sha1.h>
 #include <DueFlashStorage.h>
+#include <TinyPacks.h>
 #include "uECC.h"
 #include <Arduino.h>
 #include "EMF2014Config.h"
@@ -59,13 +60,14 @@
  * and in FreeRTOS we will start the scheduler
  */
 SettingsStore settingsStore;
+AppManager appManager;
 
 DebugTask debugTask;
 RGBTask rgbTask;
 ButtonTask buttonTask;
 MessageCheckTask messageCheckTask;
-RadioTask radioTask;
-AppOpenerTask appOpenerTask;
+RadioTask radioTask(messageCheckTask);
+AppOpenerTask appOpenerTask(appManager);
 
 FlashLightApp flashLightApp(rgbTask);
 HomeScreenApp homeScreenApp(rgbTask);
@@ -76,6 +78,7 @@ void setup() {
     // Uncomment this if you want to see serial output during startup
     // This will require you to send a character over serial before unblocking
     // the startup
+
     debug::waitForKey();
 
     tildaButtonSetup();
@@ -91,11 +94,11 @@ void setup() {
     appOpenerTask.start();
 
     // Applications
-    AppManager::add(homeScreenApp);
-    AppManager::add(flashLightApp);
+    appManager.add(homeScreenApp);
+    appManager.add(flashLightApp);
 
     // Boot into home screen
-    AppManager::open("HomeScreen");
+    appManager.open("HomeScreen");
 
     // Start scheduler
     debug::log("Start Scheduler");

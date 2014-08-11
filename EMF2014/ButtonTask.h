@@ -38,7 +38,7 @@
 class ButtonTask: public Task {
 friend class ButtonSubscription;
 public:
-    String getName();
+    String getName() const;
 protected:
     void task();
 };

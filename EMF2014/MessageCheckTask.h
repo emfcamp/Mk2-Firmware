@@ -28,32 +28,32 @@
  SOFTWARE.
  */
 
-#ifndef _MESSAGE_CHECK_TASK_H_
-#define _MESSAGE_CHECK_TASK_H_
+#pragma once
 
 #include <Arduino.h>
 #include <FreeRTOS_ARM.h>
+
+#include "IncomingRadioMessage.h"
 #include "EMF2014Config.h"
 #include "Task.h"
-
-struct IncomingRadioMessage {
-	byte* content;
-	uint32_t length;
-	byte hash[12];
-	byte signature[40];
-	uint16_t receiver;
-};
+#include "DataStore.h"
 
 class MessageCheckTask: public Task {
 public:
-	String getName();
+    MessageCheckTask();
+    ~MessageCheckTask();
 
-	static void addIncomingMessage(IncomingRadioMessage *message);
+	String getName() const;
+
+	void addIncomingMessage(IncomingRadioMessage *message);
+
+private:
+    MessageCheckTask(const MessageCheckTask&) {}
+
 protected:
 	void task();
 
 private:
-	static QueueHandle_t incomingMessages;
+	QueueHandle_t mIncomingMessages;
+    DataStore* mDataStore;
 };
-
-#endif // _MESSAGE_CHECK_TASK_H_

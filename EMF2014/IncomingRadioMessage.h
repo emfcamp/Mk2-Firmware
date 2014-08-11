@@ -1,7 +1,9 @@
 /*
  TiLDA Mk2
  
- TiLDATask
+ Incoming Radio Message
+
+ This is a consumer task that checks messages received by the radio task for validity
 
  The MIT License (MIT)
  
@@ -29,6 +31,32 @@
 #pragma once
 
 #include <Arduino.h>
-#include <FreeRTOS_ARM.h>
-#include "EMF2014Config.h"
 
+class IncomingRadioMessage {
+public:
+    IncomingRadioMessage(uint32_t aLength,
+                            const byte* aBuffer,
+                            const byte* aHash,
+                            const byte* aSignature,
+                            uint16_t aReciever);
+    ~IncomingRadioMessage();
+
+    byte* Sha1Result() const;
+
+    byte* content() const;
+    uint32_t length() const;
+    const byte* hash() const;
+    const byte* signature() const;
+    uint16_t receiver() const;
+
+private:
+    IncomingRadioMessage(){;}
+    IncomingRadioMessage(const IncomingRadioMessage&){;}
+
+private:
+    byte* mContent;
+    uint32_t mLength;
+    byte mHash[12];
+    byte mSignature[40];
+    uint16_t mReceiver;
+};

@@ -34,8 +34,18 @@
 #include "RGBTask.h"
 #include "AppManager.h"
 
+FlashLightApp::FlashLightApp(RGBTask& rgbTask)
+    :_rgbTask(rgbTask), _lightLevel(8), mButtonSubscription(NULL)
+{
+
+}
+
+FlashLightApp::~FlashLightApp() {
+    delete mButtonSubscription;
+}
+
 // ToDo: Add all the fancy features from https://github.com/emfcamp/Mk2-Firmware/blob/master/frRGBTask/frRGBTask.ino
-String FlashLightApp::getName() {
+String FlashLightApp::getName() const {
     return "FlashLight";
 }
 
@@ -48,13 +58,12 @@ void FlashLightApp::updateLeds() {
 }
 
 void FlashLightApp::task() {
-    ButtonSubscription _buttons;
-    _pbuttons =& _buttons;
-    _buttons.addButtons(UP | DOWN);
+    mButtonSubscription = new ButtonSubscription();
+    mButtonSubscription->addButtons(UP | DOWN);
 
     updateLeds();
     while(true) {
-        Button button = _buttons.waitForPress(( TickType_t ) 1000);
+        Button button = mButtonSubscription->waitForPress(( TickType_t ) 1000);
         if (button == UP) {
             if (_lightLevel < 8) {
                 _lightLevel++;
@@ -78,9 +87,9 @@ void FlashLightApp::afterSuspension() {
 }
 
 void FlashLightApp::beforeResume() {
-    if (_pbuttons) {
-        // Clear Button Queue of any up/down button presse that have occured durind suspension
-        _pbuttons->clear();
+    if (mButtonSubscription) {
+        // Clear Button Queue of any up/down button pressed that have occured durind suspension
+        mButtonSubscription->clear();
     }
     updateLeds();
 }

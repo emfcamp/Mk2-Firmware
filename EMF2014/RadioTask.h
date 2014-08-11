@@ -29,8 +29,7 @@
  SOFTWARE.
  */
 
-#ifndef _RADIO_TASK_H_
-#define _RADIO_TASK_H_
+#pragma once
 
 #include <Arduino.h>
 #include <FreeRTOS_ARM.h>
@@ -38,13 +37,18 @@
 #include "Task.h"
 #include "MessageCheckTask.h"
 
-#define RADIO_STATE_DISCOVERY 0
-#define RADIO_STATE_RECEIVE 1
-#define RADIO_STATE_TRANSMIT 2
-
 class RadioTask: public Task {
+private:
+	enum RadioState : uint8_t {
+		RADIO_STATE_DISCOVERY,
+		RADIO_STATE_RECEIVE,
+		RADIO_STATE_TRANSMIT
+	};
+
 public:
-	String getName();
+	RadioTask(MessageCheckTask& aMessageCheckTask);
+
+	String getName() const;
 protected:
 	void task();
 private:
@@ -55,7 +59,7 @@ private:
 	inline uint32_t _bytesToInt(byte b1, byte b2, byte b3, byte b4);
 	inline String _intToHex(uint8_t input);
 
-	inline void _parsePacketBuffer(byte packetBuffer[], uint8_t& packetBufferLength);
+	inline uint8_t _parsePacketBuffer(byte packetBuffer[], uint8_t packetBufferLength);
 
 	inline void _handleReceivePacket(byte packetBuffer[], uint8_t packetBufferLength);
 	inline void _handleDiscoveryPacket(byte packetBuffer[], uint8_t packetBufferLength, uint8_t rssi);
@@ -64,9 +68,10 @@ private:
 	inline void _initialiseDiscoveryState();
 	inline void _initialiseReceiveState();
 	inline void _clearSerialBuffer();
+	inline void _sendOutgoingBuffer();
 
-	static const uint16_t NO_CURRENT_MESSAGE = 65535;
-	static const uint8_t NO_CHANNEL_DISCOVERED = 255;
+private:
+	MessageCheckTask& mMessageCheckTask;
 
 	byte _messageBuffer[RADIO_MAX_MESSAGE_BUFFER_LENGTH];
 	uint16_t _messageBufferPosition;
@@ -80,7 +85,8 @@ private:
 	TickType_t _discoveryFinishingTime;
 	TickType_t _lastMessageReceived;
 
-	uint8_t _radioState;
-};
+	byte _outgoingPacketBuffer[RADIO_PACKET_LENGTH];
+	bool _outgoingPacketAvailable;
 
-#endif // _RADIO_TASK_H_
+	RadioState _radioState;
+};

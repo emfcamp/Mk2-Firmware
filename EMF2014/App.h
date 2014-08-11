@@ -28,8 +28,7 @@
  SOFTWARE.
  */
 
-#ifndef _APP_H_
-#define _APP_H_
+#pragma once
 
 #include <Arduino.h>
 #include <FreeRTOS_ARM.h>
@@ -41,12 +40,10 @@ public:
 	App(): running(false) {};
 	void start();
 	void suspend();
-    virtual String getName()=0;
+    virtual String getName() const = 0;
 protected:
     virtual void task()=0;
     virtual void afterSuspension()=0;
     virtual void beforeResume()=0;
     bool running;
 };
-
-#endif // _APP_H_

@@ -27,13 +27,10 @@
  SOFTWARE.
  */
 
-#ifndef _IR_TASK_H_
-#define _IR_TASK_H_
+#pragma once
 
 #include <Arduino.h>
 #include <FreeRTOS_ARM.h>
 #include "EMF2014Config.h"
 
 
-
-#endif // _IR_TASK_H_

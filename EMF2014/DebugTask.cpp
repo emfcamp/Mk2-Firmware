@@ -38,6 +38,9 @@ namespace debug {
     void log(String text) {
         // ToDo: Add other debug outputs
         if (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING) {
+            if (serialPortMutex == 0) {
+                serialPortMutex = xSemaphoreCreateMutex();
+            }
             if (xSemaphoreTake(serialPortMutex, ( TickType_t ) 10) == pdTRUE ) {
                 DEBUG_SERIAL.println(text);
             }
@@ -50,6 +53,9 @@ namespace debug {
     void logByteArray(const byte in[], int len) {
         // ToDo: Add other debug outputs
         if (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING) {
+            if (serialPortMutex == 0) {
+                serialPortMutex = xSemaphoreCreateMutex();
+            }
             if (xSemaphoreTake(serialPortMutex, ( TickType_t ) 10) == pdTRUE ) {
                 //DEBUG_SERIAL.print(String((char*)in));
                 int i;
@@ -104,14 +110,14 @@ namespace debug {
         DEBUG_SERIAL.begin(115200);
         delay(250);
 
+        serialPortMutex = 0;
+
         pinMode(DEBUG_LED, OUTPUT);       
         digitalWrite(DEBUG_LED, LOW);
-
-        serialPortMutex = xSemaphoreCreateMutex();
     }
 }
 
-String DebugTask::getName() {
+String DebugTask::getName() const {
     return "DebugTask";
 }
 

@@ -34,7 +34,7 @@
 /** 
  * Button Task class
  */
-String ButtonTask::getName() {
+String ButtonTask::getName() const {
     return "ButtonTask";
 }
 

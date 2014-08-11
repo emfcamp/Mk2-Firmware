@@ -27,8 +27,7 @@
  SOFTWARE.
  */
 
-#ifndef _TASK_H_
-#define _TASK_H_
+#pragma once
 
 #include <Arduino.h>
 #include <FreeRTOS_ARM.h>
@@ -36,8 +35,10 @@
 
 class Task {
 public:
+    virtual ~Task();
+    
 	void start();
-	virtual String getName()=0;
+	virtual String getName() const = 0;
 protected:
     virtual void task()=0;
     TaskHandle_t taskHandle;
@@ -45,5 +46,3 @@ private:
 	void taskCaller();
 	static void _task(void *referenceToClass);
 };
-
-#endif // _TASK_H_

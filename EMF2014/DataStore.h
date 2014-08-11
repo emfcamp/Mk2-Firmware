@@ -29,78 +29,36 @@
  SOFTWARE.
  */
 
-#ifndef _DATA_STORE_H_
-#define _DATA_STORE_H_
+#pragma once
 
 #include <Arduino.h>
 #include <FreeRTOS_ARM.h>
+#include <TinyPacks.h>
+
+#include "Weather.h"
+#include "Schedule.h"
 #include "EMF2014Config.h"
-
-uint16_t static const CONTENT_RID_WEATHER_FORECAST = 40962;
-
-// This maps to http://www.metoffice.gov.uk/datapoint/support/documentation/code-definitions
-enum class WeatherType : uint8_t {
-	WEATHER_TYPE_NOT_AVAILABLE = 31,
-	WEATHER_TYPE_CLEAR_NIGHT = 0,
-	WEATHER_TYPE_SUNNY_NIGHT = 1,
-	WEATHER_TYPE_PARTLY_CLOUDY_NIGHT = 2,
-	WEATHER_TYPE_PARTLY_CLOUDY_DAY = 3,
-	WEATHER_TYPE_MIST = 5,
-	WEATHER_TYPE_FOG = 6,
-	WEATHER_TYPE_CLOUDY = 7,
-	WEATHER_TYPE_OVERCAST = 8,
-	WEATHER_TYPE_LIGHT_RAIN_SHOWER_NIGHT = 9,
-	WEATHER_TYPE_LIGHT_RAIN_SHOWER_DAY = 10,
-	WEATHER_TYPE_DRIZZLE = 11,
-	WEATHER_TYPE_LIGHT_RAIN = 12,
-	WEATHER_TYPE_HEAVY_RAIN_SHOWER_NIGHT = 13,
-	WEATHER_TYPE_HEAVY_RAIN_SHOWER_DAY = 14,
-	WEATHER_TYPE_HEAVY_RAIN = 15,
-	WEATHER_TYPE_SLEET_SHOWER_NIGHT = 16,
-	WEATHER_TYPE_SLEET_SHOWRT_DAY = 17,
-	WEATHER_TYPE_SLEET = 18,
-	WEATHER_TYPE_HAIL_SHOWER_NIGHT = 19,
-	WEATHER_TYPE_HAIL_SHOWER_DAY = 20,
-	WEATHER_TYPE_HAIL = 21,
-	WEATHER_TYPE_LIGHT_SNOW_SHOWER_NIGHT = 22,
-	WEATHER_TYPE_LIGHT_SNOW_SHOWER_DAY = 23,
-	WEATHER_TYPE_LIGHT_SNOW = 24,
-	WEATHER_TYPE_HEAVY_SNOW_SHOWER_NIGHT = 25,
-	WEATHER_TYPE_HEAVY_SNOW_SHOWER_DAY = 26,
-	WEATHER_TYPE_HEAVY_SNOW = 27,
-	WEATHER_TYPE_THUNDER_SHOWER_NIGHT = 28,
-	WEATHER_TYPE_THUNDER_SHOWER_DAY = 29 ,
-	WEATHER_TYPE_THUNDER = 30
-};
-
-struct WeatherForecastPeriod {
-	WeatherType weatherType;
-	int8_t temperature;
-	int8_t feelsLikeTemperature;
-	uint8_t windSpeed;
-	uint8_t screenRelativeHumidity;
-	uint8_t precipitationProbability;
-};
-
-struct WeatherForecast {
-	bool valid;
-	WeatherForecastPeriod current;
-	WeatherForecastPeriod in3Hours;
-	WeatherForecastPeriod in6Hours;
-	WeatherForecastPeriod in12Hours;
-	WeatherForecastPeriod in24Hours;
-	WeatherForecastPeriod in48Hours;
-};
-
 
 class DataStore {
 public:
-	static void addContent(uint16_t rid, byte* content, uint16_t length);
-	static WeatherForecast getWeatherForecast();
+	DataStore();
+	~DataStore();
+
+	void addContent(uint16_t rid, const byte* content, uint16_t length);
+	const WeatherForecast& getWeatherForecast() const;
+	const Schedule& getSchedule() const;
+
 private:
-	static WeatherForecast _weatherForecast;
+	void _addWeatherForecastRaw(const byte* content, uint16_t length);
+	void _addScheduleFridayRaw(const byte* content, uint16_t length);
 
-	static void _addWeatherForecastRaw(byte* content);
+	static void _unpackWeatherForecastPeriod(WeatherForecastPeriod& period, PackReader& reader);
+	static tp_integer_t _getInteger(PackReader& reader);
+	static String _getString(PackReader& reader);
+
+private:
+	WeatherForecast mWeatherForecast;
+	Schedule mSchedule;
+
+	PackReader mReader;
 };
-
-#endif // _DATA_STORE_H_
