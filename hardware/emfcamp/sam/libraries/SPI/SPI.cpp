@@ -173,7 +173,7 @@ byte SPIClass::transferDMA(uint32_t _pin, uint8_t *txBuffer, uint8_t *rxBuffer, 
     
     // reconfigure SPI for fixed peripheral mode
     //SPI_Disable(spi);
-    spi->SPI_MR = SPI_MR_MSTR | SPI_MR_MODFDIS | SPI_MR_PCS(BOARD_PIN_TO_SPI_CHANNEL(_pin));
+    spi->SPI_MR = SPI_MR_MSTR | SPI_MR_MODFDIS | SPI_MR_PCS(~(1 << BOARD_PIN_TO_SPI_CHANNEL(_pin)));
     if (_mode == SPI_LAST) {
         spi->SPI_CR = SPI_CR_LASTXFER;
     } else {
@@ -239,7 +239,7 @@ void SPIClass::DMAFinished(uint32_t _status) {
  */
 void DMAC_Handler(void) {
     static uint32_t ul_status;
-    
+    digitalWrite(PIN_LED_RXL, LOW);
     ul_status = dmac_get_status(DMAC);
     SPI.DMAFinished(ul_status);
 }
