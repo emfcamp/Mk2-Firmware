@@ -1,8 +1,8 @@
 /*
- TiLDA Mk2 SPI DMA transfer API test
+ TiLDA Mk2 SPI DMA transfer API test as a FreeRTOS task
  
  Read a buffer from the S25FLx flash chip using dma
- bupasing the flash library and just using commmands directly
+ buypasing the flash library and just using commmands directly
  
  The MIT License (MIT)
  
@@ -28,6 +28,7 @@
  */
 
 #include <SPI.h>
+#include <FreeRTOS_ARM.h>
 
 uint32_t startAddress = 0x0;
 
@@ -62,33 +63,76 @@ void spiDMADoneCallback() {
 
 
 void setup() {
+    BaseType_t t1,t2;
     // PMIC to CHARGE
     pinMode(PMIC_ENOTG, OUTPUT);
     digitalWrite(PMIC_ENOTG, LOW);
     // Wake SRF
     pinMode(SRF_SLEEP, OUTPUT);
     digitalWrite(SRF_SLEEP, LOW);
+    
+    pinMode(LCD_CS, OUTPUT);
+    digitalWrite(LCD_CS, HIGH);
+    
     pinMode(PIN_LED_RXL, OUTPUT);
     digitalWrite(PIN_LED_RXL, HIGH);
     
-    Serial.begin(115200);
+    SerialUSB.begin(115200);
+    while(!SerialUSB){};
     delay(500);
-    Serial.println("TiLDA SPI DMA tests");
+    SerialUSB.println("TiLDA SPI DMA tests");
+  
+    t1 = xTaskCreate(vSPITest,
+                     NULL,
+                     configMINIMAL_STACK_SIZE,
+                     NULL,
+                     2,
+                     NULL);
+                
+    t2 = xTaskCreate(vBlinkTask,
+                     NULL,
+                     configMINIMAL_STACK_SIZE,
+                     NULL,
+                     1,
+                     NULL);
     
-    Serial.println("Setup flash SPI");
+    if ( t2 != pdPASS) {
+        // tasked didn't get created
+        SerialUSB.println("Failed to create task");
+        while(1);
+    }
+      
+
+    // Start scheduler
+    SerialUSB.println("Start Scheduler");
+    vTaskStartScheduler();
+
+    SerialUSB.println("Insufficient RAM");
+    while(1);
+    
+         
+}
+
+void loop() {
+   
+}
+
+
+void vSPITest(void *pvParameters) {
+    SerialUSB.println("Setup flash SPI");
     pinMode(FLASH_HOLD, OUTPUT);
     digitalWrite(FLASH_HOLD, HIGH);
     
     SPI.begin(FLASH_CS);
     SPI.setClockDivider(2); //42MHz
-    Serial.println("Configure DMA");
+    SerialUSB.println("Configure DMA");
     SPI.configureDMA();
     
     SPI.registerDMACallback(spiDMADoneCallback);
     
     // setup buffer with tx data 
     // for a fast read we need to set the first 5 bytes with the command, 24bit start address and blank xfer before the device will start sending back data
-    Serial.println("Setup tx buffer");
+    SerialUSB.println("Setup tx buffer");
     flashBuffer[0] = FAST_READ;
     
     flashBuffer[1] = startAddress >> 16;   
@@ -96,22 +140,45 @@ void setup() {
     flashBuffer[3] = startAddress && 0xFF;
 
     flashBuffer[4] = 0;
-    Serial.println("Start DMA");
+    vTaskDelay((1000/portTICK_PERIOD_MS));
+    
+    SerialUSB.println("Start DMA");
     SPI.transferDMA(FLASH_CS, flashBuffer, flashBuffer, 5+READ_SIZE, SPI_LAST);
-    Serial.println("Entering loop");
+    SerialUSB.println("Entering loop");
+    
+    while(1) {
+        if (flashXferDoneFlag) {
+            flashXferDoneFlag = 0;
+            SerialUSB.println("Flash DMA Xfer Done");
+            for (int i=0; i < 5+READ_SIZE; i++) {
+                SerialUSB.print(i);
+                SerialUSB.print(":0x");
+                SerialUSB.println(flashBuffer[i], HEX);
+                vTaskDelay((10/portTICK_PERIOD_MS));
+            }
+        }
+        vTaskDelay((1000/portTICK_PERIOD_MS));
+    }
         
+
 }
 
-void loop() {
-    if (flashXferDoneFlag) {
-        flashXferDoneFlag = 0;
-        Serial.println("Flash DMA Xfer Done");
-        for (int i=0; i < 5+READ_SIZE; i++) {
-            Serial.print(i);
-            Serial.print(":0x");
-            Serial.println(flashBuffer[i], HEX);
-            delay(5);
-        }
+
+/******************************************************************************/
+
+
+void vBlinkTask(void *pvParameters) {
+    SerialUSB.println("Blink Task start");
+    // int to hold led state
+    uint8_t state = 0;
+    // enabled pin 13 led
+    pinMode(PIN_LED_TXL, OUTPUT);
+    while(1) {
+        digitalWrite(PIN_LED_TXL, state);
+        state = !state;
+        
+        vTaskDelay((100/portTICK_PERIOD_MS));
     }
     
 }
+
