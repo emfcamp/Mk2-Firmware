@@ -205,26 +205,18 @@ void LCDTask::_do_display() {
     _command(CMD_SET_COLUMN_LOWER | ((col+ST7565_STARTBYTES) & 0xf));
     _command(CMD_SET_COLUMN_UPPER | (((col+ST7565_STARTBYTES) >> 4) & 0x0F));
     _command(CMD_RMW);
-    debug::logByteArray(_framebuffer[pagemap[p]],128);
-    //if (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING) {
-    //  vTaskSuspendAll();
-    //  suspend=1;
-    //}
-    /*for(; col <= maxcol; col++) {
-      _data(this->_framebuffer[pagemap[p]][col]);
-    }*/
+
+    uint8_t txBuffer[128];
     uint8_t rxBuffer[128];
-    debug::log("Starting SPI DAM Transfer");
+
     ::LCDDataDoneFlag = 0;
-    SPI.transferDMA(FLASH_CS, _framebuffer[pagemap[p]], rxBuffer, 128, SPI_LAST);
+    digitalWrite(LCD_A0,HIGH); //Select Data Mode
+    digitalWrite(LCD_CS,LOW); //Select LCD (why doesn't SPI do this?)
+    SPI.transferDMA(LCD_CS, _framebuffer[pagemap[p]], rxBuffer, 128, SPI_LAST);
     while (::LCDDataDoneFlag == 0)
     { vTaskDelay(10); }
     ::LCDDataDoneFlag = 0;
    
-    debug::log("SPI DMA Transfer Complete");
-    if (suspend == 1 ) {
-      xTaskResumeAll(); 
-    } 
   }    
 }
 
@@ -381,7 +373,7 @@ void LCDTask::task() {
         debug::log("LCDTask::task() Error Creating queue");
       }
       // Write framebuffer to display
-      debug::log("[LCDTask::task()] call _display");
+      //debug::log("[LCDTask::task()] call _display");
       _display();
       // Sleep for 40ms, to limit updates to 25fps
       vTaskDelay((40/portTICK_PERIOD_MS));
