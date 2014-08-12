@@ -4,6 +4,9 @@
  Read a buffer from the S25FLx flash chip using dma
  buypasing the flash library and just using commmands directly
  
+ To triger a read press the LIGHT button
+ 
+ 
  The MIT License (MIT)
  
  Copyright (c) 2014 Electromagnetic Field LTD
@@ -26,7 +29,8 @@
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  SOFTWARE.
  */
-
+ 
+#include <Debounce.h>
 #include <SPI.h>
 #include <FreeRTOS_ARM.h>
 
@@ -61,6 +65,29 @@ void spiDMADoneCallback() {
     flashXferDoneFlag = 1;
 }
 
+void tildaButtonInterruptPriority() {
+    // reset pin interrupt handler IRQn priority levels to allow use of FreeRTOS API calls
+    NVIC_DisableIRQ(PIOA_IRQn);
+    NVIC_ClearPendingIRQ(PIOA_IRQn);
+    NVIC_SetPriority(PIOA_IRQn, configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY);
+    NVIC_EnableIRQ(PIOA_IRQn);
+    
+    NVIC_DisableIRQ(PIOB_IRQn);
+    NVIC_ClearPendingIRQ(PIOB_IRQn);
+    NVIC_SetPriority(PIOB_IRQn, configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY);
+    NVIC_EnableIRQ(PIOB_IRQn);
+    
+    NVIC_DisableIRQ(PIOC_IRQn);
+    NVIC_ClearPendingIRQ(PIOC_IRQn);
+    NVIC_SetPriority(PIOC_IRQn, configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY);
+    NVIC_EnableIRQ(PIOC_IRQn);
+    
+    NVIC_DisableIRQ(PIOD_IRQn);
+    NVIC_ClearPendingIRQ(PIOD_IRQn);
+    NVIC_SetPriority(PIOD_IRQn, configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY);
+    NVIC_EnableIRQ(PIOD_IRQn);
+}
+
 
 void setup() {
     BaseType_t t1,t2;
@@ -77,10 +104,17 @@ void setup() {
     pinMode(PIN_LED_RXL, OUTPUT);
     digitalWrite(PIN_LED_RXL, HIGH);
     
+    tildaButtonSetup();
+    tildaButtonAttachInterrupts();
+    tildaButtonInterruptPriority();
+    
+    
     SerialUSB.begin(115200);
     while(!SerialUSB){};
     delay(500);
     SerialUSB.println("TiLDA SPI DMA tests");
+    
+    
   
     t1 = xTaskCreate(vSPITest,
                      NULL,
@@ -117,8 +151,11 @@ void loop() {
    
 }
 
-
+SemaphoreHandle_t xFlashSemaphore;
 void vSPITest(void *pvParameters) {
+    xFlashSemaphore = xSemaphoreCreateBinary();
+//    xSemaphoreTake(xFlashSemaphore, ( TickType_t ) 10 );
+  
     SerialUSB.println("Setup flash SPI");
     pinMode(FLASH_HOLD, OUTPUT);
     digitalWrite(FLASH_HOLD, HIGH);
@@ -130,24 +167,24 @@ void vSPITest(void *pvParameters) {
     
     SPI.registerDMACallback(spiDMADoneCallback);
     
-    // setup buffer with tx data 
-    // for a fast read we need to set the first 5 bytes with the command, 24bit start address and blank xfer before the device will start sending back data
-    SerialUSB.println("Setup tx buffer");
-    flashBuffer[0] = FAST_READ;
-    
-    flashBuffer[1] = startAddress >> 16;   
-    flashBuffer[2] = startAddress >> 8;
-    flashBuffer[3] = startAddress && 0xFF;
-
-    flashBuffer[4] = 0;
-    vTaskDelay((1000/portTICK_PERIOD_MS));
-    
-    SerialUSB.println("Start DMA");
-    SPI.transferDMA(FLASH_CS, flashBuffer, flashBuffer, 5+READ_SIZE, SPI_LAST);
-    SerialUSB.println("Entering loop");
     
     while(1) {
-        if (flashXferDoneFlag) {
+        if (xSemaphoreTake(xFlashSemaphore, ( TickType_t ) 10 ) == pdTRUE) {
+            // setup buffer with tx data 
+            // for a fast read we need to set the first 5 bytes with the command, 24bit start address and blank xfer before the device will start sending back data
+            SerialUSB.println("Setup tx buffer");
+            flashBuffer[0] = FAST_READ;
+            
+            flashBuffer[1] = startAddress >> 16;   
+            flashBuffer[2] = startAddress >> 8;
+            flashBuffer[3] = startAddress && 0xFF;
+        
+            flashBuffer[4] = 0;
+  
+            SerialUSB.println("Start DMA");
+            SPI.transferDMA(FLASH_CS, flashBuffer, flashBuffer, 5+READ_SIZE, SPI_LAST);
+            SerialUSB.println("Entering loop");
+        } else if (flashXferDoneFlag) {
             flashXferDoneFlag = 0;
             SerialUSB.println("Flash DMA Xfer Done");
             for (int i=0; i < 5+READ_SIZE; i++) {
@@ -163,6 +200,24 @@ void vSPITest(void *pvParameters) {
 
 }
 
+// stupid attache interupt hack
+
+uint8_t firstLightFire = 1;
+void buttonLightPress(){
+
+    if (firstLightFire) {
+      firstLightFire = 0;
+      return;
+    }
+    
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+
+    xSemaphoreGiveFromISR(xFlashSemaphore, &xHigherPriorityTaskWoken);
+    
+    if (xHigherPriorityTaskWoken) {
+        portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+    }
+}
 
 /******************************************************************************/
 
@@ -181,4 +236,3 @@ void vBlinkTask(void *pvParameters) {
     }
     
 }
-
