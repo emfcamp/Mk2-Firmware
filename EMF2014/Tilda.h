@@ -35,12 +35,19 @@
 #include <FreeRTOS_ARM.h>
 #include "EMF2014Config.h"
 #include "ButtonSubscription.h"
+#include "RGBTask.h"
 
 class Tilda {
 public:
     static ButtonSubscription createButtonSubscription(uint16_t buttons);
     static void log(String text);
     static void delay(uint16_t durationInMs);
+    static void setLedColor(RGBLed led, RGBColor color);
+    static void setLedColor(RGBColor color);
+
+    static void setupTasks(RGBTask* rgbTask);
 private:
     Tilda();
+
+    static RGBTask* _rgbTask;
 };

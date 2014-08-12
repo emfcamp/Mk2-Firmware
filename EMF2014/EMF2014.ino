@@ -51,6 +51,7 @@
 #include "FlashLightApp.h"
 #include "HomeScreenApp.h"
 #include "TiLDAButtonInterrupts.h"
+#include "Tilda.h"
 
 /*
  * Setup is the main entry point for an Arduino sketch.
@@ -67,14 +68,15 @@ MessageCheckTask messageCheckTask;
 RadioTask radioTask(messageCheckTask);
 AppOpenerTask appOpenerTask(appManager);
 
-FlashLightApp flashLightApp(rgbTask);
-HomeScreenApp homeScreenApp(rgbTask);
+FlashLightApp flashLightApp;
+HomeScreenApp homeScreenApp;
 
 void setup() {
     debug::setup();
+    Tilda::setupTasks(&rgbTask);
 
     // Uncomment this if you want to see serial output during startup
-    // This will require you to send a character over serial before unblocking 
+    // This will require you to send a character over serial before unblocking
     // the startup
 
     debug::waitForKey();

@@ -29,6 +29,9 @@
 #include "Tilda.h"
 #include <FreeRTOS_ARM.h>
 #include "DebugTask.h"
+#include "RGBTask.h"
+
+RGBTask *Tilda::_rgbTask = NULL;
 
 Tilda::Tilda() {}
 
@@ -48,4 +51,20 @@ void Tilda::delay(uint16_t durationInMs) {
     } else {
         delay(durationInMs);
     }
+}
+
+void Tilda::setLedColor(RGBLed led, RGBColor color) {
+    if (_rgbTask) {
+        _rgbTask->setColor(led, color);
+    }
+}
+
+void Tilda::setLedColor(RGBColor color) {
+    if (_rgbTask) {
+        _rgbTask->setColor(color);
+    }
+}
+
+void Tilda::setupTasks(RGBTask* rgbTask) {
+    _rgbTask = rgbTask;
 }

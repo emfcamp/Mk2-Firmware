@@ -37,12 +37,11 @@
 
 class HomeScreenApp: public App {
 public:
-	HomeScreenApp (RGBTask& rgbTask): _rgbTask(rgbTask) {};
 	String getName() const;
 protected:
     void task();
     void afterSuspension();
     void beforeResume();
 private:
-	RGBTask& _rgbTask;
+
 };
