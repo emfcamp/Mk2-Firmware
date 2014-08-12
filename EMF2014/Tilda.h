@@ -40,6 +40,7 @@ class Tilda {
 public:
     static ButtonSubscription createButtonSubscription(uint16_t buttons);
     static void log(String text);
+    static void delay(uint16_t durationInMs);
 private:
     Tilda();
 };

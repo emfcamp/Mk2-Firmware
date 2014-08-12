@@ -27,6 +27,7 @@
  */
 
 #include "Tilda.h"
+#include <FreeRTOS_ARM.h>
 #include "DebugTask.h"
 
 Tilda::Tilda() {}
@@ -39,4 +40,12 @@ ButtonSubscription Tilda::createButtonSubscription(uint16_t buttons) {
 
 void Tilda::log(String text) {
     debug::log(text);
+}
+
+void Tilda::delay(uint16_t durationInMs) {
+    if (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING) {
+        vTaskDelay(durationInMs / portTICK_PERIOD_MS);
+    } else {
+        delay(durationInMs);
+    }
 }
