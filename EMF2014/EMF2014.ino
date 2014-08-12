@@ -72,6 +72,9 @@ LCDTask lcdTask;
 FlashLightApp flashLightApp(rgbTask);
 HomeScreenApp homeScreenApp(rgbTask);
 void setup() {
+    // making sure this it not interferaing with LCD
+    pinMode(FLASH_CS, OUTPUT);
+    digitalWrite(FLASH_CS, HIGH);
     debug::setup();
 
     // Uncomment this if you want to see serial output during startup
