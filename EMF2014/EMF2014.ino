@@ -73,7 +73,7 @@ HomeScreenApp homeScreenApp;
 
 void setup() {
     debug::setup();
-    Tilda::setupTasks(&rgbTask);
+    Tilda::setupTasks(&appManager, &rgbTask);
 
     // Uncomment this if you want to see serial output during startup
     // This will require you to send a character over serial before unblocking
@@ -98,7 +98,7 @@ void setup() {
     appManager.add(flashLightApp);
 
     // Boot into home screen
-    appManager.open("HomeScreen");
+    Tilda::openApp("HomeScreen");
 
     // Start scheduler
     debug::log("Start Scheduler");

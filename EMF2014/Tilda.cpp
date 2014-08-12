@@ -30,8 +30,10 @@
 #include <FreeRTOS_ARM.h>
 #include "DebugTask.h"
 #include "RGBTask.h"
+#include "AppManager.h"
 
 RGBTask *Tilda::_rgbTask = NULL;
+AppManager *Tilda::_appManager = NULL;
 
 Tilda::Tilda() {}
 
@@ -65,6 +67,13 @@ void Tilda::setLedColor(RGBColor color) {
     }
 }
 
-void Tilda::setupTasks(RGBTask* rgbTask) {
+void Tilda::openApp(String name) {
+    if (_appManager) {
+        _appManager->open(name);
+    }
+}
+
+void Tilda::setupTasks(AppManager* appManager, RGBTask* rgbTask) {
+    _appManager = appManager;
     _rgbTask = rgbTask;
 }

@@ -36,6 +36,7 @@
 #include "EMF2014Config.h"
 #include "ButtonSubscription.h"
 #include "RGBTask.h"
+#include "AppManager.h"
 
 class Tilda {
 public:
@@ -44,10 +45,13 @@ public:
     static void delay(uint16_t durationInMs);
     static void setLedColor(RGBLed led, RGBColor color);
     static void setLedColor(RGBColor color);
+    static void openApp(String name);
 
-    static void setupTasks(RGBTask* rgbTask);
+    // This is not part of the actual API
+    static void setupTasks(AppManager* appManager, RGBTask* rgbTask);
 private:
     Tilda();
 
     static RGBTask* _rgbTask;
+    static AppManager* _appManager;
 };
