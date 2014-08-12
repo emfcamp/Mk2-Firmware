@@ -33,6 +33,7 @@
 #include "DebugTask.h"
 #include "RGBTask.h"
 #include "AppManager.h"
+#include "Tilda.h"
 
 FlashLightApp::FlashLightApp(RGBTask& rgbTask)
     :_rgbTask(rgbTask), _lightLevel(8), mButtonSubscription(NULL)
@@ -58,9 +59,8 @@ void FlashLightApp::updateLeds() {
 }
 
 void FlashLightApp::task() {
-    mButtonSubscription = new ButtonSubscription();
-    mButtonSubscription->addButtons(UP | DOWN);
-
+    ButtonSubscription buttonSubscription = Tilda::createButtonSubscription(UP | DOWN);
+    mButtonSubscription = &buttonSubscription;
     updateLeds();
     while(true) {
         Button button = mButtonSubscription->waitForPress(( TickType_t ) 1000);

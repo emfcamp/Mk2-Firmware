@@ -42,7 +42,7 @@ ButtonSubscription::~ButtonSubscription() {
     vQueueDelete(mQueue);
 }
 
-void ButtonSubscription::addButtons(int buttons) {
+void ButtonSubscription::addButtons(uint16_t buttons) {
     mButtons = mButtons | buttons;
     addQueueToButtons(mButtons, mQueue);
 }

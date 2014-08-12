@@ -39,12 +39,12 @@ public:
 	ButtonSubscription();
     ~ButtonSubscription();
 
-    void addButtons(int buttons);
+    void addButtons(uint16_t buttons);
     Button waitForPress(TickType_t ticksToWait);
     Button waitForPress();
     void clear();
 
 private:
-    int mButtons;
+    uint16_t mButtons;
     QueueHandle_t mQueue;
 };

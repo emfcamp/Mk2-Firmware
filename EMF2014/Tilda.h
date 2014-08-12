@@ -1,7 +1,10 @@
 /*
  TiLDA Mk2
 
- App Opener Task
+ Tilda
+
+ This file exposes a static, easy to use interface onto the TiLDA API. It's designed
+ to make it easier for others to write Apps.
 
  The MIT License (MIT)
 
@@ -25,36 +28,18 @@
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  SOFTWARE.
  */
-#include "AppOpenerTask.h"
 
+#pragma once
+
+#include <Arduino.h>
 #include <FreeRTOS_ARM.h>
-
+#include "EMF2014Config.h"
 #include "ButtonSubscription.h"
-#include "DebugTask.h"
-#include "Tilda.h"
 
-AppOpenerTask::AppOpenerTask(AppManager& aAppManager)
-    :mAppManager(aAppManager)
-{}
-
-String AppOpenerTask::getName() const {
-    return "AppOpener";
-}
-
-void AppOpenerTask::task() {
-    ButtonSubscription buttonSubscription = Tilda::createButtonSubscription(LIGHT | B);
-
-    while(true) {
-        Button button = buttonSubscription.waitForPress();
-        if (button == LIGHT) {
-            if (mAppManager.getActiveAppName() == "FlashLight") {
-                mAppManager.open("HomeScreen");
-            } else {
-                mAppManager.open("FlashLight");
-            }
-        } else if (button == B) {
-            mAppManager.open("HomeScreen");
-        }
-    }
-
-}
+class Tilda {
+public:
+    static ButtonSubscription createButtonSubscription(uint16_t buttons);
+    static void log(String text);
+private:
+    Tilda();
+};

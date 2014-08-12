@@ -1,7 +1,7 @@
 /*
  TiLDA Mk2
 
- App Opener Task
+ TildaApi
 
  The MIT License (MIT)
 
@@ -25,36 +25,18 @@
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  SOFTWARE.
  */
-#include "AppOpenerTask.h"
 
-#include <FreeRTOS_ARM.h>
-
-#include "ButtonSubscription.h"
-#include "DebugTask.h"
 #include "Tilda.h"
+#include "DebugTask.h"
 
-AppOpenerTask::AppOpenerTask(AppManager& aAppManager)
-    :mAppManager(aAppManager)
-{}
+Tilda::Tilda() {}
 
-String AppOpenerTask::getName() const {
-    return "AppOpener";
+ButtonSubscription Tilda::createButtonSubscription(uint16_t buttons) {
+    ButtonSubscription result;
+    result.addButtons(LIGHT | A | B | UP | DOWN | LEFT | RIGHT | CENTER);
+    return result;
 }
 
-void AppOpenerTask::task() {
-    ButtonSubscription buttonSubscription = Tilda::createButtonSubscription(LIGHT | B);
-
-    while(true) {
-        Button button = buttonSubscription.waitForPress();
-        if (button == LIGHT) {
-            if (mAppManager.getActiveAppName() == "FlashLight") {
-                mAppManager.open("HomeScreen");
-            } else {
-                mAppManager.open("FlashLight");
-            }
-        } else if (button == B) {
-            mAppManager.open("HomeScreen");
-        }
-    }
-
+void Tilda::log(String text) {
+    debug::log(text);
 }
