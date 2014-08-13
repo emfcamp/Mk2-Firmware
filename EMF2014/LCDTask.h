@@ -37,52 +37,19 @@ SOFTWARE.
 #include "EMF2014Config.h"
 #include "Task.h"
 
-#ifndef _BV
-#define _BV(bit) (1 << (bit))
-#endif
 
-#define ST7565_STARTBYTES 4
-
-#define DISPLAY_WIDTH 128
-#define DISPLAY_HEIGHT 64
-
-// Colors
-#define BLACK				0xFF
-#define WHITE				0x00
-
-const uint8_t pagemap[] = { 7, 6, 5, 4, 3, 2, 1, 0 };
 
 class LCDTask: public Task {
 
 private:
   // Control functions
-  void _command(uint8_t);
-  void _data(uint8_t);
-  void _set_brightness(uint8_t);
-  void _display();
-  void _init();
-  static uint8_t _x;
-  static uint8_t _y;
-  static uint8_t _framebuffer[DISPLAY_HEIGHT/8][DISPLAY_WIDTH];
-  static QueueHandle_t _updateWaiting;
-  void _updateDisplay();
-  static SemaphoreHandle_t frameBufferMutex;
-  void _do_display();
-  uint8_t _do_ReadData(void);
-  void _do_WriteData(uint8_t data);
-  void _spiwrite(uint8_t c);
-  static uint8_t LCDDataDoneFlag;
+ 
 
 protected:
 
 public:
-  LCDTask();
   String getName();
   void task();
-  void Init();
-  uint8_t ReadData(void);
-  void WriteData(uint8_t data);
-  void GotoXY(uint8_t x, uint8_t y);
 };
 
 #endif // _LCD_TASK_H_

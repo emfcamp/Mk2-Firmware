@@ -55,6 +55,8 @@
 #include "glcd.h"
 #include "allBitmaps.h"
 
+#include "M2tk.h"
+#include "utility/m2ghglcd.h"
 
 /*
  * Setup is the main entry point for an Arduino sketch.
@@ -81,9 +83,7 @@ void setup() {
     // This will require you to send a character over serial before unblocking 
     // the startup
     debug::waitForKey();
-    
-    lcdTask.Init();
-    
+        
     tildaButtonSetup();
     tildaButtonAttachInterrupts();
     tildaButtonInterruptPriority();
@@ -95,7 +95,6 @@ void setup() {
     messageCheckTask.start();
     radioTask.start();
     lcdTask.start();
-    GLCD.setLCD(lcdTask);
 
     appOpenerTask.start();
 
