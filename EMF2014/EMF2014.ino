@@ -37,8 +37,9 @@
 
 #include <FreeRTOS_ARM.h>
 #include <Sha1.h>
+#include <DueFlashStorage.h>
 #include <TinyPacks.h>
-#include "uECC.h"
+#include <uECC.h>
 #include <Arduino.h>
 #include "EMF2014Config.h"
 #include "DebugTask.h"
@@ -52,13 +53,14 @@
 #include "HomeScreenApp.h"
 #include "TiLDAButtonInterrupts.h"
 #include "Tilda.h"
+#include "SettingsStore.h"
 
 /*
  * Setup is the main entry point for an Arduino sketch.
  * Here is where we will do a lot of work in getting the system running
  * and in FreeRTOS we will start the scheduler
  */
-
+SettingsStore settingsStore;
 AppManager appManager;
 
 DebugTask debugTask;
