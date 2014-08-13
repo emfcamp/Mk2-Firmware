@@ -25,10 +25,9 @@
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  SOFTWARE.
  */
-#include <FreeRTOS_ARM.h>
-#include "DebugTask.h"
 
 #include "HomeScreenApp.h"
+#include "Tilda.h"
 
 String HomeScreenApp::getName() const {
     return "HomeScreen";
@@ -36,12 +35,12 @@ String HomeScreenApp::getName() const {
 
 void HomeScreenApp::task() {
     while(true) {
-        _rgbTask.setColor({255, 0, 0});
-        vTaskDelay((300/portTICK_PERIOD_MS));
-        _rgbTask.setColor({0, 255, 0});
-        vTaskDelay((300/portTICK_PERIOD_MS));
-        _rgbTask.setColor({0, 0, 255});
-        vTaskDelay((300/portTICK_PERIOD_MS));
+        Tilda::setLedColor({255, 0, 0});
+        Tilda::delay(300);
+        Tilda::setLedColor({0, 255, 0});
+        Tilda::delay(300);
+        Tilda::setLedColor({0, 0, 255});
+        Tilda::delay(300);
     }
 }
 

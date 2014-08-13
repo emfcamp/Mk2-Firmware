@@ -33,15 +33,12 @@
 #include "DebugTask.h"
 #include "RGBTask.h"
 #include "AppManager.h"
+#include "Tilda.h"
 
-FlashLightApp::FlashLightApp(RGBTask& rgbTask)
-    :_rgbTask(rgbTask), _lightLevel(8), mButtonSubscription(NULL)
+FlashLightApp::FlashLightApp()
+    :_lightLevel(8), _buttonSubscription(NULL)
 {
 
-}
-
-FlashLightApp::~FlashLightApp() {
-    delete mButtonSubscription;
 }
 
 // ToDo: Add all the fancy features from https://github.com/emfcamp/Mk2-Firmware/blob/master/frRGBTask/frRGBTask.ino
@@ -54,16 +51,15 @@ void FlashLightApp::updateLeds() {
     if (_lightLevel == 8) {
         actualLightLevel = 255;
     }
-    _rgbTask.setColor({actualLightLevel, actualLightLevel, actualLightLevel});
+    Tilda::setLedColor({actualLightLevel, actualLightLevel, actualLightLevel});
 }
 
 void FlashLightApp::task() {
-    mButtonSubscription = new ButtonSubscription();
-    mButtonSubscription->addButtons(UP | DOWN);
-
+    ButtonSubscription buttonSubscription = Tilda::createButtonSubscription(UP | DOWN);
+    _buttonSubscription = &buttonSubscription;
     updateLeds();
     while(true) {
-        Button button = mButtonSubscription->waitForPress(( TickType_t ) 1000);
+        Button button = _buttonSubscription->waitForPress(( TickType_t ) 1000);
         if (button == UP) {
             if (_lightLevel < 8) {
                 _lightLevel++;
@@ -83,13 +79,13 @@ void FlashLightApp::task() {
 }
 
 void FlashLightApp::afterSuspension() {
-    _rgbTask.setColor({0, 0, 0});
+    Tilda::setLedColor({0, 0, 0});
 }
 
 void FlashLightApp::beforeResume() {
-    if (mButtonSubscription) {
+    if (_buttonSubscription) {
         // Clear Button Queue of any up/down button pressed that have occured durind suspension
-        mButtonSubscription->clear();
+        _buttonSubscription->clear();
     }
     updateLeds();
 }

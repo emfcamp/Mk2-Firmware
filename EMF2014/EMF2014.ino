@@ -38,9 +38,10 @@
 // Reference all libraries that are used here, otherwise Arduino won't include them :(
 #include <FreeRTOS_ARM.h>
 #include <Sha1.h>
+#include <DueFlashStorage.h>
 #include <TinyPacks.h>
 #include <rtc_clock.h>
-#include "uECC.h"
+#include <uECC.h>
 #include <Arduino.h>
 
 // These are the includes actually needed for this file:
@@ -55,6 +56,8 @@
 #include "FlashLightApp.h"
 #include "HomeScreenApp.h"
 #include "TiLDAButtonInterrupts.h"
+#include "Tilda.h"
+#include "SettingsStore.h"
 
 /*
  * Setup is the main entry point for an Arduino sketch.
@@ -63,7 +66,7 @@
  */
 
 RTC_clock realTimeClock(RC);
-
+SettingsStore settingsStore;
 AppManager appManager;
 
 DebugTask debugTask;
@@ -73,11 +76,12 @@ MessageCheckTask messageCheckTask;
 RadioTask radioTask(messageCheckTask, realTimeClock);
 AppOpenerTask appOpenerTask(appManager);
 
-FlashLightApp flashLightApp(rgbTask);
-HomeScreenApp homeScreenApp(rgbTask);
+FlashLightApp flashLightApp;
+HomeScreenApp homeScreenApp;
 
 void setup() {
     debug::setup();
+    Tilda::setupTasks(&appManager, &rgbTask);
 
     // Uncomment this if you want to see serial output during startup
     // This will require you to send a character over serial before unblocking
@@ -104,7 +108,7 @@ void setup() {
     appManager.add(flashLightApp);
 
     // Boot into home screen
-    appManager.open("HomeScreen");
+    Tilda::openApp("HomeScreen");
 
     // Start scheduler
     debug::log("Start Scheduler");

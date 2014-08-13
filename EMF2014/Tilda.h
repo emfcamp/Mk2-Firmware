@@ -1,8 +1,10 @@
 /*
  TiLDA Mk2
 
- HomeScreenApp
- This is just a placeholder at the moment - Later this will be showing some sort of menu
+ Tilda
+
+ This file exposes a static, easy to use interface onto the TiLDA API. It's designed
+ to make it easier for others to write Apps.
 
  The MIT License (MIT)
 
@@ -32,16 +34,24 @@
 #include <Arduino.h>
 #include <FreeRTOS_ARM.h>
 #include "EMF2014Config.h"
-#include "App.h"
+#include "ButtonSubscription.h"
 #include "RGBTask.h"
+#include "AppManager.h"
 
-class HomeScreenApp: public App {
+class Tilda {
 public:
-	String getName() const;
-protected:
-    void task();
-    void afterSuspension();
-    void beforeResume();
-private:
+    static ButtonSubscription createButtonSubscription(uint16_t buttons);
+    static void log(String text);
+    static void delay(uint16_t durationInMs);
+    static void setLedColor(RGBLed led, RGBColor color);
+    static void setLedColor(RGBColor color);
+    static void openApp(String name);
 
+    // This is not part of the actual API
+    static void setupTasks(AppManager* appManager, RGBTask* rgbTask);
+private:
+    Tilda();
+
+    static RGBTask* _rgbTask;
+    static AppManager* _appManager;
 };

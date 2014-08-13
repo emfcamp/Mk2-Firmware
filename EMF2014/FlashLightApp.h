@@ -38,8 +38,7 @@
 
 class FlashLightApp: public App {
 public:
-	FlashLightApp(RGBTask& rgbTask);
-    ~FlashLightApp();
+	FlashLightApp();
 
 	String getName() const;
 protected:
@@ -48,7 +47,6 @@ protected:
     void beforeResume();
 private:
 	void updateLeds();
-	RGBTask& _rgbTask;
 	unsigned char _lightLevel;
-	ButtonSubscription* mButtonSubscription;
+	ButtonSubscription *_buttonSubscription;
 };

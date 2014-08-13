@@ -1,8 +1,12 @@
 /*
  TiLDA Mk2
 
- HomeScreenApp
- This is just a placeholder at the moment - Later this will be showing some sort of menu
+ SettingsStore
+
+ This class stores information like badgeId, preferences and whatever
+ else we can think of. This goes into the flash memory.
+
+ See: https://github.com/sebnil/DueFlashStorage/blob/master/flash_efc.cpp#L845
 
  The MIT License (MIT)
 
@@ -27,21 +31,28 @@
  SOFTWARE.
  */
 
-#pragma once
+#ifndef _SETTINGS_STORE_H_
+#define _SETTINGS_STORE_H_
 
 #include <Arduino.h>
 #include <FreeRTOS_ARM.h>
 #include "EMF2014Config.h"
-#include "App.h"
-#include "RGBTask.h"
 
-class HomeScreenApp: public App {
+
+
+class SettingsStore {
 public:
-	String getName() const;
-protected:
-    void task();
-    void afterSuspension();
-    void beforeResume();
-private:
+    SettingsStore();
 
+    bool getUniqueId(uint32_t *unique_id);
+
+    uint16_t getBadgeId();
+    void setBadgeId(uint16_t badgeId);
+    bool hasBadgeId();
+
+    static const uint16_t BADGE_ID_UNKOWN;
+private:
+    uint16_t _badgeId;
 };
+
+#endif // _SETTINGS_STORE_H_
