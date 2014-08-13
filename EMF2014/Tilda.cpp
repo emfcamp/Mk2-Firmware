@@ -1,8 +1,7 @@
 /*
  TiLDA Mk2
 
- HomeScreenApp
- This is just a placeholder at the moment - Later this will be showing some sort of menu
+ TildaApi
 
  The MIT License (MIT)
 
@@ -27,21 +26,54 @@
  SOFTWARE.
  */
 
-#pragma once
-
-#include <Arduino.h>
+#include "Tilda.h"
 #include <FreeRTOS_ARM.h>
-#include "EMF2014Config.h"
-#include "App.h"
+#include "DebugTask.h"
 #include "RGBTask.h"
+#include "AppManager.h"
 
-class HomeScreenApp: public App {
-public:
-	String getName() const;
-protected:
-    void task();
-    void afterSuspension();
-    void beforeResume();
-private:
+RGBTask *Tilda::_rgbTask = NULL;
+AppManager *Tilda::_appManager = NULL;
 
-};
+Tilda::Tilda() {}
+
+ButtonSubscription Tilda::createButtonSubscription(uint16_t buttons) {
+    ButtonSubscription result;
+    result.addButtons(LIGHT | A | B | UP | DOWN | LEFT | RIGHT | CENTER);
+    return result;
+}
+
+void Tilda::log(String text) {
+    debug::log(text);
+}
+
+void Tilda::delay(uint16_t durationInMs) {
+    if (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING) {
+        vTaskDelay(durationInMs / portTICK_PERIOD_MS);
+    } else {
+        delay(durationInMs);
+    }
+}
+
+void Tilda::setLedColor(RGBLed led, RGBColor color) {
+    if (_rgbTask) {
+        _rgbTask->setColor(led, color);
+    }
+}
+
+void Tilda::setLedColor(RGBColor color) {
+    if (_rgbTask) {
+        _rgbTask->setColor(color);
+    }
+}
+
+void Tilda::openApp(String name) {
+    if (_appManager) {
+        _appManager->open(name);
+    }
+}
+
+void Tilda::setupTasks(AppManager* appManager, RGBTask* rgbTask) {
+    _appManager = appManager;
+    _rgbTask = rgbTask;
+}

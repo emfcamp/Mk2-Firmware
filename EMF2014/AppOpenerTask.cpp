@@ -31,6 +31,7 @@
 
 #include "ButtonSubscription.h"
 #include "DebugTask.h"
+#include "Tilda.h"
 
 AppOpenerTask::AppOpenerTask(AppManager& aAppManager)
     :mAppManager(aAppManager)
@@ -41,8 +42,7 @@ String AppOpenerTask::getName() const {
 }
 
 void AppOpenerTask::task() {
-    ButtonSubscription buttonSubscription;
-    buttonSubscription.addButtons(LIGHT | B);
+    ButtonSubscription buttonSubscription = Tilda::createButtonSubscription(LIGHT | B);
 
     while(true) {
         Button button = buttonSubscription.waitForPress();
@@ -50,7 +50,7 @@ void AppOpenerTask::task() {
             if (mAppManager.getActiveAppName() == "FlashLight") {
                 mAppManager.open("HomeScreen");
             } else {
-                mAppManager.open("FlashLight");           
+                mAppManager.open("FlashLight");
             }
         } else if (button == B) {
             mAppManager.open("HomeScreen");

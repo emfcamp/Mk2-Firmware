@@ -52,6 +52,7 @@
 #include "FlashLightApp.h"
 #include "HomeScreenApp.h"
 #include "TiLDAButtonInterrupts.h"
+#include "Tilda.h"
 #include "SettingsStore.h"
 
 /*
@@ -69,11 +70,12 @@ MessageCheckTask messageCheckTask;
 RadioTask radioTask(messageCheckTask);
 AppOpenerTask appOpenerTask(appManager);
 
-FlashLightApp flashLightApp(rgbTask);
-HomeScreenApp homeScreenApp(rgbTask);
+FlashLightApp flashLightApp;
+HomeScreenApp homeScreenApp;
 
 void setup() {
     debug::setup();
+    Tilda::setupTasks(&appManager, &rgbTask);
 
     // Uncomment this if you want to see serial output during startup
     // This will require you to send a character over serial before unblocking
@@ -98,7 +100,7 @@ void setup() {
     appManager.add(flashLightApp);
 
     // Boot into home screen
-    appManager.open("HomeScreen");
+    Tilda::openApp("HomeScreen");
 
     // Start scheduler
     debug::log("Start Scheduler");
