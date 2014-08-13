@@ -81,7 +81,7 @@ HomeScreenApp homeScreenApp;
 
 void setup() {
     debug::setup();
-    Tilda::setupTasks(&appManager, &rgbTask);
+    Tilda::setupTasks(&appManager, &rgbTask, &realTimeClock);
 
     // Uncomment this if you want to see serial output during startup
     // This will require you to send a character over serial before unblocking

@@ -34,6 +34,7 @@
 
 RGBTask *Tilda::_rgbTask = NULL;
 AppManager *Tilda::_appManager = NULL;
+RTC_clock *Tilda::_realTimeClock = NULL;
 
 Tilda::Tilda() {}
 
@@ -73,7 +74,12 @@ void Tilda::openApp(String name) {
     }
 }
 
-void Tilda::setupTasks(AppManager* appManager, RGBTask* rgbTask) {
+RTC_clock* Tilda::getClock() {
+    return _realTimeClock;
+}
+
+void Tilda::setupTasks(AppManager* appManager, RGBTask* rgbTask, RTC_clock* realTimeClock) {
     _appManager = appManager;
     _rgbTask = rgbTask;
+    _realTimeClock = realTimeClock;
 }

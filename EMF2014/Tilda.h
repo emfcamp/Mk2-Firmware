@@ -33,10 +33,12 @@
 
 #include <Arduino.h>
 #include <FreeRTOS_ARM.h>
+#include <rtc_clock.h>
 #include "EMF2014Config.h"
 #include "ButtonSubscription.h"
 #include "RGBTask.h"
 #include "AppManager.h"
+
 
 class Tilda {
 public:
@@ -46,12 +48,14 @@ public:
     static void setLedColor(RGBLed led, RGBColor color);
     static void setLedColor(RGBColor color);
     static void openApp(String name);
+    static RTC_clock* getClock();
 
     // This is not part of the actual API
-    static void setupTasks(AppManager* appManager, RGBTask* rgbTask);
+    static void setupTasks(AppManager* appManager, RGBTask* rgbTask, RTC_clock* realTimeClock);
 private:
     Tilda();
 
     static RGBTask* _rgbTask;
     static AppManager* _appManager;
+    static RTC_clock* _realTimeClock;
 };
