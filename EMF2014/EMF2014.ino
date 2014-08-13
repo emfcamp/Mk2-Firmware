@@ -35,11 +35,15 @@
  SOFTWARE.
  */
 
+// Reference all libraries that are used here, otherwise Arduino won't include them :(
 #include <FreeRTOS_ARM.h>
 #include <Sha1.h>
 #include <TinyPacks.h>
+#include <rtc_clock.h>
 #include "uECC.h"
 #include <Arduino.h>
+
+// These are the includes actually needed for this file:
 #include "EMF2014Config.h"
 #include "DebugTask.h"
 #include "RGBTask.h"
@@ -58,13 +62,15 @@
  * and in FreeRTOS we will start the scheduler
  */
 
+RTC_clock realTimeClock(RC);
+
 AppManager appManager;
 
 DebugTask debugTask;
 RGBTask rgbTask;
 ButtonTask buttonTask;
 MessageCheckTask messageCheckTask;
-RadioTask radioTask(messageCheckTask);
+RadioTask radioTask(messageCheckTask, realTimeClock);
 AppOpenerTask appOpenerTask(appManager);
 
 FlashLightApp flashLightApp(rgbTask);
@@ -74,10 +80,12 @@ void setup() {
     debug::setup();
 
     // Uncomment this if you want to see serial output during startup
-    // This will require you to send a character over serial before unblocking 
+    // This will require you to send a character over serial before unblocking
     // the startup
 
     debug::waitForKey();
+
+    realTimeClock.init();
 
     tildaButtonSetup();
     tildaButtonAttachInterrupts();
