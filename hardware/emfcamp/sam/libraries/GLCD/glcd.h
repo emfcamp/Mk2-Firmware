@@ -72,7 +72,7 @@ class glcd : public gText {
     int Init(uint8_t invert = NON_INVERTED);
     void SetDisplayMode(uint8_t mode); // NON_INVERTED or INVERTED,   was
                                        // SetInverted(uint8_t invert);
-    /*@}*/
+                                       /*@}*/
 
     /** @name DRAWING FUNCTIONS
      * The following graphic functions are available

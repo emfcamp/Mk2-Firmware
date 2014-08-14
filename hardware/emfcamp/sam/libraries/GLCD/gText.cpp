@@ -35,7 +35,7 @@ extern "C" {
 */
 
 //#define GLCD_OLD_FONTDRAW    // uncomment this define to get old font
-//rendering (not recommended)
+// rendering (not recommended)
 
 // extern glcd_Device GLCD; // this is the global GLCD instance, here upcast to
 // the base glcd_Device class
@@ -677,384 +677,370 @@ int gText::PutChar(uint8_t c) {
     }
     c -= firstChar;
 
-                    if( isFixedWidthFont(this->Font) {
-                      thielefont = 0;
-                      width = FontRead(this->Font+FONT_FIXED_WIDTH);
-                      index = c*bytes*width+FONT_WIDTH_TABLE;
-                    }
-                    else{
-                      // variable width font, read width data, to get the index
-                      thielefont = 1;
-                      /*
-                      * Because there is no table for the offset of where the data
-                      * for each character glyph starts, run the table and add up all the
-                      * widths of all the characters prior to the character we
-                      * need to locate.
-                      */
-                      for(uint8_t i=0; i<c; i++) {
-                        index += FontRead(this->Font+FONT_WIDTH_TABLE+i);
-                      }
-                      /*
-                      * Calculate the offset of where the font data
-                      * for our character starts.
-                      * The index value from above has to be adjusted because
-                      * there is potentialy more than 1 byte per column in the glyph,
-                      * when the characgter is taller than 8 bits.
-                      * To account for this, index has to be multiplied
-                      * by the height in bytes because there is one byte of font
-                      * data for each vertical 8 pixels.
-                      * The index is then adjusted to skip over the font width data
-                      * and the font header information.
-                      */
+    if (isFixedWidthFont(this->Font)) {
+        thielefont = 0;
+        width = FontRead(this->Font + FONT_FIXED_WIDTH);
+        index = c * bytes * width + FONT_WIDTH_TABLE;
+    } else {
+        // variable width font, read width data, to get the index
+        thielefont = 1;
+        /*
+        * Because there is no table for the offset of where the data
+        * for each character glyph starts, run the table and add up all the
+        * widths of all the characters prior to the character we
+        * need to locate.
+        */
+        for (uint8_t i = 0; i < c; i++) {
+            index += FontRead(this->Font + FONT_WIDTH_TABLE + i);
+        }
+        /*
+        * Calculate the offset of where the font data
+        * for our character starts.
+        * The index value from above has to be adjusted because
+        * there is potentialy more than 1 byte per column in the glyph,
+        * when the characgter is taller than 8 bits.
+        * To account for this, index has to be multiplied
+        * by the height in bytes because there is one byte of font
+        * data for each vertical 8 pixels.
+        * The index is then adjusted to skip over the font width data
+        * and the font header information.
+        */
 
-                      index = index*bytes+charCount+FONT_WIDTH_TABLE;
+        index = index * bytes + charCount + FONT_WIDTH_TABLE;
 
-                      /*
-                      * Finally, fetch the width of our character
-                      */
-                      width = FontRead(this->Font+FONT_WIDTH_TABLE+c);
-                    }
+        /*
+        * Finally, fetch the width of our character
+        */
+        width = FontRead(this->Font + FONT_WIDTH_TABLE + c);
+    }
 
 #ifndef GLCD_NODEFER_SCROLL
-                    /*
-                    * check for a defered scroll
-                    * If there is a deferred scroll,
-                    * Fake a newline to complete it.
-                    */
+    /*
+    * check for a defered scroll
+    * If there is a deferred scroll,
+    * Fake a newline to complete it.
+    */
 
-                    if(this->need_scroll)
-                      {
-                        this->PutChar('\n'); // fake a newline to cause wrap/scroll
-                        this->need_scroll = 0;
-                      }
+    if (this->need_scroll) {
+        this->PutChar('\n'); // fake a newline to cause wrap/scroll
+        this->need_scroll = 0;
+    }
 #endif
 
-                      /*
-                      * If the character won't fit in the text area,
-                      * fake a newline to get the text area to wrap and
-                      * scroll if necessary.
-                      * NOTE/WARNING: the below calculation assumes a 1 pixel pad.
-                      * This will need to be changed if/when configurable pixel padding is supported.
-                      */
-                      if(this->x + width > this->tarea.x2)
-                        {
-                          this->PutChar('\n'); // fake a newline to cause wrap/scroll
-                          #ifndef GLCD_NODEFER_SCROLL
-                          /*
-                          * We can't defer a scroll at this point since we need to ouput
-                          * a character right now.
-                          */
-                          if(this->need_scroll)
-                            {
-                              this->PutChar('\n'); // fake a newline to cause wrap/scroll
-                              this->need_scroll = 0;
-                            }
-                            #endif
-                          }
+    /*
+    * If the character won't fit in the text area,
+    * fake a newline to get the text area to wrap and
+    * scroll if necessary.
+    * NOTE/WARNING: the below calculation assumes a 1 pixel pad.
+    * This will need to be changed if/when configurable pixel padding is
+    * supported.
+    */
+    if (this->x + width > this->tarea.x2) {
+        this->PutChar('\n'); // fake a newline to cause wrap/scroll
+#ifndef GLCD_NODEFER_SCROLL
+        /*
+        * We can't defer a scroll at this point since we need to ouput
+        * a character right now.
+        */
+        if (this->need_scroll) {
+            this->PutChar('\n'); // fake a newline to cause wrap/scroll
+            this->need_scroll = 0;
+        }
+#endif
+    }
 
 // last but not least, draw the character
 
 #ifdef GLCD_OLD_FONTDRAW
-                          /*================== OLD FONT DRAWING ============================*/
-                          glcd_Device::GotoXY(this->x, this->y);
+    /*================== OLD FONT DRAWING ============================*/
+    glcd_Device::GotoXY(this->x, this->y);
 
-                          /*
-                          * Draw each column of the glyph (character) horizontally
-                          * 8 bits (1 page) at a time.
-                          * i.e. if a font is taller than 8 bits, draw upper 8 bits first,
-                          * Then drop down and draw next 8 bits and so on, until done.
-                          * This code depends on WriteData() doing writes that span LCD
-                          * memory pages, which has issues because the font data isn't
-                          * always a multiple of 8 bits.
-                          */
+    /*
+    * Draw each column of the glyph (character) horizontally
+    * 8 bits (1 page) at a time.
+    * i.e. if a font is taller than 8 bits, draw upper 8 bits first,
+    * Then drop down and draw next 8 bits and so on, until done.
+    * This code depends on WriteData() doing writes that span LCD
+    * memory pages, which has issues because the font data isn't
+    * always a multiple of 8 bits.
+    */
 
-                          for(uint8_t i=0; i<bytes; i++)	/* each vertical byte */
-                            {
-                              uint16_t page = i*width; // page must be 16 bit to prevent overflow
-                              for(uint8_t j=0; j<width; j++) /* each column */
-                                {
-                                  uint8_t data = FontRead(this->Font+index+page+j);
+    for (uint8_t i = 0; i < bytes; i++) /* each vertical byte */
+    {
+        uint16_t page = i * width; // page must be 16 bit to prevent overflow
+        for (uint8_t j = 0; j < width; j++) /* each column */
+        {
+            uint8_t data = FontRead(this->Font + index + page + j);
 
-                                  /*
-                                  * This funkyness is because when the character glyph is not a
-                                  * multiple of 8 in height, the residual bits in the font data
-                                  * were aligned to the incorrect end of the byte with respect
-                                  * to the GLCD. I believe that this was an initial oversight (bug)
-                                  * in Thieles font creator program. It is easily fixed
-                                  * in the font program but then creates a potential backward
-                                  * compatiblity problem.
-                                  *	--- bperrybap
-                                  */
+            /*
+            * This funkyness is because when the character glyph is not a
+            * multiple of 8 in height, the residual bits in the font data
+            * were aligned to the incorrect end of the byte with respect
+            * to the GLCD. I believe that this was an initial oversight (bug)
+            * in Thieles font creator program. It is easily fixed
+            * in the font program but then creates a potential backward
+            * compatiblity problem.
+            *	--- bperrybap
+            */
 
-                                  if(height > 8 && height < (i+1)*8)	/* is it last byte of multibyte tall font? */
-                                    {
-                                      data >>= (i+1)*8-height;
-                                    }
+            if (height > 8 && height < (i + 1) * 8) /* is it last byte of
+                                                       multibyte tall font? */
+            {
+                data >>= (i + 1) * 8 - height;
+            }
 
-                                    if(this->FontColor == BLACK) {
-                                      this->WriteData(data);
-                                    } else {
-                                      this->WriteData(~data);
-                                    }
-                                  }
-                                  // 1px gap between chars
-                                  if(this->FontColor == BLACK) {
-                                    this->WriteData(0x00);
-                                  } else {
-                                    this->WriteData(0xFF);
-                                  }
-                                  glcd_Device::GotoXY(this->x, glcd_Device::Coord.y+8);
-                                }
-                                this->x = this->x+width+1;
+            if (this->FontColor == BLACK) {
+                this->WriteData(data);
+            } else {
+                this->WriteData(~data);
+            }
+        }
+        // 1px gap between chars
+        if (this->FontColor == BLACK) {
+            this->WriteData(0x00);
+        } else {
+            this->WriteData(0xFF);
+        }
+        glcd_Device::GotoXY(this->x, glcd_Device::Coord.y + 8);
+    }
+    this->x = this->x + width + 1;
 
 /*================== END of OLD FONT DRAWING ============================*/
 #else
 
-                                /*================== NEW FONT DRAWING ===================================*/
+    /*================== NEW FONT DRAWING ===================================*/
 
-                                /*
-                                * Paint font data bits and write them to LCD memory 1 LCD page at a time.
-                                * This is very different from simply reading 1 byte of font data
-                                * and writing all 8 bits to LCD memory and expecting the write data routine
-                                * to fragement the 8 bits across LCD 2 memory pages when necessary.
-                                * That method (really doesn't work) and reads and writes the same LCD page
-                                * more than once as well as not do sequential writes to memory.
-                                *
-                                * This method of rendering while much more complicated, somewhat scrambles the font
-                                * data reads to ensure that all writes to LCD pages are always sequential and a given LCD
-                                * memory page is never read or written more than once.
-                                * And reads of LCD pages are only done at the top or bottom of the font data rendering
-                                * when necessary.
-                                * i.e it ensures the absolute minimum number of LCD page accesses
-                                * as well as does the sequential writes as much as possible.
-                                *
-                                */
+    /*
+    * Paint font data bits and write them to LCD memory 1 LCD page at a time.
+    * This is very different from simply reading 1 byte of font data
+    * and writing all 8 bits to LCD memory and expecting the write data routine
+    * to fragement the 8 bits across LCD 2 memory pages when necessary.
+    * That method (really doesn't work) and reads and writes the same LCD page
+    * more than once as well as not do sequential writes to memory.
+    *
+    * This method of rendering while much more complicated, somewhat scrambles
+    *the font
+    * data reads to ensure that all writes to LCD pages are always sequential
+    *and a given LCD
+    * memory page is never read or written more than once.
+    * And reads of LCD pages are only done at the top or bottom of the font data
+    *rendering
+    * when necessary.
+    * i.e it ensures the absolute minimum number of LCD page accesses
+    * as well as does the sequential writes as much as possible.
+    *
+    */
 
-                                uint8_t pixels = height +1; /* 1 for gap below character*/
-                                uint8_t p;
-                                uint8_t dy;
-                                uint8_t tfp;
-                                uint8_t dp;
-                                uint8_t dbyte;
-                                uint8_t fdata;
+    uint8_t pixels = height + 1; /* 1 for gap below character*/
+    uint8_t p;
+    uint8_t dy;
+    uint8_t tfp;
+    uint8_t dp;
+    uint8_t dbyte;
+    uint8_t fdata;
 
-                                for(p = 0; p < pixels;)
-                                  {
-                                    dy = this->y + p;
+    for (p = 0; p < pixels;) {
+        dy = this->y + p;
 
-                                    /*
-                                    * Align to proper Column and page in LCD memory
-                                    */
+        /*
+        * Align to proper Column and page in LCD memory
+        */
 
-                                    glcd_Device::GotoXY(this->x, (dy & ~7));
+        glcd_Device::GotoXY(this->x, (dy & ~7));
 
-                                    uint16_t page = p/8 * width; // page must be 16 bit to prevent overflow
+        uint16_t page =
+            p / 8 * width; // page must be 16 bit to prevent overflow
 
-                                    for(uint8_t j=0; j<width; j++) /* each column of font data */
-                                      {
+        for (uint8_t j = 0; j < width; j++) /* each column of font data */
+        {
 
-                                        /*
-                                        * Fetch proper byte of font data.
-                                        * Note:
-                                        * This code "cheats" to add the horizontal space/pixel row
-                                        * below the font.
-                                        * It essentially creates a font pixel of 0 when the pixels are
-                                        * out of the defined pixel map.
-                                        *
-                                        * fake a fondata read read when we are on the very last
-                                        * bottom "pixel". This lets the loop logic continue to run
-                                        * with the extra fake pixel. If the loop is not the
-                                        * the last pixel the pixel will come from the actual
-                                        * font data, but that is ok as it is 0 padded.
-                                        *
-                                        */
+            /*
+            * Fetch proper byte of font data.
+            * Note:
+            * This code "cheats" to add the horizontal space/pixel row
+            * below the font.
+            * It essentially creates a font pixel of 0 when the pixels are
+            * out of the defined pixel map.
+            *
+            * fake a fondata read read when we are on the very last
+            * bottom "pixel". This lets the loop logic continue to run
+            * with the extra fake pixel. If the loop is not the
+            * the last pixel the pixel will come from the actual
+            * font data, but that is ok as it is 0 padded.
+            *
+            */
 
-                                        if(p >= height)
-                                          {
-                                            /*
-                                            * fake a font data read for padding below character.
-                                            */
-                                            fdata = 0;
-                                          }
-                                          else
-                                            {
-                                              fdata = FontRead(this->Font+index+page+j);
+            if (p >= height) {
+                /*
+                * fake a font data read for padding below character.
+                */
+                fdata = 0;
+            } else {
+                fdata = FontRead(this->Font + index + page + j);
 
-                                              /*
-                                              * Have to shift font data because Thiele shifted residual
-                                              * font bits the wrong direction for LCD memory.
-                                              *
-                                              * The real solution to this is to fix the variable width font format to
-                                              * not shift the residual bits the wrong direction!!!!
-                                              */
-                                              if(thielefont && (height - (p&~7)) < 8)
-                                                {
-                                                  fdata >>= 8 - (height & 7);
-                                                }
-                                              }
+                /*
+                * Have to shift font data because Thiele shifted residual
+                * font bits the wrong direction for LCD memory.
+                *
+                * The real solution to this is to fix the variable width font
+                *format to
+                * not shift the residual bits the wrong direction!!!!
+                */
+                if (thielefont && (height - (p & ~7)) < 8) {
+                    fdata >>= 8 - (height & 7);
+                }
+            }
 
-                                              if(this->FontColor == WHITE)
-                                                fdata ^= 0xff;	/* inverted data for "white" font color	*/
+            if (this->FontColor == WHITE)
+                fdata ^= 0xff; /* inverted data for "white" font color	*/
 
+            /*
+            * Check to see if a quick full byte write of font
+            * data can be done.
+            */
 
-                                                /*
-                                                * Check to see if a quick full byte write of font
-                                                * data can be done.
-                                                */
+            if (!(dy & 7) && !(p & 7) && ((pixels - p) >= 8)) {
+                /*
+                * destination pixel is on a page boundary
+                * Font data is on byte boundary
+                * And there are 8 or more pixels left
+                * to paint so a full byte write can be done.
+                */
 
-                                                if(!(dy & 7) && !(p & 7) && ((pixels -p) >= 8))
-                                                  {
-                                                    /*
-                                                    * destination pixel is on a page boundary
-                                                    * Font data is on byte boundary
-                                                    * And there are 8 or more pixels left
-                                                    * to paint so a full byte write can be done.
-                                                    */
+                this->WriteData(fdata);
+                continue;
+            } else {
+                /*
+                * No, so must fetch byte from LCD memory.
+                */
+                dbyte = this->ReadData();
+            }
 
-                                                    this->WriteData(fdata);
-                                                    continue;
-                                                  }
-                                                  else
-                                                    {
-                                                      /*
-                                                      * No, so must fetch byte from LCD memory.
-                                                      */
-                                                      dbyte = this->ReadData();
-                                                    }
+            /*
+            * At this point there is either not a full page of data
+            * left to be painted  or the font data spans multiple font
+            * data bytes. (or both) So, the font data bits will be painted
+            * into a byte and then written to the LCD memory.page.
+            */
 
-                                                    /*
-                                                    * At this point there is either not a full page of data
-                                                    * left to be painted  or the font data spans multiple font
-                                                    * data bytes. (or both) So, the font data bits will be painted
-                                                    * into a byte and then written to the LCD memory.page.
-                                                    */
+            tfp = p;     /* font pixel bit position 		*/
+            dp = dy & 7; /* data byte pixel bit position */
 
+            /*
+            * paint bits until we hit bottom of page/byte
+            * or run out of pixels to paint.
+            */
+            while ((dp <= 7) && (tfp) < pixels) {
+                if (fdata & _BV(tfp & 7)) {
+                    dbyte |= _BV(dp);
+                } else {
+                    dbyte &= ~_BV(dp);
+                }
 
-                                                    tfp = p;		/* font pixel bit position 		*/
-                                                    dp = dy & 7;	/* data byte pixel bit position */
+                /*
+                * Check for crossing font data bytes
+                */
+                if ((tfp & 7) == 7) {
+                    fdata = FontRead(this->Font + index + page + j + width);
 
-                                                    /*
-                                                    * paint bits until we hit bottom of page/byte
-                                                    * or run out of pixels to paint.
-                                                    */
-                                                    while((dp <= 7) && (tfp) < pixels)
-                                                      {
-                                                        if(fdata & _BV(tfp & 7))
-                                                          {
-                                                            dbyte |= _BV(dp);
-                                                          }
-                                                          else
-                                                            {
-                                                              dbyte &= ~_BV(dp);
-                                                            }
+                    /*
+                    * Have to shift font data because Thiele shifted residual
+                    * font bits the wrong direction for LCD memory.
+                    *
+                    */
 
-                                                            /*
-                                                            * Check for crossing font data bytes
-                                                            */
-                                                            if((tfp & 7)== 7)
-                                                              {
-                                                                fdata = FontRead(this->Font+index+page+j+width);
+                    if ((thielefont) && ((height - tfp) < 8)) {
+                        fdata >>= (8 - (height & 7));
+                    }
 
-                                                                /*
-                                                                * Have to shift font data because Thiele shifted residual
-                                                                * font bits the wrong direction for LCD memory.
-                                                                *
-                                                                */
+                    if (this->FontColor == WHITE)
+                        fdata ^= 0xff; /* inverted data for "white" color
+                                          */
+                }
+                tfp++;
+                dp++;
+            }
 
-                                                                if((thielefont) && ((height - tfp) < 8))
-                                                                  {
-                                                                    fdata >>= (8 - (height & 7));
-                                                                  }
+            /*
+            * Now flush out the painted byte.
+            */
+            this->WriteData(dbyte);
+        }
 
-                                                                  if(this->FontColor == WHITE)
-                                                                    fdata ^= 0xff;	/* inverted data for "white" color	*/
-                                                                  }
-                                                                  tfp++;
-                                                                  dp++;
-                                                                }
+        /*
+        * now create a horizontal gap (vertical line of pixels) between
+        *characters.
+        * Since this gap is "white space", the pixels painted are oposite of the
+        * font color.
+        *
+        * Since full LCD pages are being written, there are 4 combinations of
+        *filling
+        * in the this gap page.
+        *	- pixels start at bit 0 and go down less than 8 bits
+        *	- pixels don't start at 0 but go down through bit 7
+        *	- pixels don't start at 0 and don't go down through bit 7 (fonts
+        *shorter than 6 hi)
+        *	- pixels start at bit 0 and go down through bit 7 (full byte)
+        *
+        * The code below creates a mask of the bits that should not be painted.
+        *
+        * Then it is easy to paint the desired bits since if the color is WHITE,
+        * the paint bits are set, and if the coloer is not WHITE the paint bits
+        *are stripped.
+        * and the paint bits are the inverse of the desired bits mask.
+        */
 
-                                                                /*
-                                                                * Now flush out the painted byte.
-                                                                */
-                                                                this->WriteData(dbyte);
-                                                              }
+        if ((dy & 7) || (pixels - p < 8)) {
+            uint8_t mask = 0;
 
-                                                              /*
-                                                              * now create a horizontal gap (vertical line of pixels) between characters.
-                                                              * Since this gap is "white space", the pixels painted are oposite of the
-                                                              * font color.
-                                                              *
-                                                              * Since full LCD pages are being written, there are 4 combinations of filling
-                                                              * in the this gap page.
-                                                              *	- pixels start at bit 0 and go down less than 8 bits
-                                                              *	- pixels don't start at 0 but go down through bit 7
-                                                              *	- pixels don't start at 0 and don't go down through bit 7 (fonts shorter than 6 hi)
-                                                              *	- pixels start at bit 0 and go down through bit 7 (full byte)
-                                                              *
-                                                              * The code below creates a mask of the bits that should not be painted.
-                                                              *
-                                                              * Then it is easy to paint the desired bits since if the color is WHITE,
-                                                              * the paint bits are set, and if the coloer is not WHITE the paint bits are stripped.
-                                                              * and the paint bits are the inverse of the desired bits mask.
-                                                              */
+            dbyte = this->ReadData();
 
+            if (dy & 7)
+                mask |= _BV(dy & 7) - 1;
 
+            if ((pixels - p) < 8)
+                mask |= ~(_BV(pixels - p) - 1);
 
-                                                              if((dy & 7) || (pixels - p < 8))
-                                                                {
-                                                                  uint8_t mask = 0;
+            if (this->FontColor == WHITE)
+                dbyte |= ~mask;
+            else
+                dbyte &= mask;
 
-                                                                  dbyte = this->ReadData();
+        } else {
+            if (this->FontColor == WHITE)
+                dbyte = 0xff;
+            else
+                dbyte = 0;
+        }
 
-                                                                  if(dy & 7)
-                                                                    mask |= _BV(dy & 7) -1;
+        this->WriteData(dbyte);
 
-                                                                    if((pixels-p) < 8)
-                                                                      mask |= ~(_BV(pixels - p) -1);
+        /*
+        * advance the font pixel for the pixels
+        * just painted.
+        */
 
+        p += 8 - (dy & 7);
+    }
 
-                                                                      if(this->FontColor == WHITE)
-                                                                        dbyte |= ~mask;
-                                                                        else
-                                                                          dbyte &= mask;
+    /*
+    * Since this rendering code always starts off with a GotoXY() it really
+    *isn't necessary
+    * to do a real GotoXY() to set the h/w location after rendering a character.
+    * We can get away with only setting the s/w version of X & Y.
+    *
+    * Since y didn't change while rendering, it is still correct.
+    * But update x for the pixels rendered.
+    *
+    */
 
-                                                                        }
-                                                                        else
-                                                                          {
-                                                                            if(this->FontColor == WHITE)
-                                                                              dbyte = 0xff;
-                                                                              else
-                                                                                dbyte = 0;
-                                                                              }
-
-                                                                              this->WriteData(dbyte);
-
-                                                                              /*
-                                                                              * advance the font pixel for the pixels
-                                                                              * just painted.
-                                                                              */
-
-                                                                              p += 8 - (dy & 7);
-                                                                            }
-
-
-                                                                            /*
-                                                                            * Since this rendering code always starts off with a GotoXY() it really isn't necessary
-                                                                            * to do a real GotoXY() to set the h/w location after rendering a character.
-                                                                            * We can get away with only setting the s/w version of X & Y.
-                                                                            *
-                                                                            * Since y didn't change while rendering, it is still correct.
-                                                                            * But update x for the pixels rendered.
-                                                                            *
-                                                                            */
-
-                                                                            this->x = this->x+width+1;
+    this->x = this->x + width + 1;
 
 /*================== END of NEW FONT DRAWING ============================*/
 
 #endif // NEW_FONTDRAW
 
-                                                                            return 1; // valid char
+    return 1; // valid char
 }
 
 /**
@@ -1287,9 +1273,9 @@ void gText::CursorTo(int8_t column) {
     if (this->Font == 0)
         return; // no font selected
                 /*
-    * Text position is relative to current text area
-    * negative value moves the cursor backwards
-    */
+* Text position is relative to current text area
+* negative value moves the cursor backwards
+*/
     if (column >= 0)
         this->x = column * (FontRead(this->Font + FONT_FIXED_WIDTH) + 1) +
                   this->tarea.x1;
@@ -1488,21 +1474,21 @@ void gText::SetTextMode(textMode mode) {
 uint8_t gText::CharWidth(uint8_t c) {
     uint8_t width = 0;
 
-                                                                                          if(isFixedWidthFont(this->Font){
-                                                                                            width = FontRead(this->Font+FONT_FIXED_WIDTH)+1;  // there is 1 pixel pad here
-                                                                                          }
-                                                                                          else{
-                                                                                            // variable width font
-                                                                                            uint8_t firstChar = FontRead(this->Font+FONT_FIRST_CHAR);
-                                                                                            uint8_t charCount = FontRead(this->Font+FONT_CHAR_COUNT);
+    if (isFixedWidthFont(this->Font)) {
+        width = FontRead(this->Font + FONT_FIXED_WIDTH) +
+                1; // there is 1 pixel pad here
+    } else {
+        // variable width font
+        uint8_t firstChar = FontRead(this->Font + FONT_FIRST_CHAR);
+        uint8_t charCount = FontRead(this->Font + FONT_CHAR_COUNT);
 
-                                                                                            // read width data
-                                                                                            if(c >= firstChar && c < (firstChar+charCount)) {
-                                                                                              c -= firstChar;
-                                                                                              width = FontRead(this->Font+FONT_WIDTH_TABLE+c)+1;
-                                                                                            }
-                                                                                          }
-                                                                                          return width;
+        // read width data
+        if (c >= firstChar && c < (firstChar + charCount)) {
+            c -= firstChar;
+            width = FontRead(this->Font + FONT_WIDTH_TABLE + c) + 1;
+        }
+    }
+    return width;
 }
 
 /**

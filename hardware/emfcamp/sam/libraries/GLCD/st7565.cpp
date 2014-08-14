@@ -199,7 +199,7 @@ void glcd_Device::_do_display() {
 
         ::LCDDataDoneFlag = 0;
         digitalWrite(LCD_A0, HIGH); // Select Data Mode
-        digitalWrite(LCD_CS, LOW); // Select LCD (why doesn't SPI do this?)
+        digitalWrite(LCD_CS, LOW);  // Select LCD (why doesn't SPI do this?)
         SPI.transferDMA(LCD_CS, _framebuffer[pagemap[p]], rxBuffer, 128,
                         SPI_LAST);
         while (::LCDDataDoneFlag == 0) {
