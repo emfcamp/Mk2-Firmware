@@ -303,8 +303,8 @@ static const uint8_t CAN1TX = 107;
 #define BUTTON_LIGHT          (43u) // should be 60 but seems I forgot to swap the trace with SRF_AT_COMMAND
 #define BUTTON_SCREEN_RIGHT   (46u)
 #define BUTTON_SCREEN_LEFT    (29u)
-#define BUTTON_A              (47u)
-#define BUTTON_B              (48u)
+#define BUTTON_A              (48u)
+#define BUTTON_B              (47u)
 #define BUTTON_UP             (27u)
 #define BUTTON_RIGHT          (25u)
 #define BUTTON_DOWN           (26u)
