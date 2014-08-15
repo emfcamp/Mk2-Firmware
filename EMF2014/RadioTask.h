@@ -33,6 +33,7 @@
 
 #include <Arduino.h>
 #include <FreeRTOS_ARM.h>
+#include <rtc_clock.h>
 #include "EMF2014Config.h"
 #include "Task.h"
 #include "MessageCheckTask.h"
@@ -46,7 +47,7 @@ private:
 	};
 
 public:
-	RadioTask(MessageCheckTask& aMessageCheckTask);
+	RadioTask(MessageCheckTask& aMessageCheckTask, RTC_clock& aRealTimeClock);
 
 	String getName() const;
 protected:
@@ -72,6 +73,7 @@ private:
 
 private:
 	MessageCheckTask& mMessageCheckTask;
+	RTC_clock& mRealTimeClock;
 
 	byte _messageBuffer[RADIO_MAX_MESSAGE_BUFFER_LENGTH];
 	uint16_t _messageBufferPosition;

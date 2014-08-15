@@ -28,7 +28,8 @@
 
 #include "DebugTask.h"
 #include <FreeRTOS_ARM.h>
- 
+#include "Tilda.h"
+
 
 namespace debug {
     // I tried to write this with a queue, but the C++ pointer gods
@@ -96,7 +97,7 @@ namespace debug {
     }
 
     /**
-     * Lights the debug led and waits for a key to be pressed in 
+     * Lights the debug led and waits for a key to be pressed in
      * the serial console before sending the text
      */
     void stopWithMessage(String text) {
@@ -116,7 +117,7 @@ namespace debug {
 
         serialPortMutex = 0;
 
-        pinMode(DEBUG_LED, OUTPUT);       
+        pinMode(DEBUG_LED, OUTPUT);
         digitalWrite(DEBUG_LED, LOW);
     }
 }
@@ -128,8 +129,9 @@ String DebugTask::getName() const {
 void DebugTask::task() {
     while(true) {
         // Not sure what to do here
-        debug::log("Still alive.");
-        vTaskDelay((5000/portTICK_PERIOD_MS));
+        debug::log("Still alive. "+ String(Tilda::getClock()->unixtime()));
+
+        vTaskDelay((1000/portTICK_PERIOD_MS));
     }
 }
 

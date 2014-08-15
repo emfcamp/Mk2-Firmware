@@ -35,8 +35,8 @@
 #define NO_CURRENT_MESSAGE 65535
 #define NO_CHANNEL_DISCOVERED 255
 
-RadioTask::RadioTask(MessageCheckTask& aMessageCheckTask)
-	:mMessageCheckTask(aMessageCheckTask)
+RadioTask::RadioTask(MessageCheckTask& aMessageCheckTask, RTC_clock& aRealTimeClock)
+	:mMessageCheckTask(aMessageCheckTask), mRealTimeClock(aRealTimeClock)
 {
 }
 
@@ -138,6 +138,11 @@ inline uint8_t RadioTask::_parsePacketBuffer(byte packetBuffer[], uint8_t packet
 inline void RadioTask::_handleDiscoveryPacket(byte packetBuffer[], uint8_t packetBufferLength, uint8_t rssi) {
 	uint8_t channel = packetBuffer[0];
 	uint32_t timestamp = _bytesToInt(packetBuffer[1], packetBuffer[2], packetBuffer[3], packetBuffer[4]);
+	if (!mRealTimeClock.has_been_set()) {
+		debug::log("Setting time to " + String(timestamp));
+		mRealTimeClock.set_unixtime(timestamp);
+	}
+
 	char identifier[3];
 	identifier[0] = packetBuffer[5];
 	identifier[1] = packetBuffer[6];
