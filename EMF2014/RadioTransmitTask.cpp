@@ -102,6 +102,10 @@ void RadioTransmitTask::respond() {
 				outgoingPacketBuffer[index++] = static_cast<byte>(uniqueId[i] >> 24);
 			}
 
+			while (index < RADIO_PACKET_LENGTH) {
+				outgoingPacketBuffer[index++] = 0;
+			}
+
 			RADIO_SERIAL.write(outgoingPacketBuffer, RADIO_PACKET_LENGTH);
 			RADIO_SERIAL.flush();
 		}
