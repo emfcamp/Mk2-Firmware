@@ -33,34 +33,34 @@
 #include "DataStore.h"
 #include "RadioMessageHandler.h"
 
-#define RID_RANGE_UNINDENTIFIED_BADGE 0x0000 //Unidentified Badges
-#define RID_RANGE_BADGE_ID_START 0x0001
-#define RID_RANGE_BADGE_ID_END 0x8FFF // Badge IDs (16384 badges max)
-#define RID_RANGE_SPECIAL_START 0x9000
-#define RID_RANGE_SPECIAL_END 0x9FFF //Special backend service (e.g. badge id negotiation)
-#define RID_RANGE_CONTENT_START 0xA000
-#define RID_RANGE_CONTENT_END 0xAFFF //Content (e.g. Schedule Saturday, Weather forecast)
-#define RID_RANGE_NON_CONTENT_START 0xB000
-#define RID_RANGE_NON_CONTENT_END 0xBFFF //Special non-content broadcasts (e.g. start reply-window, reply with badge id)
-#define RID_RANGE_RESERVED_START 0xC000
-#define RID_RANGE_RESERVED_RESERVED_END 0xFFFF //Reserved
+#define MAX_HANDLERS 20
 
 MessageCheckTask::MessageCheckTask() {
+	mHandlers = new HandlerItem*[MAX_HANDLERS];
+
+	for (int i = 0 ; i < MAX_HANDLERS ; ++i) {
+		mHandlers[i] = NULL;
+	}
 }
 
 MessageCheckTask::~MessageCheckTask() {
+	delete[] mHandlers;
 }
 
 String MessageCheckTask::getName() const {
 	return "MessageCheckTask";
 }
 
-void MessageCheckTask::setContentHandler(RadioMessageHandler& aHandler) {
-	mContentHandler = &aHandler;
-}
-
-void MessageCheckTask::setNonContentHandler(RadioMessageHandler& aHandler) {
-	mNonContentHandler = &aHandler;
+void MessageCheckTask::subscribe(RadioMessageHandler& aHandler, uint16_t aRangeStart, uint16_t aRangeEnd) {
+	for (int i = 0 ; i < MAX_HANDLERS ; ++i) {
+		if (mHandlers[i] == NULL) {
+			mHandlers[i] = new HandlerItem;
+			mHandlers[i]->mHandler = &aHandler;
+			mHandlers[i]->mRangeStart = aRangeStart;
+			mHandlers[i]->mRangeEnd = aRangeEnd;
+			break;
+		}
+	}
 }
 
 void MessageCheckTask::addIncomingMessage(IncomingRadioMessage *message) {
@@ -91,13 +91,17 @@ void MessageCheckTask::task() {
 				if (!uECC_verify(EMF_PUBLIC_KEY, digest, message->signature())) {
 					debug::log("MessageCheckTask: Can't validate message, ecc doesn't check out.");
 				} else {
-					if (message->rid() <= RID_RANGE_CONTENT_START &&
-			    		 message->rid() >= RID_RANGE_CONTENT_END) {
-						mContentHandler->handleMessage(*message);
-			    	} else if (message->rid() <= RID_RANGE_NON_CONTENT_START &&
-			    		 message->rid() >= RID_RANGE_NON_CONTENT_END) {
+					// we have a valid message so tell the handlers
+					debug::log("MessageCheckTask: valid message.");
 
-			    	}
+					for (int i = 0 ; i < MAX_HANDLERS ; ++i) {
+						if (mHandlers[i] != NULL
+								&& message->rid() >= mHandlers[i]->mRangeStart
+								&& message->rid() <= mHandlers[i]->mRangeEnd) {
+							debug::log("MessageCheckTask: dispatched!");
+							mHandlers[i]->mHandler->handleMessage(*message);
+						}
+					}
 			    }
 			}
 

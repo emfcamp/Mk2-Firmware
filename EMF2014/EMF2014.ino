@@ -77,13 +77,20 @@ RGBTask rgbTask;
 ButtonTask buttonTask;
 MessageCheckTask messageCheckTask;
 RadioReceiveTask radioReceiveTask(messageCheckTask, realTimeClock);
-RadioTransmitTask radioTransmitTask(radioReceiveTask);
+RadioTransmitTask radioTransmitTask(radioReceiveTask, settingsStore);
 AppOpenerTask appOpenerTask(appManager);
 
 FlashLightApp flashLightApp;
 HomeScreenApp homeScreenApp;
 
 void setup() {
+    randomSeed(analogRead(RANDOM_SEED_PIN));
+
+    // Setup radio communitcation
+    RADIO_SERIAL.begin(RADIO_SERIAL_BAUD);
+    // Setup AT Mode pin
+    pinMode(RADIO_AT_MODE_PIN, OUTPUT);
+
     debug::setup();
     Tilda::setupTasks(&appManager, &rgbTask, &realTimeClock);
 
@@ -99,7 +106,13 @@ void setup() {
     tildaButtonAttachInterrupts();
     tildaButtonInterruptPriority();
 
-    messageCheckTask.setContentHandler(dataStore);
+    messageCheckTask.subscribe(dataStore,
+                                RID_RANGE_CONTENT_START,
+                                RID_RANGE_CONTENT_END);
+
+    messageCheckTask.subscribe(radioTransmitTask,
+                                RID_START_TRANSMIT_WINDOW,
+                                RID_START_TRANSMIT_WINDOW);
 
     // Background tasks
     debugTask.start();

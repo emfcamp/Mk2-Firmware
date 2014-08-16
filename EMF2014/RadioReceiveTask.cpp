@@ -29,6 +29,7 @@
 #include "RadioReceiveTask.h"
 #include "DebugTask.h"
 #include "IncomingRadioMessage.h"
+#include "Utils.h"
 
 #include <FreeRTOS_ARM.h>
 
@@ -45,21 +46,6 @@ String RadioReceiveTask::getName() const {
 }
 
 void RadioReceiveTask::task() {
-
-	// Temporary: Remove me soon!
-	_outgoingPacketBuffer[0] = 0x90;
-	_outgoingPacketBuffer[1] = 0x03; // ping service
-	for (uint8_t i=2; i<RADIO_PACKET_LENGTH; i++) {
-		_outgoingPacketBuffer[i] = i - 2;
-	}
-	_outgoingPacketAvailable = true;
-
-	// Setup radio communitcation
-	RADIO_SERIAL.begin(RADIO_SERIAL_BAUD);
-
-	// Setup AT Mode pin
-	pinMode(RADIO_AT_MODE_PIN, OUTPUT);
-
 	_clearSerialBuffer();
 	_initialiseDiscoveryState();
 
@@ -137,7 +123,7 @@ inline uint8_t RadioReceiveTask::_parsePacketBuffer(byte packetBuffer[], uint8_t
 
 inline void RadioReceiveTask::_handleDiscoveryPacket(byte packetBuffer[], uint8_t packetBufferLength, uint8_t rssi) {
 	uint8_t channel = packetBuffer[0];
-	uint32_t timestamp = _bytesToInt(packetBuffer[1], packetBuffer[2], packetBuffer[3], packetBuffer[4]);
+	uint32_t timestamp = Utils::bytesToInt(packetBuffer[1], packetBuffer[2], packetBuffer[3], packetBuffer[4]);
 	if (!mRealTimeClock.has_been_set()) {
 		debug::log("Setting time to " + String(timestamp));
 		mRealTimeClock.set_unixtime(timestamp);
@@ -155,7 +141,7 @@ inline void RadioReceiveTask::_handleDiscoveryPacket(byte packetBuffer[], uint8_
 
 inline void RadioReceiveTask::_handleReceivePacket(byte packetBuffer[], uint8_t packetBufferLength) {
 	// the first two bytes are always describing the receiver
-	int packetReceiver = _bytesToInt(packetBuffer[0], packetBuffer[1]);
+	int packetReceiver = Utils::bytesToInt(packetBuffer[0], packetBuffer[1]);
 
 	/*if (_currentMessageReceiver != packetReceiver) {
 		debug::log("RadioReceiveTask: Still waiting for packets, but got new receiver. Was waiting for " + String(_remainingMessageLength) + " bytes");
@@ -171,7 +157,7 @@ inline void RadioReceiveTask::_handleReceivePacket(byte packetBuffer[], uint8_t 
 		// Set meta data variables
 		_messageBufferPosition = 0;
 		_currentMessageReceiver = packetReceiver;
-		_remainingMessageLength = _bytesToInt(packetBuffer[2], packetBuffer[3], packetBuffer[4], packetBuffer[5]);
+		_remainingMessageLength = Utils::bytesToInt(packetBuffer[2], packetBuffer[3], packetBuffer[4], packetBuffer[5]);
 		memcpy(_currentMessageHash, packetBuffer + 6, 12);
 		memcpy(_currentMessageSignature, packetBuffer + 18, 40);
 	} else {
@@ -257,7 +243,7 @@ inline void RadioReceiveTask::_initialiseReceiveState() {
 	_enterAtMode();
 	RADIO_SERIAL.println("ATZD3");  // output format <payload>|<rssi>
 	RADIO_SERIAL.println("ATPK3A"); // 58byte packet length
-	RADIO_SERIAL.println("ATCN" + _intToHex(_bestChannel)); // Channel
+	RADIO_SERIAL.println("ATCN" + Utils::intToHex(_bestChannel)); // Channel
 	RADIO_SERIAL.println("ATAC");   // apply
 	RADIO_SERIAL.flush();
 	_leaveAtMode();
@@ -269,31 +255,5 @@ inline void RadioReceiveTask::_initialiseReceiveState() {
 
 inline void RadioReceiveTask::_clearSerialBuffer() {
 	while (RADIO_SERIAL.available()) RADIO_SERIAL.read();
-}
-
-inline void RadioReceiveTask::_sendOutgoingBuffer() {
-	RADIO_SERIAL.write(_outgoingPacketBuffer, RADIO_PACKET_LENGTH);
-	RADIO_SERIAL.flush();
-	debug::log("RadioReceiveTask: Outgoing message sent");
-	//_outgoingPacketAvailable = false;
-}
-
-// ToDo: These could probably live somewhere else
-inline uint16_t RadioReceiveTask::_bytesToInt(byte b1, byte b2) {
-	int result = 0;
-	result = (result << 8) + b1;
-	result = (result << 8) + b2;
-	return result;
-}
-inline uint32_t RadioReceiveTask::_bytesToInt(byte b1, byte b2, byte b3, byte b4) {
-	int result = 0;
-	result = (result << 8) + b1;
-	result = (result << 8) + b2;
-	result = (result << 8) + b3;
-	result = (result << 8) + b4;
-	return result;
-}
-inline String RadioReceiveTask::_intToHex(uint8_t input) {
-	return String("0123456789abcdef"[input>>4]) + String("0123456789abcdef"[input&0xf]);
 }
 

@@ -54,16 +54,10 @@ protected:
 	void task();
 
 private:
-	RadioReceiveTask(const RadioReceiveTask& that)
-		:mMessageCheckTask(that.mMessageCheckTask),
-		mRealTimeClock(that.mRealTimeClock) {}
+	RadioReceiveTask(const RadioReceiveTask& that);
 
 	inline void _enterAtMode();
 	inline void _leaveAtMode();
-
-	inline uint16_t _bytesToInt(byte b1, byte b2);
-	inline uint32_t _bytesToInt(byte b1, byte b2, byte b3, byte b4);
-	inline String _intToHex(uint8_t input);
 
 	inline uint8_t _parsePacketBuffer(byte packetBuffer[], uint8_t packetBufferLength);
 
@@ -74,7 +68,6 @@ private:
 	inline void _initialiseDiscoveryState();
 	inline void _initialiseReceiveState();
 	inline void _clearSerialBuffer();
-	inline void _sendOutgoingBuffer();
 
 private:
 	MessageCheckTask& mMessageCheckTask;
@@ -91,9 +84,6 @@ private:
 	uint8_t _bestChannel;
 	TickType_t _discoveryFinishingTime;
 	TickType_t _lastMessageReceived;
-
-	byte _outgoingPacketBuffer[RADIO_PACKET_LENGTH];
-	bool _outgoingPacketAvailable;
 
 	RadioState _radioState;
 };

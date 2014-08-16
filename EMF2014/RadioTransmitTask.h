@@ -37,23 +37,30 @@
 #include "EMF2014Config.h"
 #include "Task.h"
 #include "RadioReceiveTask.h"
+#include "RadioMessageHandler.h"
 
-class RadioTransmitTask: public Task {
+class SettingsStore;
+
+class RadioTransmitTask: public Task, public RadioMessageHandler {
 public:
-	RadioTransmitTask(RadioReceiveTask& aRadioReceiveTask);
+	RadioTransmitTask(RadioReceiveTask& aRadioReceiveTask, const SettingsStore& aSettingsStore);
 
 	String getName() const;
 
-	void transmit();
+private:
+    RadioTransmitTask(const RadioTransmitTask&);
+
+    void respond();
+
+private: // from RadioMessageHandler
+	void handleMessage(const IncomingRadioMessage& aIncomingRadioMessage);
 
 protected:
 	void task();
 
 private:
-	RadioTransmitTask(const RadioTransmitTask& that);
-
-private:
 	RadioReceiveTask& mRadioReceiveTask;
+    const SettingsStore& mSettingsStore;
 
 	QueueHandle_t mQueue;
 };

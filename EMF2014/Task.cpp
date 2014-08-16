@@ -30,15 +30,50 @@
 
 #include "Task.h"
 
+Task::Task()
+    :mTaskHandle(NULL)
+{}
+
 Task::~Task() {
+    vTaskDelete(mTaskHandle);
 }
 
 void Task::start() {
-    BaseType_t taskHolder;
-    taskHolder = xTaskCreate(_task, "TASKNAME", ( uint8_t ) 255, static_cast<void*>(this), 2, &taskHandle);
-    if (taskHolder != pdPASS) {
-        debug::stopWithMessage("Failed to create " + getName() + " task");
+    if (mTaskHandle == NULL) {
+        debug::log("Start task: " + getName());
+        
+        // get and convert the task name
+        String taskName = getName();
+        char* name = new char[taskName.length()];
+        taskName.toCharArray(name, taskName.length());
+
+        // start the task
+        if (xTaskCreate(_task, name, ( uint8_t ) 255, static_cast<void*>(this), 2, &mTaskHandle) != pdPASS) {
+            debug::stopWithMessage("Failed to create " + getName() + " task");
+        }
+
+        delete[] name;
+    } else if (eTaskGetState(mTaskHandle) == eSuspended) {
+        debug::log("Resume task: " + getName());
+        beforeResume();
+        vTaskResume(mTaskHandle);
     }
+}
+
+void Task::suspend() {
+    if (mTaskHandle && eTaskGetState(mTaskHandle) != eSuspended) {
+        debug::log("Suspend task: " + getName());
+        vTaskSuspend(mTaskHandle);
+        afterSuspension();
+    } 
+}
+
+void Task::afterSuspension() {
+    // do nothing
+}
+
+void Task::beforeResume() {
+    // do nothing
 }
 
 // ToDo: Remove this function to save some stack 
@@ -52,6 +87,6 @@ void Task::taskCaller() {
     }
 }
 
-void Task::_task(void *referenceToClass) {
-    static_cast<Task*>(referenceToClass)->taskCaller();
+void Task::_task(void* self) {
+    static_cast<Task*>(self)->taskCaller();
 }

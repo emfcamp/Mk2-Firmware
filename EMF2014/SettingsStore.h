@@ -44,13 +44,17 @@ class SettingsStore {
 public:
     SettingsStore();
 
-    bool getUniqueId(uint32_t *unique_id);
+    bool getUniqueId(uint32_t* unique_id) const;
 
-    uint16_t getBadgeId();
+    uint16_t getBadgeId() const;
     void setBadgeId(uint16_t badgeId);
-    bool hasBadgeId();
+    bool hasBadgeId() const;
 
     static const uint16_t BADGE_ID_UNKOWN;
+
+private:
+    SettingsStore(const SettingsStore&);
+
 private:
     uint16_t _badgeId;
 };

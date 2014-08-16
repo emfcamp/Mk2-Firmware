@@ -30,34 +30,80 @@
 
 #include "RadioTransmitTask.h"
 #include "DebugTask.h"
+#include "Utils.h"
+#include "Tilda.h"
+#include "SettingsStore.h"
 
-RadioTransmitTask::RadioTransmitTask(RadioReceiveTask& aRadioRecieveTask)
-	:mRadioReceiveTask(aRadioRecieveTask)
-{
-}
+RadioTransmitTask::RadioTransmitTask(RadioReceiveTask& aRadioRecieveTask, const SettingsStore& aSettingsStore)
+	:mRadioReceiveTask(aRadioRecieveTask), mSettingsStore(aSettingsStore)
+{}
 
 String RadioTransmitTask::getName() const {
 	return "RadioTransmitTask";
 }
 
-void RadioTransmitTask::transmit() {
+void RadioTransmitTask::handleMessage(const IncomingRadioMessage& aIncomingRadioMessage) {
+	uint32_t transmitDuration = Utils::bytesToInt(aIncomingRadioMessage.content()[0],
+										aIncomingRadioMessage.content()[1],
+										aIncomingRadioMessage.content()[2],
+										aIncomingRadioMessage.content()[3]);
+
 	if( mQueue == 0 ) {
 		debug::log("RadioTransmitTask: incomingMessages queue has not been created");
 	} else {
-		if(xQueueSendToBack(mQueue, NULL, (TickType_t) 0) != pdPASS) {
+		if(xQueueSendToBack(mQueue, &transmitDuration, (TickType_t) 0) != pdPASS) {
 	        debug::log("RadioTransmitTask: Could not queue incoming message");
 	    }
 	}
 }
 
 void RadioTransmitTask::task() {
-	mQueue = xQueueCreate(10, 1);
+	mQueue = xQueueCreate(10, sizeof(uint32_t));
 
 	while(true) {
-		void* message;
-		if(xQueueReceive(mQueue, &message, portMAX_DELAY) == pdTRUE) {
-			debug::log("RadioTransmitTask: told to transmit");
+		uint32_t transmitDuration;
+		if(xQueueReceive(mQueue, &transmitDuration, portMAX_DELAY) == pdTRUE) {
+			mRadioReceiveTask.suspend();
+			debug::log("RadioTransmitTask: transmit duration (ms): " + String(transmitDuration));
+
+			uint32_t preDelay = random(0, transmitDuration);
+			uint32_t postDelay = transmitDuration - preDelay;
+
+			Tilda::delay(preDelay);
+			respond();
+			Tilda::delay(postDelay);
+
+			mRadioReceiveTask.start();
         }
 	}
+}
 
+void RadioTransmitTask::respond() {
+	if (!mSettingsStore.hasBadgeId()) {
+		debug::log("RadioTransmitTask: hasn't got a badge id");
+
+		uint32_t uniqueId[4];
+		if (mSettingsStore.getUniqueId(uniqueId)) {
+			debug::log("RadioTransmitTask: send our uniqueId: " + String(uniqueId[0]) + ":" + String(uniqueId[1]) + ":" + String(uniqueId[2]) + ":" + String(uniqueId[3]));
+			byte outgoingPacketBuffer[RADIO_PACKET_LENGTH];
+
+			uint8_t index = 0; 
+			// RID
+			outgoingPacketBuffer[index++] = 0x90;
+			outgoingPacketBuffer[index++] = 0x02;
+			// Badge id (we don't know our yet so send zero)
+			outgoingPacketBuffer[index++] = 0x00;
+			outgoingPacketBuffer[index++] = 0x00;
+			// Our unique id
+			for (int i = 0 ; i < 4 ; ++i) {
+				outgoingPacketBuffer[index++] = static_cast<byte>(uniqueId[i]);
+				outgoingPacketBuffer[index++] = static_cast<byte>(uniqueId[i] >> 8);
+				outgoingPacketBuffer[index++] = static_cast<byte>(uniqueId[i] >> 16);
+				outgoingPacketBuffer[index++] = static_cast<byte>(uniqueId[i] >> 24);
+			}
+
+			RADIO_SERIAL.write(outgoingPacketBuffer, RADIO_PACKET_LENGTH);
+			RADIO_SERIAL.flush();
+		}
+	}
 }
