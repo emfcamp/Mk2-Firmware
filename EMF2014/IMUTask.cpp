@@ -80,7 +80,7 @@ static void IMU_android_orient_cb(unsigned char orientation)
 }
 
 // Public
-String IMUTask::getName()
+String IMUTask::getName() const
 {
     return "IMUTask";
 }

@@ -45,8 +45,7 @@ static void IMU_android_orient_cb(unsigned char orientation);
 
 class IMUTask: public Task {
 public:
-    String getName();
-    void setup();
+    String getName() const;
     int8_t setSampleRate(TickType_t ms);
     EventGroupHandle_t eventGroup;
 protected:
@@ -57,6 +56,7 @@ private:
     uint8_t dmp_state;
     
     // functions
+    void setup();
     int8_t MPUSetup();
     static inline unsigned short inv_orientation_matrix_to_scalar(const signed char *mtx);
     static unsigned short inv_row_2_scale(const signed char *row);
