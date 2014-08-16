@@ -83,7 +83,7 @@ The functions affected are:
 #include <FreeRTOS_ARM.h>
 #include "glcd.h"
 
-String LCDTask::getName()
+String LCDTask::getName() const
 {
   return "LCD";
 }

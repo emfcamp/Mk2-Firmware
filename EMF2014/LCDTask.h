@@ -48,7 +48,7 @@ private:
 protected:
 
 public:
-  String getName();
+  String getName() const;
   void task();
 };
 

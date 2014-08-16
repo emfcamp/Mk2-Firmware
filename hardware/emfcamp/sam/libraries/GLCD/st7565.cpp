@@ -83,6 +83,7 @@ The functions affected are:
 #include "ST7565.h"
 #include "SPI.h"
 #include "glcd.h"
+#include <debug.h>
 #include <FreeRTOS_ARM.h>
 
 QueueHandle_t glcd_Device::_updateWaiting;
@@ -188,32 +189,31 @@ uint8_t reverse(uint8_t b) {
 
 // Never call this directly, as it has no mutex
 void glcd_Device::_do_display() {
-    bool suspend = 0;
-
     uint8_t col, maxcol, p;
+    debug::log("[glcd_Device::_do_display()]");
+    debug::logHWM();
 
-  uint8_t txBuffer[1024];
+    static uint8_t txBuffer[1024];
+    //txBuffer=(uint8_t*)malloc(1024*sizeof(uint8_t));
+    switch (_rotation)
+    {
+        case ROTATION_0:
+            memcpy(txBuffer,_framebuffer,sizeof(txBuffer));
+            break;
+        case ROTATION_90:
+            break;
+        case ROTATION_180:
+            for (uint16_t i = 0; i < 1024; i++)
+            {
+                txBuffer[1023-i] = reverse(_framebuffer[i]);
+            }
+            break;
+        case ROTATION_270:
+            break;
+    }
 
-  switch (_rotation)
-  {
-    case ROTATION_0:
-        memcpy(txBuffer,_framebuffer,sizeof(_framebuffer));
-        break;
-    case ROTATION_90:
-        break;
-    case ROTATION_180:
-        for (uint8_t i = 0; i < sizeof(_framebuffer); i++)
-        {
-              txBuffer[sizeof(_framebuffer)-i] = reverse(_framebuffer[i]);
-        }
-        break;
-    case ROTATION_270:
-        break;
-  }
-
-
+    debug::log("[glcd_Device::_do_display()] Starting write to screen");
     for (p = 0; p < 8; p++) {
-
         _command(CMD_SET_PAGE | pagemap[p]);
         // start at the beginning of the row
         col = 0;
@@ -223,13 +223,12 @@ void glcd_Device::_do_display() {
                  (((col + ST7565_STARTBYTES) >> 4) & 0x0F));
         _command(CMD_RMW);
 
-
         uint8_t rxBuffer[128]; //discarded
-        debug::logByteArray(txBuffer,1024);
+        //debug::logByteArray(txBuffer + DEVICE_WIDTH * pagemap[p], 128);
         ::LCDDataDoneFlag = 0;
         digitalWrite(LCD_A0, HIGH); // Select Data Mode
         digitalWrite(LCD_CS, LOW);  // Select LCD (why doesn't SPI do this?)
-        SPI.transferDMA(LCD_CS, _framebuffer + DEVICE_WIDTH  * (pagemap[p]) , rxBuffer, 128,
+        SPI.transferDMA(LCD_CS, txBuffer + DEVICE_WIDTH  * (pagemap[p]) , rxBuffer, 128,
                         SPI_LAST);
         while (::LCDDataDoneFlag == 0) {
             vTaskDelay(10);
@@ -237,6 +236,7 @@ void glcd_Device::_do_display() {
         digitalWrite(LCD_CS, HIGH);  // De-select LCD (why doesn't SPI do this?)
         ::LCDDataDoneFlag = 0;
     }
+    //free(txBuffer);
 }
 
 void glcd_Device::Display(void) {
