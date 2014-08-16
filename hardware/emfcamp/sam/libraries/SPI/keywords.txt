@@ -14,6 +14,9 @@ SPI	KEYWORD1
 begin			KEYWORD2
 end				KEYWORD2
 transfer		KEYWORD2
+transferDMA     KEYWORD2
+registerDMACallback KEYWORD2
+configureDMA    KEYWORD2
 #setBitOrder	KEYWORD2
 setDataMode		KEYWORD2
 setClockDivider	KEYWORD2

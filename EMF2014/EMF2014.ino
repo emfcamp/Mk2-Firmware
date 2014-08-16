@@ -43,6 +43,10 @@
 #include <TinyPacks.h>
 #include <rtc_clock.h>
 #include <uECC.h>
+#include "SPI.h"
+#include "glcd.h"
+#include "M2tk.h"
+#include "utility/m2ghglcd.h"
 #include <Arduino.h>
 
 // These are the includes actually needed for this file:
@@ -58,6 +62,7 @@
 #include "TiLDAButtonInterrupts.h"
 #include "Tilda.h"
 #include "SettingsStore.h"
+#include "LCDTask.h"
 
 /*
  * Setup is the main entry point for an Arduino sketch.
@@ -72,12 +77,18 @@ RGBTask rgbTask;
 ButtonTask buttonTask;
 MessageCheckTask messageCheckTask;
 RadioTask radioTask(messageCheckTask, realTimeClock);
+LCDTask lcdTask;
 AppOpenerTask appOpenerTask(appManager);
 
 FlashLightApp flashLightApp;
 HomeScreenApp homeScreenApp;
 
+
+
 void setup() {
+    // making sure this it not interferaing with LCD
+    pinMode(FLASH_CS, OUTPUT);
+    digitalWrite(FLASH_CS, HIGH);
     debug::setup();
     Tilda::setupTasks(&appManager, &rgbTask, &realTimeClock);
 
@@ -98,6 +109,8 @@ void setup() {
     buttonTask.start();
     messageCheckTask.start();
     radioTask.start();
+    lcdTask.start();
+
     appOpenerTask.start();
 
     // Applications
@@ -107,8 +120,8 @@ void setup() {
     // Boot into home screen
     Tilda::openApp("HomeScreen");
 
-    // Start scheduler
     debug::log("Start Scheduler");
+    // Start scheduler
     vTaskStartScheduler();
 
     debug::log("Insufficient RAM");
