@@ -26,10 +26,9 @@
  SOFTWARE.
  */
 
-#include "DebugTask.h"
+#include "debug.h"
 #include <FreeRTOS_ARM.h>
-#include "Tilda.h"
-
+ 
 
 namespace debug {
     // I tried to write this with a queue, but the C++ pointer gods
@@ -39,9 +38,6 @@ namespace debug {
     void log(String text) {
         // ToDo: Add other debug outputs
         if (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING) {
-            if (serialPortMutex == 0) {
-                serialPortMutex = xSemaphoreCreateMutex();
-            }
             if (xSemaphoreTake(serialPortMutex, ( TickType_t ) 10) == pdTRUE ) {
                 DEBUG_SERIAL.println(text);
             }
@@ -54,9 +50,6 @@ namespace debug {
     void logByteArray(const byte in[], int len) {
         // ToDo: Add other debug outputs
         if (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING) {
-            if (serialPortMutex == 0) {
-                serialPortMutex = xSemaphoreCreateMutex();
-            }
             if (xSemaphoreTake(serialPortMutex, ( TickType_t ) 10) == pdTRUE ) {
                 //DEBUG_SERIAL.print(String((char*)in));
                 int i;
@@ -97,7 +90,7 @@ namespace debug {
     }
 
     /**
-     * Lights the debug led and waits for a key to be pressed in
+     * Lights the debug led and waits for a key to be pressed in 
      * the serial console before sending the text
      */
     void stopWithMessage(String text) {
@@ -115,25 +108,13 @@ namespace debug {
         DEBUG_SERIAL.begin(115200);
         delay(250);
 
-        serialPortMutex = 0;
-
-        pinMode(DEBUG_LED, OUTPUT);
+        pinMode(DEBUG_LED, OUTPUT);       
         digitalWrite(DEBUG_LED, LOW);
+
+        serialPortMutex = xSemaphoreCreateMutex();
     }
 }
 
-String DebugTask::getName() const {
-    return "DebugTask";
-}
-
-void DebugTask::task() {
-    while(true) {
-        // Not sure what to do here
-        debug::log("Still alive. "+ String(Tilda::getClock()->unixtime()));
-
-        vTaskDelay((1000/portTICK_PERIOD_MS));
-    }
-}
 
 // I'm not even sure if this works...
 void vApplicationStackOverflowHook( TaskHandle_t xTask, signed char *pcTaskName ) {

@@ -37,6 +37,7 @@
 
 // Reference all libraries that are used here, otherwise Arduino won't include them :(
 #include <FreeRTOS_ARM.h>
+#include <debug.h>
 #include <Wire.h>
 #include <MPU6050.h>
 #include <Sha1.h>
@@ -48,7 +49,6 @@
 
 // These are the includes actually needed for this file:
 #include "EMF2014Config.h"
-#include "DebugTask.h"
 #include "RGBTask.h"
 #include "ButtonTask.h"
 #include "RadioTask.h"
@@ -71,8 +71,6 @@
 RTC_clock realTimeClock(RC);
 SettingsStore settingsStore;
 AppManager appManager;
-
-DebugTask debugTask;
 RGBTask rgbTask;
 ButtonTask buttonTask;
 MessageCheckTask messageCheckTask;
@@ -106,7 +104,6 @@ void setup() {
     tildaButtonInterruptPriority();
 
     // Background tasks
-    debugTask.start();
     imuTask.start();
     rgbTask.start();
     buttonTask.start();

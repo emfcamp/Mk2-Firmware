@@ -28,7 +28,7 @@
 
 #include "Tilda.h"
 #include <FreeRTOS_ARM.h>
-#include "DebugTask.h"
+#include <debug.h>
 #include "RGBTask.h"
 #include "AppManager.h"
 

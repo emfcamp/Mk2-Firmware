@@ -30,9 +30,10 @@
  */
 
 #include "IMUTask.h"
+#include <debug.h>
 #include <Wire.h>
 #include <MPU6050.h>
-#include "DebugTask.h"
+
 
 // forward declaration
 int8_t MPUSetup();

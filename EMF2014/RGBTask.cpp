@@ -28,9 +28,8 @@
 
 #include "RGBTask.h"
 
-#include "DebugTask.h"
-#include <string>
 #include <FreeRTOS_ARM.h>
+#include <debug.h>
 
 RGBTask::RGBTask() {
 }
