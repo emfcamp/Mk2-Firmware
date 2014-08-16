@@ -54,10 +54,17 @@ commands to a GLCD device.
 #define _BV(bit) (1 << (bit))
 #endif
 
+#ifdef LCD_ADAFRUIT
+#define ST7565_STARTBYTES 3
+#else
 #define ST7565_STARTBYTES 4
+#endif
 
-const uint8_t pagemap[] = { 7, 6, 5, 4, 3, 2, 1, 0 };
-
+#ifdef LCD_ADAFRUIT
+const uint8_t pagemap[] = { 4, 5, 6, 7, 0, 1, 2, 3 };
+#else
+const uint8_t pagemap[] = { 0, 1, 2, 3, 4, 5, 6, 7 };
+#endif
 /// @cond hide_from_doxygen
 typedef struct {
     uint8_t x;

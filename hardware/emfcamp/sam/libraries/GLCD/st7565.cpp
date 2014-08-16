@@ -86,6 +86,7 @@ The functions affected are:
 #include <debug.h>
 #include <FreeRTOS_ARM.h>
 
+
 QueueHandle_t glcd_Device::_updateWaiting;
 SemaphoreHandle_t glcd_Device::frameBufferMutex;
 uint8_t glcd_Device::_framebuffer[DEVICE_HEIGHT / 8 * DEVICE_WIDTH];
@@ -128,7 +129,11 @@ void glcd_Device::Init(void) {
 
     // Reset Sequence LCD must not be selected, but in command mode
     digitalWrite(LCD_A0, LOW);
+    #ifdef LCD_ADAFRUIT
+    digitalWrite(LCD_CS, LOW);
+    #else
     digitalWrite(LCD_CS, HIGH);
+    #endif
     digitalWrite(LCD_RESET, LOW);
     delay(200);
     digitalWrite(LCD_RESET, HIGH);
@@ -140,14 +145,23 @@ void glcd_Device::Init(void) {
     SPI.configureDMA();
     SPI.registerDMACallback(spiDMADoneCallback);
 
+#ifdef LCD_ADAFRUIT
+    // LCD bias select
+    _command(CMD_SET_BIAS_7);
+#else
     // LCD bias select
     _command(CMD_SET_BIAS_9);
+#endif
+
     // ADC select
     _command(CMD_SET_ADC_REVERSE);
     // SHL select
     _command(CMD_SET_COM_NORMAL);
+
+#ifndef LCD_ADAFRUIT
     // Static Off
     _command(CMD_SET_STATIC_OFF);
+#endif
     // Initial display line
     _command(CMD_SET_DISP_START_LINE);
     // turn on voltage converter (VC=1, VR=0, VF=0)
@@ -163,9 +177,12 @@ void glcd_Device::Init(void) {
     // wait
     delay(50);
 
+#ifdef LCD_ADAFRUIT
+    _command(CMD_SET_RESISTOR_RATIO | 0x6);
+#else
     // set lcd operating voltage (regulator resistor, ref voltage resistor)
     _command(CMD_SET_RESISTOR_RATIO | 0x7);
-
+#endif
     // Library Initialisation
     _x = 0;
     _y = 0;
@@ -174,8 +191,11 @@ void glcd_Device::Init(void) {
     _command(CMD_SET_ALLPTS_NORMAL);
     _command(CMD_DISPLAY_ON);
     // st7565_set_brightness(contrast);
-
+#ifdef LCD_ADAFRUIT
+    _set_brightness(0x18);
+#else
     _set_brightness(0x08);
+#endif
     // Ensure display is cleared
     memset(this->_framebuffer, 0x00, sizeof(_framebuffer));
 }
@@ -214,6 +234,7 @@ void glcd_Device::_do_display() {
 
     debug::log("[glcd_Device::_do_display()] Starting write to screen");
     for (p = 0; p < 8; p++) {
+        debug::log("page: " + String(p) + " mapped: " + String(pagemap[p]));
         _command(CMD_SET_PAGE | pagemap[p]);
         // start at the beginning of the row
         col = 0;
@@ -228,7 +249,7 @@ void glcd_Device::_do_display() {
         ::LCDDataDoneFlag = 0;
         digitalWrite(LCD_A0, HIGH); // Select Data Mode
         digitalWrite(LCD_CS, LOW);  // Select LCD (why doesn't SPI do this?)
-        SPI.transferDMA(LCD_CS, txBuffer + DEVICE_WIDTH  * (pagemap[p]) , rxBuffer, 128,
+        SPI.transferDMA(LCD_CS, txBuffer + DEVICE_WIDTH  * p , rxBuffer, 128,
                         SPI_LAST);
         while (::LCDDataDoneFlag == 0) {
             vTaskDelay(10);
