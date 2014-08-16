@@ -36,14 +36,14 @@ RGBTask::RGBTask() {
 
 void RGBTask::setColor(RGBLed led, RGBColor color) {
     if (led == LED1 || led == BOTH) {
-        analogWrite(LED1_RED, 255 - color.red);
-        analogWrite(LED1_GREEN, 255 - color.green);
-        analogWrite(LED1_BLUE, 255 - color.blue);
+        analogWrite(LED1_RED, color.red);
+        analogWrite(LED1_GREEN, color.green);
+        analogWrite(LED1_BLUE, color.blue);
     }
     if (led == LED2 || led == BOTH) {
-        analogWrite(LED2_RED, 255 - color.red);
-        analogWrite(LED2_GREEN, 255 - color.green);
-        analogWrite(LED2_BLUE, 255 - color.blue);
+        analogWrite(LED2_RED, color.red);
+        analogWrite(LED2_GREEN, color.green);
+        analogWrite(LED2_BLUE, color.blue);
     }
 }
 
