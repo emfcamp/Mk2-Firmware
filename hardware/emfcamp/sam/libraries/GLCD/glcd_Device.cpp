@@ -35,7 +35,7 @@ configuration.
 #define _BV(bit) (1 << (bit))
 #endif
 
-glcd_Device::glcd_Device() {_rotation = ROTATION_180;}
+glcd_Device::glcd_Device() {_rotation = ROTATION_0;}
 
 /**
 * set pixel at x,y to the given color
