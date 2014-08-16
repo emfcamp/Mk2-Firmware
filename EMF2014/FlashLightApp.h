@@ -27,8 +27,7 @@
  SOFTWARE.
  */
 
-#ifndef _FLASH_LIGHT_APP_H_
-#define _FLASH_LIGHT_APP_H_
+#pragma once
 
 #include <Arduino.h>
 #include <FreeRTOS_ARM.h>
@@ -39,17 +38,15 @@
 
 class FlashLightApp: public App {
 public:
-	FlashLightApp(RGBTask rgbTask): _rgbTask(rgbTask), _lightLevel(8) {};
-	String getName();
+	FlashLightApp();
+
+	String getName() const;
 protected:
     void task();
     void afterSuspension();
     void beforeResume();
 private:
 	void updateLeds();
-	RGBTask _rgbTask;
-	signed char _lightLevel;
-	ButtonSubscription *_pbuttons;
+	unsigned char _lightLevel;
+	ButtonSubscription *_buttonSubscription;
 };
-
-#endif // _FLASH_LIGHT_APP_H_

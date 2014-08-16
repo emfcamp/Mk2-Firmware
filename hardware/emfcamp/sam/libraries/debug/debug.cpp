@@ -26,9 +26,9 @@
  SOFTWARE.
  */
 
-#include "DebugTask.h"
+#include "debug.h"
 #include <FreeRTOS_ARM.h>
-
+ 
 
 namespace debug {
     // I tried to write this with a queue, but the C++ pointer gods
@@ -47,11 +47,39 @@ namespace debug {
         }
     }
 
+    void logByteArray(const byte in[], int len) {
+        // ToDo: Add other debug outputs
+        if (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING) {
+            if (xSemaphoreTake(serialPortMutex, ( TickType_t ) 10) == pdTRUE ) {
+                //DEBUG_SERIAL.print(String((char*)in));
+                int i;
+                for (i=0; i<len; i++) {
+                    DEBUG_SERIAL.print("0123456789abcdef"[in[i]>>4]);
+                    DEBUG_SERIAL.print("0123456789abcdef"[in[i]&0xf]);
+                    DEBUG_SERIAL.print(" ");
+                }
+                DEBUG_SERIAL.println();
+            }
+            xSemaphoreGive(serialPortMutex);
+        } else {
+            DEBUG_SERIAL.println("Can't print hash, scheduler not running.");
+        }
+    }
+
+    void logHWM() {
+         if (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING) {
+            UBaseType_t uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
+            DEBUG_SERIAL.println("HWM: " + String(uxHighWaterMark));
+        } else {
+            DEBUG_SERIAL.println("HWM: not running");
+        }
+    }
+
     void logFromISR(String text) {
         // ToDo: Add other debug outputs
         if (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING) {
             if (xSemaphoreTakeFromISR(serialPortMutex, NULL) == pdTRUE) {
-                DEBUG_SERIAL.println(text);
+                    DEBUG_SERIAL.println(text);
                 BaseType_t xHigherPriorityTaskWoken;
                 xSemaphoreGiveFromISR(serialPortMutex, &xHigherPriorityTaskWoken);
                 portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
@@ -87,17 +115,6 @@ namespace debug {
     }
 }
 
-String DebugTask::getName() {
-    return "DebugTask";
-}
-
-void DebugTask::task() {
-    while(true) {
-        // Not sure what to do here
-        debug::log("Still alive.");
-        vTaskDelay((1000/portTICK_PERIOD_MS));
-    }
-}
 
 // I'm not even sure if this works...
 void vApplicationStackOverflowHook( TaskHandle_t xTask, signed char *pcTaskName ) {

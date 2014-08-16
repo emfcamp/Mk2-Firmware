@@ -28,14 +28,21 @@
 #include "FlashLightApp.h"
 
 #include <FreeRTOS_ARM.h>
+#include <debug.h>
 
 #include "ButtonSubscription.h"
-#include "DebugTask.h"
 #include "RGBTask.h"
 #include "AppManager.h"
+#include "Tilda.h"
+
+FlashLightApp::FlashLightApp()
+    :_lightLevel(8), _buttonSubscription(NULL)
+{
+
+}
 
 // ToDo: Add all the fancy features from https://github.com/emfcamp/Mk2-Firmware/blob/master/frRGBTask/frRGBTask.ino
-String FlashLightApp::getName() {
+String FlashLightApp::getName() const {
     return "FlashLight";
 }
 
@@ -44,17 +51,15 @@ void FlashLightApp::updateLeds() {
     if (_lightLevel == 8) {
         actualLightLevel = 255;
     }
-    _rgbTask.setColor({actualLightLevel, actualLightLevel, actualLightLevel});
+    Tilda::setLedColor({actualLightLevel, actualLightLevel, actualLightLevel});
 }
 
 void FlashLightApp::task() {
-    ButtonSubscription _buttons;
-    _pbuttons =& _buttons;
-    _buttons.addButtons(UP | DOWN);
-
+    ButtonSubscription buttonSubscription = Tilda::createButtonSubscription(UP | DOWN);
+    _buttonSubscription = &buttonSubscription;
     updateLeds();
     while(true) {
-        Button button = _buttons.waitForPress(( TickType_t ) 1000);
+        Button button = _buttonSubscription->waitForPress(( TickType_t ) 1000);
         if (button == UP) {
             if (_lightLevel < 8) {
                 _lightLevel++;
@@ -74,13 +79,13 @@ void FlashLightApp::task() {
 }
 
 void FlashLightApp::afterSuspension() {
-    _rgbTask.setColor({0, 0, 0});
+    Tilda::setLedColor({0, 0, 0});
 }
 
 void FlashLightApp::beforeResume() {
-    if (_pbuttons) {
-        // Clear Button Queue of any up/down button presse that have occured durind suspension
-        _pbuttons->clear();
+    if (_buttonSubscription) {
+        // Clear Button Queue of any up/down button pressed that have occured durind suspension
+        _buttonSubscription->clear();
     }
     updateLeds();
 }

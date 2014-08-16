@@ -26,14 +26,21 @@
  SOFTWARE.
  */
 #include <FreeRTOS_ARM.h>
-#include "DebugTask.h"
+#include <debug.h>
 #include "EMF2014Config.h"
 #include "AppManager.h"
 
-App * _apps[MAX_APPS];
-App * activeApp;
+AppManager::AppManager() {
+    for (uint8_t i=0; i<MAX_APPS; i++) {
+        _apps[i] = NULL;
+    }
+}
 
-void AppManager::add(App &app) {
+AppManager::~AppManager() {
+
+}
+
+void AppManager::add(App& app) {
     for (uint8_t i=0; i<MAX_APPS; i++) {
         if (_apps[i] == NULL) {
             _apps[i] =& app;
@@ -42,7 +49,7 @@ void AppManager::add(App &app) {
     }
 }   
 
-App & AppManager::getByName(String name) {
+App& AppManager::getByName(const String& name) const {
     for (uint8_t i=0; i<MAX_APPS; i++) {
         if (_apps[i] != NULL) {
             if (_apps[i]->getName() == name) {
@@ -54,7 +61,7 @@ App & AppManager::getByName(String name) {
     return *_apps[0];
 }  
 
-void AppManager::open(App & app) {
+void AppManager::open(App& app) {
     debug::log("Opening " + app.getName());
     if (activeApp) {
         debug::log("Current Active App " + activeApp->getName());
@@ -66,16 +73,16 @@ void AppManager::open(App & app) {
         activeApp->suspend();
     }
     app.start();
-    activeApp =& app;
+    activeApp = &app;
 } 
 
-String AppManager::getActiveAppName() {
+String AppManager::getActiveAppName() const {
     if (activeApp) {
         return activeApp->getName();
     }
     return "";
 }
 
-void AppManager::open(String name) {
+void AppManager::open(const String& name) {
     open(getByName(name));
 }

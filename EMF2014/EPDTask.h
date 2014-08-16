@@ -29,8 +29,7 @@
  SOFTWARE.
  */
 
-#ifndef _EPD_TASK_H_
-#define _EPD_TASK_H_
+#pragma once
 
 #include <Arduino.h>
 #include <FreeRTOS_ARM.h>
@@ -38,4 +37,3 @@
 
 
 
-#endif // _EPD_TASK_H_

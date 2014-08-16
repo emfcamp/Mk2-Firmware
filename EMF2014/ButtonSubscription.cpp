@@ -27,25 +27,29 @@
  */
 
 #include "ButtonSubscription.h"
-#include "DebugTask.h"
+#include <debug.h>
 #include <FreeRTOS_ARM.h>
 #include "TiLDAButtonInterrupts.h"
 #include "EMF2014Config.h"
 
 ButtonSubscription::ButtonSubscription() {
-    _queue = xQueueCreate(1, sizeof(Button));
-    configASSERT(_queue);
-    _buttons = 0;
+    mQueue = xQueueCreate(1, sizeof(Button));
+    configASSERT(mQueue);
+    mButtons = 0;
 }
 
-void ButtonSubscription::addButtons(int buttons) {
-    _buttons = _buttons | buttons;
-    addQueueToButtons(buttons, _queue);
+ButtonSubscription::~ButtonSubscription() {
+    vQueueDelete(mQueue);
+}
+
+void ButtonSubscription::addButtons(uint16_t buttons) {
+    mButtons = mButtons | buttons;
+    addQueueToButtons(mButtons, mQueue);
 }
 
 Button ButtonSubscription::waitForPress(TickType_t ticksToWait) {
     Button button;
-    if(xQueueReceive( _queue, &button, ticksToWait) == pdTRUE) {
+    if(xQueueReceive(mQueue, &button, ticksToWait) == pdTRUE) {
         return button;
     }
     return NONE;
@@ -56,8 +60,5 @@ Button ButtonSubscription::waitForPress() {
 }
 
 void ButtonSubscription::clear() {
-    xQueueReset( _queue);
+    xQueueReset(mQueue);
 }
-
-
-

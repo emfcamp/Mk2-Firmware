@@ -34,8 +34,7 @@
  SOFTWARE.
  */
 
-#ifndef _PMIC_TASK_H_
-#define _PMIC_TASK_H_
+#pragma once
 
 #include <Arduino.h>
 #include <FreeRTOS_ARM.h>
@@ -58,7 +57,7 @@ static void PMICChargeStateInterrupt(void);
 
 class PMICTask: public Task {
 public:
-    String getName();
+    String getName() const;
     uint32_t getBatteryReading();
     float getBatteryVoltage();
     uint8_t getBatteryPercent();
@@ -74,5 +73,3 @@ private:
 };
 
 extern PMICTask PMIC;
-
-#endif // _PMIC_TASK_H_

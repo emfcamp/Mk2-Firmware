@@ -28,28 +28,33 @@
 #include "AppOpenerTask.h"
 
 #include <FreeRTOS_ARM.h>
+#include <debug.h>
 
 #include "ButtonSubscription.h"
-#include "DebugTask.h"
+#include "Tilda.h"
 
-String AppOpenerTask::getName() {
+
+AppOpenerTask::AppOpenerTask(AppManager& aAppManager)
+    :mAppManager(aAppManager)
+{}
+
+String AppOpenerTask::getName() const {
     return "AppOpener";
 }
 
 void AppOpenerTask::task() {
-    ButtonSubscription buttonSubscription;
-    buttonSubscription.addButtons(LIGHT | B);
+    ButtonSubscription buttonSubscription = Tilda::createButtonSubscription(LIGHT | B);
 
     while(true) {
         Button button = buttonSubscription.waitForPress();
         if (button == LIGHT) {
-            if (AppManager::getActiveAppName() == "FlashLight") {
-                AppManager::open("HomeScreen");
+            if (mAppManager.getActiveAppName() == "FlashLight") {
+                mAppManager.open("HomeScreen");
             } else {
-                AppManager::open("FlashLight");           
+                mAppManager.open("FlashLight");
             }
         } else if (button == B) {
-            AppManager::open("HomeScreen");
+            mAppManager.open("HomeScreen");
         }
     }
 

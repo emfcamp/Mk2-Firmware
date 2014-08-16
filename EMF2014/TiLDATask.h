@@ -26,13 +26,9 @@
  SOFTWARE.
  */
 
-#ifndef _TILDA_TASK_H_
-#define _TILDA_TASK_H_
+#pragma once
 
 #include <Arduino.h>
 #include <FreeRTOS_ARM.h>
 #include "EMF2014Config.h"
 
-
-
-#endif // _TILDA_TASK_H_

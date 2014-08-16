@@ -28,8 +28,7 @@
  SOFTWARE.
  */
 
-#ifndef _TILDA_BUTTON_INTERRUPTS_H_
-#define _TILDA_BUTTON_INTERRUPTS_H_
+#pragma once
 
 #include <Arduino.h>
 #include <FreeRTOS_ARM.h>
@@ -55,5 +54,3 @@ void tildaButtonAttachInterrupts();
 void tildaButtonDetachInterrupts();
 
 void addQueueToButtons(uint32_t buttons, QueueHandle_t queue);
-
-#endif // _TILDA_BUTTON_INTERRUPTS_H_

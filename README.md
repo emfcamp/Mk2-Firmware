@@ -3,9 +3,9 @@ TiLDA v2 Firmware
 
 #### Firmware on the TiLDA v2 Badge
 * To use this code you need Arduino IDE version 1.5.7 or later which can be downloaded [here](http://arduino.cc/en/Main/Software#toc3).
-* The easiest way to work with this repo is to set it as the sketchbook folder in the IDE's File->Prefrences menu (restart the IDE after changing this setting).
+* The easiest way to work with this repo is to set it as the sketchbook folder in the IDE's File->Preferences menu (restart the IDE after changing this setting).
 * This way you will not have any conflicts with your existing sketchbook and library folders.
-* N.B. Arduino 1.5.7 stores its preferences in a seperate location to that of the Arduino 1.0.x IDE).
+* N.B. Arduino 1.5.7 stores its preferences in a separate location to that of the Arduino 1.0.x IDE).
 
 
 * The TiLDA code base if split in 3 distinct sections:
@@ -16,7 +16,7 @@ TiLDA v2 Firmware
 
 
 #### hardware/
-* This folder contains _TiLDA Mk2_ board definition for use with the Arduino IDE (version -> 1.5.5).
+* This folder contains _TiLDA Mk2_ board definition for use with the Arduino IDE (version -> 1.5.7).
 * To use: copy the **emfcamp** folder to your **~/sketchbook/hardware/** folder.
 * You can then select _TiLDA Mk2_ from the _Tools->Board_ menu.
 * To use the **FTDI** upload port you will need to manually erase the board before uploading a new sketch (short the **Erase** pins for 1 second).
@@ -29,5 +29,10 @@ TiLDA v2 Firmware
 
 
 #### frRGBTask/
-* This is the first fully fuctional test of the RGB Task.
+* This is the first fully functional test of the RGB Task.
 * Some of the buttons are set up to test the different RGB modes.
+
+
+#### Contributing
+* If you wish to work on code please fork our repo, do your work in a branch and submit a pull request for review
+* Please do not commit to master

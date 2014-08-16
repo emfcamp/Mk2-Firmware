@@ -28,8 +28,7 @@
  SOFTWARE.
  */
 
-#ifndef _BUTTON_SUBSCRIPTION_H_
-#define _BUTTON_SUBSCRIPTION_H_
+#pragma once
 
 #include <Arduino.h>
 #include <FreeRTOS_ARM.h>
@@ -38,13 +37,14 @@
 class ButtonSubscription {
 public:
 	ButtonSubscription();
-    void addButtons(int buttons);
+    ~ButtonSubscription();
+
+    void addButtons(uint16_t buttons);
     Button waitForPress(TickType_t ticksToWait);
     Button waitForPress();
     void clear();
-private:
-    int _buttons;
-    QueueHandle_t _queue;
-};
 
-#endif // _BUTTON_SUBSCRIPTION_H_
+private:
+    uint16_t mButtons;
+    QueueHandle_t mQueue;
+};

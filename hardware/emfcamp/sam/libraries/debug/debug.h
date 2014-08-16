@@ -32,29 +32,31 @@
  SOFTWARE.
  */
 
-#ifndef _DEBUG_TASK_H_
-#define _DEBUG_TASK_H_
+#ifndef _DEBUG_H_
+#define _DEBUG_H_
 
 #include <Arduino.h>
 #include <FreeRTOS_ARM.h>
-#include "EMF2014Config.h"
-#include "Task.h"
+
+// Enable debug task and output
+#define DEBUG 1
+// send the debug output out over the USB Serial line
+#define DEBUG_SERIAL SerialUSB
+// define a pin that will be set to high if stopWithMessage is called
+#define DEBUG_LED 10
+// send the debug output to a log file on the flash
+#define DEBUG_USE_FLASH 0
 
 namespace debug {
 	void setup();
+	void logByteArray(const byte hash[], int len);
+	void logHWM();
     void log(String text);
     void logFromISR(String text);
     void stopWithMessage(String text);
     void waitForKey();
 }
 
-class DebugTask: public Task {
-public:
-	String getName();
-protected:
-	void task();
-};
-
 void vApplicationStackOverflowHook( TaskHandle_t xTask, signed char *pcTaskName );
 
-#endif // _DEBUG_TASK_H_
+#endif // _DEBUG_H_

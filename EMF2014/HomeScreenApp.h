@@ -27,8 +27,7 @@
  SOFTWARE.
  */
 
-#ifndef _HOME_SCREEN_APP_H_
-#define _HOME_SCREEN_APP_H_
+#pragma once
 
 #include <Arduino.h>
 #include <FreeRTOS_ARM.h>
@@ -38,14 +37,11 @@
 
 class HomeScreenApp: public App {
 public:
-	HomeScreenApp (RGBTask rgbTask): _rgbTask(rgbTask) {};
-	String getName();
+	String getName() const;
 protected:
     void task();
     void afterSuspension();
     void beforeResume();
 private:
-	RGBTask _rgbTask;
-};
 
-#endif // _HOME_SCREEN_APP_H_
+};

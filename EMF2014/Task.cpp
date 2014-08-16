@@ -26,9 +26,12 @@
  SOFTWARE.
  */
 #include <FreeRTOS_ARM.h>
-#include "DebugTask.h"
+#include <debug.h>
 
 #include "Task.h"
+
+Task::~Task() {
+}
 
 void Task::start() {
     BaseType_t taskHolder;

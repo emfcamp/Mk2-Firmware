@@ -28,9 +28,11 @@
 
 #include "RGBTask.h"
 
-#include "DebugTask.h"
-#include <string>
 #include <FreeRTOS_ARM.h>
+#include <debug.h>
+
+RGBTask::RGBTask() {
+}
 
 void RGBTask::setColor(RGBLed led, RGBColor color) {
     if (led == LED1 || led == BOTH) {
@@ -49,7 +51,7 @@ void RGBTask::setColor(RGBColor color) {
     setColor(BOTH, color);
 }
 
-String RGBTask::getName() {
+String RGBTask::getName() const {
     return "RGBTask";
 }
 
