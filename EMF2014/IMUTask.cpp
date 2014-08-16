@@ -33,7 +33,7 @@
 #include <debug.h>
 #include <Wire.h>
 #include <MPU6050.h>
-
+#include "Tilda.h"
 
 // forward declaration
 int8_t MPUSetup();
@@ -126,7 +126,7 @@ void IMUTask::setup()
     do {
         debug::log("IMUTask: Initialising MPU attempt " + String(count));
         mpu_force_reset();
-        vTaskDelay((100/portTICK_PERIOD_MS));
+        Tilda::delay(100);
         count++;
         result = MPUSetup();
     } while (result != 0);
