@@ -50,6 +50,7 @@
 #include "RGBTask.h"
 #include "ButtonTask.h"
 #include "RadioReceiveTask.h"
+#include "RadioTransmitTask.h"
 #include "MessageCheckTask.h"
 #include "AppOpenerTask.h"
 #include "AppManager.h"
@@ -74,6 +75,7 @@ RGBTask rgbTask;
 ButtonTask buttonTask;
 MessageCheckTask messageCheckTask;
 RadioReceiveTask radioReceiveTask(messageCheckTask, realTimeClock);
+RadioTransmitTask radioTransmitTask(radioReceiveTask);
 AppOpenerTask appOpenerTask(appManager);
 
 FlashLightApp flashLightApp;
@@ -101,6 +103,7 @@ void setup() {
     buttonTask.start();
     messageCheckTask.start();
     radioReceiveTask.start();
+    radioTransmitTask.start();
     appOpenerTask.start();
 
     // Applications
