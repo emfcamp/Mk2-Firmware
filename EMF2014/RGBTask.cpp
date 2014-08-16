@@ -28,7 +28,7 @@
 
 #include "RGBTask.h"
 
-#include "DebugTask.h"
+#include "debug.h"
 #include <string>
 #include <FreeRTOS_ARM.h>
 

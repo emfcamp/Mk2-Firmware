@@ -29,7 +29,7 @@
 
 #include "TiLDAButtonInterrupts.h"
 #include <FreeRTOS_ARM.h>
-#include "DebugTask.h"
+#include "debug.h"
 
 // reject spikes shorter than usecs on pin
 void setDebounce(int pin, int usecs) {

@@ -26,6 +26,8 @@
  SOFTWARE.
  */
 
+#include <FreeRTOS_ARM.h>
+#include "debug.h"
 #include "HomeScreenApp.h"
 #include "Tilda.h"
 

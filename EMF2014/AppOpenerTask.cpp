@@ -30,8 +30,8 @@
 #include <FreeRTOS_ARM.h>
 
 #include "ButtonSubscription.h"
-#include "DebugTask.h"
 #include "Tilda.h"
+#include "debug.h"
 
 AppOpenerTask::AppOpenerTask(AppManager& aAppManager)
     :mAppManager(aAppManager)

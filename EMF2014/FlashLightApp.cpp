@@ -30,7 +30,7 @@
 #include <FreeRTOS_ARM.h>
 
 #include "ButtonSubscription.h"
-#include "DebugTask.h"
+#include "debug.h"
 #include "RGBTask.h"
 #include "AppManager.h"
 #include "Tilda.h"

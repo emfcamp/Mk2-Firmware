@@ -29,7 +29,8 @@
 #include "MessageCheckTask.h"
 
 #include <uECC.h> 
-#include "DebugTask.h"
+#include <Sha1.h>
+#include "debug.h"
 #include "DataStore.h"
 
 MessageCheckTask::MessageCheckTask() {

@@ -27,7 +27,7 @@
  */
 
 #include "ButtonSubscription.h"
-#include "DebugTask.h"
+#include "debug.h"
 #include <FreeRTOS_ARM.h>
 #include "TiLDAButtonInterrupts.h"
 #include "EMF2014Config.h"

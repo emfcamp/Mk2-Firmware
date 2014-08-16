@@ -46,7 +46,7 @@
 
 // These are the includes actually needed for this file:
 #include "EMF2014Config.h"
-#include "DebugTask.h"
+#include "debug.h"
 #include "RGBTask.h"
 #include "ButtonTask.h"
 #include "RadioTask.h"
@@ -68,8 +68,6 @@
 RTC_clock realTimeClock(RC);
 SettingsStore settingsStore;
 AppManager appManager;
-
-DebugTask debugTask;
 RGBTask rgbTask;
 ButtonTask buttonTask;
 MessageCheckTask messageCheckTask;
@@ -96,7 +94,6 @@ void setup() {
     tildaButtonInterruptPriority();
 
     // Background tasks
-    debugTask.start();
     rgbTask.start();
     buttonTask.start();
     messageCheckTask.start();

@@ -30,14 +30,6 @@
 
 #pragma once
 
-// Enable debug task and output
-#define DEBUG 1
-// send the debug output out over the USB Serial line
-#define DEBUG_SERIAL SerialUSB
-// define a pin that will be set to high if stopWithMessage is called
-#define DEBUG_LED 10
-// send the debug output to a log file on the flash
-#define DEBUG_USE_FLASH 0
 // This defines how many subscription each button can handle
 #define MAX_BUTTON_SUBSCRIPTIONS 10
 // maximum amount of apps the AppManager can handle
@@ -82,3 +74,5 @@ enum Button {
     RIGHT        = 64,
     CENTER       = 128
 };
+
+#endif // _EMF2014_CONFIG_H_
