@@ -27,6 +27,7 @@
  */
 
 #include "DataStore.h"
+#include "IncomingRadioMessage.h"
 #include "DebugTask.h"
 
 #define CONTENT_RID_WEATHER_FORECAST 40962
@@ -43,13 +44,13 @@ DataStore::DataStore() {
 DataStore::~DataStore() {
 }
 
-void DataStore::addContent(uint16_t rid, const byte* content, uint16_t length) {
-	if (rid == CONTENT_RID_WEATHER_FORECAST) {
-		_addWeatherForecastRaw(content, length);
-	} else if (rid == CONTENT_RID_SCHEDULE_FRIDAY) {
-		_addScheduleFridayRaw(content, length);
+void DataStore::handleMessage(const IncomingRadioMessage& aIncomingRadioMessage) {
+	if (aIncomingRadioMessage.rid() == CONTENT_RID_WEATHER_FORECAST) {
+		_addWeatherForecastRaw(aIncomingRadioMessage);
+	} else if (aIncomingRadioMessage.rid() == CONTENT_RID_SCHEDULE_FRIDAY) {
+		_addScheduleFridayRaw(aIncomingRadioMessage);
 	} else {
-		debug::log("DataStore: Rid not supported: " + String(rid) + " " + String(length));
+		debug::log("DataStore: Rid not supported: " + String(aIncomingRadioMessage.rid()) + " " + String(aIncomingRadioMessage.length()));
 	}
 }
 
@@ -82,10 +83,10 @@ void DataStore::_unpackWeatherForecastPeriod(WeatherForecastPeriod& period, Pack
 	period.precipitationProbability = (uint8_t)_getInteger(reader);
 }
 
-void DataStore::_addWeatherForecastRaw(const byte* content, uint16_t length) {
+void DataStore::_addWeatherForecastRaw(const IncomingRadioMessage& aIncomingRadioMessage) {
 	mWeatherForecast.valid = true;
 
-	mReader.setBuffer((unsigned char*)content, length);
+	mReader.setBuffer((unsigned char*)aIncomingRadioMessage.content(), aIncomingRadioMessage.length());
 	_unpackWeatherForecastPeriod(mWeatherForecast.current, mReader);
 	_unpackWeatherForecastPeriod(mWeatherForecast.in3Hours, mReader);
 	_unpackWeatherForecastPeriod(mWeatherForecast.in6Hours, mReader);
@@ -97,8 +98,8 @@ void DataStore::_addWeatherForecastRaw(const byte* content, uint16_t length) {
 				String(mWeatherForecast.current.temperature) + "deg, Weather type: " + String((uint8_t) mWeatherForecast.current.weatherType));
 }
 
-void DataStore::_addScheduleFridayRaw(const byte* content, uint16_t length) {
-	mReader.setBuffer((unsigned char*)content, length);
+void DataStore::_addScheduleFridayRaw(const IncomingRadioMessage& aIncomingRadioMessage) {
+	mReader.setBuffer((unsigned char*)aIncomingRadioMessage.content(), aIncomingRadioMessage.length());
 
 	// get the length and create a new array of events
 	mSchedule.numEvents = _getInteger(mReader);

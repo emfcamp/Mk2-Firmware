@@ -1,24 +1,23 @@
 /*
  TiLDA Mk2
- 
- MessageCheckTask
 
- This is a consumer task that checks messages received by the radio task for validity
+ FlashLightApp
+ Torch Mode - Press the light button and both RGB LEDs light up.
 
  The MIT License (MIT)
- 
+
  Copyright (c) 2014 Electromagnetic Field LTD
- 
+
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
  in the Software without restriction, including without limitation the rights
  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  copies of the Software, and to permit persons to whom the Software is
  furnished to do so, subject to the following conditions:
- 
+
  The above copyright notice and this permission notice shall be included in all
  copies or substantial portions of the Software.
- 
+
  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -30,36 +29,9 @@
 
 #pragma once
 
-#include <Arduino.h>
-#include <FreeRTOS_ARM.h>
-
 #include "IncomingRadioMessage.h"
-#include "EMF2014Config.h"
-#include "Task.h"
 
-class RadioMessageHandler;
-
-class MessageCheckTask: public Task {
+class RadioMessageHandler {
 public:
-    MessageCheckTask();
-    ~MessageCheckTask();
-
-	String getName() const;
-
-    void setContentHandler(RadioMessageHandler& aHandler);
-    void setNonContentHandler(RadioMessageHandler& aHandler);  
-
-	void addIncomingMessage(IncomingRadioMessage *message);
-
-private:
-    MessageCheckTask(const MessageCheckTask&) {}
-
-protected:
-	void task();
-
-private:
-	QueueHandle_t mIncomingMessages;
-
-    RadioMessageHandler* mContentHandler;
-    RadioMessageHandler* mNonContentHandler;
+    virtual void handleMessage(const IncomingRadioMessage&) = 0;
 };

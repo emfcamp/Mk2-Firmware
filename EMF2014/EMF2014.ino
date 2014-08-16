@@ -59,6 +59,7 @@
 #include "TiLDAButtonInterrupts.h"
 #include "Tilda.h"
 #include "SettingsStore.h"
+#include "DataStore.h"
 
 /*
  * Setup is the main entry point for an Arduino sketch.
@@ -70,6 +71,7 @@ RTC_clock realTimeClock(RC);
 SettingsStore settingsStore;
 AppManager appManager;
 
+DataStore dataStore;
 DebugTask debugTask;
 RGBTask rgbTask;
 ButtonTask buttonTask;
@@ -96,6 +98,8 @@ void setup() {
     tildaButtonSetup();
     tildaButtonAttachInterrupts();
     tildaButtonInterruptPriority();
+
+    messageCheckTask.setContentHandler(dataStore);
 
     // Background tasks
     debugTask.start();

@@ -38,19 +38,24 @@
 #include "Weather.h"
 #include "Schedule.h"
 #include "EMF2014Config.h"
+#include "RadioMessageHandler.h"
 
-class DataStore {
+class IncomingRadioMessage;
+
+class DataStore: public RadioMessageHandler {
 public:
 	DataStore();
 	~DataStore();
 
-	void addContent(uint16_t rid, const byte* content, uint16_t length);
 	const WeatherForecast& getWeatherForecast() const;
 	const Schedule& getSchedule() const;
 
+private: // from RadioMessageHandler
+	void handleMessage(const IncomingRadioMessage& aIncomingRadioMessage);
+
 private:
-	void _addWeatherForecastRaw(const byte* content, uint16_t length);
-	void _addScheduleFridayRaw(const byte* content, uint16_t length);
+	void _addWeatherForecastRaw(const IncomingRadioMessage& aIncomingRadioMessage);
+	void _addScheduleFridayRaw(const IncomingRadioMessage& aIncomingRadioMessage);
 
 	static void _unpackWeatherForecastPeriod(WeatherForecastPeriod& period, PackReader& reader);
 	static tp_integer_t _getInteger(PackReader& reader);

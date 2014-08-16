@@ -31,17 +31,36 @@
 #include <uECC.h> 
 #include "DebugTask.h"
 #include "DataStore.h"
+#include "RadioMessageHandler.h"
+
+#define RID_RANGE_UNINDENTIFIED_BADGE 0x0000 //Unidentified Badges
+#define RID_RANGE_BADGE_ID_START 0x0001
+#define RID_RANGE_BADGE_ID_END 0x8FFF // Badge IDs (16384 badges max)
+#define RID_RANGE_SPECIAL_START 0x9000
+#define RID_RANGE_SPECIAL_END 0x9FFF //Special backend service (e.g. badge id negotiation)
+#define RID_RANGE_CONTENT_START 0xA000
+#define RID_RANGE_CONTENT_END 0xAFFF //Content (e.g. Schedule Saturday, Weather forecast)
+#define RID_RANGE_NON_CONTENT_START 0xB000
+#define RID_RANGE_NON_CONTENT_END 0xBFFF //Special non-content broadcasts (e.g. start reply-window, reply with badge id)
+#define RID_RANGE_RESERVED_START 0xC000
+#define RID_RANGE_RESERVED_RESERVED_END 0xFFFF //Reserved
 
 MessageCheckTask::MessageCheckTask() {
-	mDataStore = new DataStore;
 }
 
 MessageCheckTask::~MessageCheckTask() {
-	delete mDataStore;
 }
 
 String MessageCheckTask::getName() const {
 	return "MessageCheckTask";
+}
+
+void MessageCheckTask::setContentHandler(RadioMessageHandler& aHandler) {
+	mContentHandler = &aHandler;
+}
+
+void MessageCheckTask::setNonContentHandler(RadioMessageHandler& aHandler) {
+	mNonContentHandler = &aHandler;
 }
 
 void MessageCheckTask::addIncomingMessage(IncomingRadioMessage *message) {
@@ -68,16 +87,17 @@ void MessageCheckTask::task() {
 			if (memcmp(digest, message->hash(), 12) != 0) {
 				debug::log("MessageCheckTask: Can't validate message, checksum doesn't match.");
 			} else {
-
 			    // Check ECC
-			    TickType_t start = xTaskGetTickCount();
-			    if (!uECC_verify(EMF_PUBLIC_KEY, digest, message->signature())) {
-			        debug::log("MessageCheckTask: Can't validate message, ecc doesn't check out.");
-			    } else {
-			    	mDataStore->addContent(message->receiver(), message->content(), message->length());
-			    	TickType_t end = xTaskGetTickCount();
-			    	TickType_t duration = end - start;
-			    	//debug::log("MessageCheckTask: Duration for SHA1 and ECC verify: " + String(duration) + "ms");
+				if (!uECC_verify(EMF_PUBLIC_KEY, digest, message->signature())) {
+					debug::log("MessageCheckTask: Can't validate message, ecc doesn't check out.");
+				} else {
+					if (message->rid() <= RID_RANGE_CONTENT_START &&
+			    		 message->rid() >= RID_RANGE_CONTENT_END) {
+						mContentHandler->handleMessage(*message);
+			    	} else if (message->rid() <= RID_RANGE_NON_CONTENT_START &&
+			    		 message->rid() >= RID_RANGE_NON_CONTENT_END) {
+
+			    	}
 			    }
 			}
 
