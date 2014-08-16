@@ -49,7 +49,9 @@ public:
     static void setLedColor(RGBColor color);
     static void openApp(String name);
     static RTC_clock* getClock();
-
+    static float getBatteryVoltage();
+    static uint8_t getBatteryPercent();
+    static uint8_t getChargeState();
     // This is not part of the actual API
     static void setupTasks(AppManager* appManager, RGBTask* rgbTask, RTC_clock* realTimeClock);
 private:
