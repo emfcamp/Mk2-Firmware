@@ -30,6 +30,9 @@
 
 #include "Task.h"
 
+Task::~Task() {
+}
+
 void Task::start() {
     BaseType_t taskHolder;
     taskHolder = xTaskCreate(_task, "TASKNAME", ( uint8_t ) 255, static_cast<void*>(this), 2, &taskHandle);
@@ -45,7 +48,7 @@ void Task::taskCaller() {
 
     while(true) {
         debug::log("Please make sure that no task ever returns. Task: " + getName());
-        vTaskDelay(1000);
+        vTaskDelay((1000/portTICK_PERIOD_MS));
     }
 }
 

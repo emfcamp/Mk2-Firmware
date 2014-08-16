@@ -29,13 +29,9 @@
  SOFTWARE.
  */
 
-#ifndef _PMIC_TASK_H_
-#define _PMIC_TASK_H_
+#pragma once
 
 #include <Arduino.h>
 #include <FreeRTOS_ARM.h>
 #include "EMF2014Config.h"
 
-
-
-#endif // _PMIC_TASK_H_

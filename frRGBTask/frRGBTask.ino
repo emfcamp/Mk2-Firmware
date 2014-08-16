@@ -159,26 +159,34 @@ void RGBSetOutput(RGBRequest_t *request, uint8_t offOverride = 0) {
             analogWrite(LED1_RED, 0);
             analogWrite(LED1_GREEN, 0);
             analogWrite(LED1_BLUE, 0);
-            RGB1 = {0, 0, 0};
+            RGB1[0] = 0;
+            RGB1[1] = 0;
+            RGB1[2] = 0;
         }
         if (request->led == LED2 || request->led == BOTH) {
             analogWrite(LED2_RED, 0);
             analogWrite(LED2_GREEN, 0);
             analogWrite(LED2_BLUE, 0);
-            RGB2 = {0, 0, 0};
+            RGB2[0] = 0;
+            RGB2[1] = 0;
+            RGB2[2] = 0;
         }
     } else {
         if (request->led == LED1 || request->led == BOTH) {
             analogWrite(LED1_RED, request->rgb[0]);
             analogWrite(LED1_GREEN, request->rgb[1]);
             analogWrite(LED1_BLUE, request->rgb[2]);
-            RGB1 = {request->rgb[0], request->rgb[1], request->rgb[2]};
+            RGB1[0] = request->rgb[0];
+            RGB1[1] = request->rgb[1];
+            RGB1[2] = request->rgb[2];
         }
         if (request->led == LED2 || request->led == BOTH) {
             analogWrite(LED2_RED, request->rgb[0]);
             analogWrite(LED2_GREEN, request->rgb[1]);
             analogWrite(LED2_BLUE, request->rgb[2]);
-            RGB2 = {request->rgb[0], request->rgb[1], request->rgb[2]};
+            RGB2[0] = request->rgb[0];
+            RGB2[1] = request->rgb[1];
+            RGB2[2] = request->rgb[2];
         }
     }
 }
@@ -399,7 +407,9 @@ void RGBProcessRequest() {
             #define IMU_UP false
             if (IMU_UP) {
                 //reduce brightness
-                currentRequest.rgb = {128,128,128};
+                currentRequest.rgb[0] = 128;
+                currentRequest.rgb[1] = 128;
+                currentRequest.rgb[2] = 128;
                 // TODO: IMU orientation hook, need to add something to set brightness to full if orientation is returned to normal
             }
             
@@ -660,7 +670,9 @@ void buttonLightPress(){
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
     RGBRequest_t light;
     
-    light.rgb = {255,255,255};
+    light.rgb[0] = 255;
+    light.rgb[1] = 255;
+    light.rgb[2] = 255;
     light.led = BOTH;
     light.type = TORCH;
     light.time = LIGHT_FADE_AFTER;
@@ -692,7 +704,9 @@ void buttonRightPress(){
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
     RGBRequest_t light;
     
-    light.rgb = {0,1,0};
+    light.rgb[0] = 0;
+    light.rgb[1] = 1;
+    light.rgb[2] = 0;
     light.led = BOTH;
     light.type = FLASH_ALT;
     light.period = 100;
@@ -715,7 +729,9 @@ void buttonLeftPress(){
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
     RGBRequest_t light;
     
-    light.rgb = {2,0,0};
+    light.rgb[0] = 2;
+    light.rgb[1] = 0;
+    light.rgb[2] = 0;
     light.led = BOTH;
     light.type = FLASH;
     light.period = 200;
@@ -739,7 +755,9 @@ void buttonUpPress(){
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
     RGBRequest_t light;
     
-    light.rgb = {50,0,2};
+    light.rgb[0] = 50;
+    light.rgb[1] = 0;
+    light.rgb[2] = 2;
     light.led = LED2;
     light.type = STATIC;
     light.time = LIGHT_FADE_AFTER;
@@ -761,7 +779,9 @@ void buttonDownPress(){
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;
     RGBRequest_t light;
     
-    light.rgb = {0,8,6};
+    light.rgb[0] = 0;
+    light.rgb[1] = 8;
+    light.rgb[2] = 6;
     light.led = LED2;
     light.type = FADE;
     light.period = 1000;

@@ -28,6 +28,7 @@
 
 #include "DebugTask.h"
 #include <FreeRTOS_ARM.h>
+#include "Tilda.h"
 
 
 namespace debug {
@@ -38,6 +39,9 @@ namespace debug {
     void log(String text) {
         // ToDo: Add other debug outputs
         if (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING) {
+            if (serialPortMutex == 0) {
+                serialPortMutex = xSemaphoreCreateMutex();
+            }
             if (xSemaphoreTake(serialPortMutex, ( TickType_t ) 10) == pdTRUE ) {
                 DEBUG_SERIAL.println(text);
             }
@@ -47,11 +51,42 @@ namespace debug {
         }
     }
 
+    void logByteArray(const byte in[], int len) {
+        // ToDo: Add other debug outputs
+        if (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING) {
+            if (serialPortMutex == 0) {
+                serialPortMutex = xSemaphoreCreateMutex();
+            }
+            if (xSemaphoreTake(serialPortMutex, ( TickType_t ) 10) == pdTRUE ) {
+                //DEBUG_SERIAL.print(String((char*)in));
+                int i;
+                for (i=0; i<len; i++) {
+                    DEBUG_SERIAL.print("0123456789abcdef"[in[i]>>4]);
+                    DEBUG_SERIAL.print("0123456789abcdef"[in[i]&0xf]);
+                    DEBUG_SERIAL.print(" ");
+                }
+                DEBUG_SERIAL.println();
+            }
+            xSemaphoreGive(serialPortMutex);
+        } else {
+            DEBUG_SERIAL.println("Can't print hash, scheduler not running.");
+        }
+    }
+
+    void logHWM() {
+         if (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING) {
+            UBaseType_t uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
+            DEBUG_SERIAL.println("HWM: " + String(uxHighWaterMark));
+        } else {
+            DEBUG_SERIAL.println("HWM: not running");
+        }
+    }
+
     void logFromISR(String text) {
         // ToDo: Add other debug outputs
         if (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING) {
             if (xSemaphoreTakeFromISR(serialPortMutex, NULL) == pdTRUE) {
-                DEBUG_SERIAL.println(text);
+                    DEBUG_SERIAL.println(text);
                 BaseType_t xHigherPriorityTaskWoken;
                 xSemaphoreGiveFromISR(serialPortMutex, &xHigherPriorityTaskWoken);
                 portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
@@ -62,7 +97,7 @@ namespace debug {
     }
 
     /**
-     * Lights the debug led and waits for a key to be pressed in 
+     * Lights the debug led and waits for a key to be pressed in
      * the serial console before sending the text
      */
     void stopWithMessage(String text) {
@@ -80,22 +115,23 @@ namespace debug {
         DEBUG_SERIAL.begin(115200);
         delay(250);
 
-        pinMode(DEBUG_LED, OUTPUT);       
-        digitalWrite(DEBUG_LED, LOW);
+        serialPortMutex = 0;
 
-        serialPortMutex = xSemaphoreCreateMutex();
+        pinMode(DEBUG_LED, OUTPUT);
+        digitalWrite(DEBUG_LED, LOW);
     }
 }
 
-String DebugTask::getName() {
+String DebugTask::getName() const {
     return "DebugTask";
 }
 
 void DebugTask::task() {
     while(true) {
         // Not sure what to do here
-        debug::log("Still alive.");
-        vTaskDelay( 1000 );
+        debug::log("Still alive. "+ String(Tilda::getClock()->unixtime()));
+
+        vTaskDelay((1000/portTICK_PERIOD_MS));
     }
 }
 

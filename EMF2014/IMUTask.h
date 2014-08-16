@@ -30,8 +30,7 @@
  SOFTWARE.
  */
 
-#ifndef _IMU_TASK_H_
-#define _IMU_TASK_H_
+#pragma once
 
 #include <Arduino.h>
 
@@ -39,12 +38,10 @@
 #include "EMF2014Config.h"
 #include "Task.h"
 
-
-// callback
+// callbacks
 static void IMU_interrupt(void);
 static void IMU_tap_cb(unsigned char direction, unsigned char count);
 static void IMU_android_orient_cb(unsigned char orientation);
-    
 
 class IMUTask: public Task {
 public:
@@ -70,4 +67,3 @@ private:
 
 extern IMUTask imuTask;
 
-#endif // _IMU_TASK_H_

@@ -35,33 +35,52 @@
  SOFTWARE.
  */
 
+// Reference all libraries that are used here, otherwise Arduino won't include them :(
 #include <FreeRTOS_ARM.h>
 #include <Wire.h>
 #include <MPU6050.h>
+#include <Sha1.h>
+#include <DueFlashStorage.h>
+#include <TinyPacks.h>
+#include <rtc_clock.h>
+#include <uECC.h>
+#include <Arduino.h>
+
+// These are the includes actually needed for this file:
 #include "EMF2014Config.h"
 #include "DebugTask.h"
 #include "RGBTask.h"
 #include "ButtonTask.h"
+#include "RadioTask.h"
+#include "MessageCheckTask.h"
 #include "AppOpenerTask.h"
 #include "AppManager.h"
 #include "FlashLightApp.h"
 #include "HomeScreenApp.h"
 #include "TiLDAButtonInterrupts.h"
 #include "IMUTask.h"
-
+#include "Tilda.h"
+#include "SettingsStore.h"
 
 /*
  * Setup is the main entry point for an Arduino sketch.
  * Here is where we will do a lot of work in getting the system running
  * and in FreeRTOS we will start the scheduler
  */
+
+RTC_clock realTimeClock(RC);
+SettingsStore settingsStore;
+AppManager appManager;
+
 DebugTask debugTask;
 RGBTask rgbTask;
 ButtonTask buttonTask;
-AppOpenerTask appOpenerTask;
+MessageCheckTask messageCheckTask;
+RadioTask radioTask(messageCheckTask, realTimeClock);
+AppOpenerTask appOpenerTask(appManager);
 
-FlashLightApp flashLightApp(rgbTask);
-HomeScreenApp homeScreenApp(rgbTask);
+FlashLightApp flashLightApp;
+HomeScreenApp homeScreenApp;
 
 void setup() {
     
@@ -72,12 +91,16 @@ void setup() {
     
    
     debug::setup();
+    Tilda::setupTasks(&appManager, &rgbTask, &realTimeClock);
 
     // Uncomment this if you want to see serial output during startup
-    // This will require you to send a character over serial before unblocking 
+    // This will require you to send a character over serial before unblocking
     // the startup
+
     debug::waitForKey();
-    
+
+    realTimeClock.init();
+
     tildaButtonSetup();
     tildaButtonAttachInterrupts();
     tildaButtonInterruptPriority();
@@ -87,14 +110,16 @@ void setup() {
     imuTask.start();
     rgbTask.start();
     buttonTask.start();
+    messageCheckTask.start();
+    radioTask.start();
     appOpenerTask.start();
 
     // Applications
-    AppManager::add(homeScreenApp);
-    AppManager::add(flashLightApp);
+    appManager.add(homeScreenApp);
+    appManager.add(flashLightApp);
 
     // Boot into home screen
-    AppManager::open("HomeScreen");
+    Tilda::openApp("HomeScreen");
 
     // Start scheduler
     debug::log("Start Scheduler");
