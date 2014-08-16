@@ -82,7 +82,7 @@ int glcd::Init(uint8_t invert) { glcd_Device::Init(); }
  */
 
 void glcd::ClearScreen(uint8_t color) {
-    this->SetPixels(0, 0, GLCD.Width - 1, GLCD.Height - 1, color);
+    this->SetPixels(0, 0, this->CurrentWidth() - 1, this->CurrentHeight() - 1, color);
     CursorToXY(0, 0); // home text position
 }
 
@@ -144,13 +144,13 @@ void glcd::DrawLine(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2,
      * will have been altered.
      */
 
-    if (x1 >= DISPLAY_WIDTH)
+    if (x1 >= this->CurrentWidth())
         x1 = 0;
-    if (x2 >= DISPLAY_WIDTH)
+    if (x2 >= this->CurrentWidth())
         x2 = 0;
-    if (y1 >= DISPLAY_HEIGHT)
+    if (y1 >= this->CurrentHeight())
         y1 = 0;
-    if (y2 >= DISPLAY_HEIGHT)
+    if (y2 >= this->CurrentHeight())
         y2 = 0;
 #endif
 

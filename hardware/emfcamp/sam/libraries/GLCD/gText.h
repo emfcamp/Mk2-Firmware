@@ -120,33 +120,35 @@ const textMode DEFAULT_SCROLLDIR = SCROLL_UP;
  * They are used with the
  * \ref gText::DefineArea(predefinedArea selection, textMode mode)
  *"DefineArea()" function call.
+ * Warning, these will function oddly if you have the screen rotation
+ * set away from default
  */
 typedef enum {
-    textAreaFULL = MK_TareaToken(0, 0, DISPLAY_WIDTH - 1, DISPLAY_HEIGHT - 1),
+    textAreaFULL = MK_TareaToken(0, 0, DEVICE_WIDTH - 1, DEVICE_HEIGHT - 1),
     /**<Entire GLCD display */
     textAreaTOP =
-        MK_TareaToken(0, 0, DISPLAY_WIDTH - 1, DISPLAY_HEIGHT / 2 - 1),
+        MK_TareaToken(0, 0, DEVICE_WIDTH - 1, DEVICE_HEIGHT / 2 - 1),
     /**<Top half of GLCD display */
-    textAreaBOTTOM = MK_TareaToken(0, DISPLAY_HEIGHT / 2, DISPLAY_WIDTH - 1,
-                                   DISPLAY_HEIGHT - 1),
+    textAreaBOTTOM = MK_TareaToken(0, DEVICE_HEIGHT / 2, DEVICE_WIDTH - 1,
+                                   DEVICE_HEIGHT - 1),
     /**<Bottom half of GLCD display */
     textAreaLEFT =
-        MK_TareaToken(0, 0, DISPLAY_WIDTH / 2 - 1, DISPLAY_HEIGHT - 1),
+        MK_TareaToken(0, 0, DEVICE_WIDTH / 2 - 1, DEVICE_HEIGHT - 1),
     /**<Left side of GLCD display */
-    textAreaRIGHT = MK_TareaToken(DISPLAY_WIDTH / 2, 0, DISPLAY_WIDTH - 1,
-                                  DISPLAY_HEIGHT - 1),
+    textAreaRIGHT = MK_TareaToken(DEVICE_WIDTH / 2, 0, DEVICE_WIDTH - 1,
+                                  DEVICE_HEIGHT - 1),
     /**<Right side of GLCD display */
     textAreaTOPLEFT =
-        MK_TareaToken(0, 0, DISPLAY_WIDTH / 2 - 1, DISPLAY_HEIGHT / 2 - 1),
+        MK_TareaToken(0, 0, DEVICE_WIDTH / 2 - 1, DEVICE_HEIGHT / 2 - 1),
     /**<Upper left quarter of GLCD display */
-    textAreaTOPRIGHT = MK_TareaToken(DISPLAY_WIDTH / 2, 0, DISPLAY_WIDTH - 1,
-                                     DISPLAY_HEIGHT / 2 - 1),
+    textAreaTOPRIGHT = MK_TareaToken(DEVICE_WIDTH / 2, 0, DEVICE_WIDTH - 1,
+                                     DEVICE_HEIGHT / 2 - 1),
     /**<Upper right quarter of GLCD display */
     textAreaBOTTOMLEFT = MK_TareaToken(
-        0, DISPLAY_HEIGHT / 2, DISPLAY_WIDTH / 2 - 1, DISPLAY_HEIGHT - 1),
+        0, DEVICE_HEIGHT / 2, DEVICE_WIDTH / 2 - 1, DEVICE_HEIGHT - 1),
     /**<Buttom left quarter of GLCD display */
-    textAreaBOTTOMRIGHT = MK_TareaToken(DISPLAY_WIDTH / 2, DISPLAY_HEIGHT / 2,
-                                        DISPLAY_WIDTH - 1, DISPLAY_HEIGHT - 1)
+    textAreaBOTTOMRIGHT = MK_TareaToken(DEVICE_WIDTH / 2, DEVICE_HEIGHT / 2,
+                                        DEVICE_WIDTH - 1, DEVICE_HEIGHT - 1)
     /**<Bottom right quarter of GLCD display */
 } predefinedArea;
 

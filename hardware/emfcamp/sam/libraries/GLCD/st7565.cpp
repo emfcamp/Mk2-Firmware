@@ -87,7 +87,7 @@ The functions affected are:
 
 QueueHandle_t glcd_Device::_updateWaiting;
 SemaphoreHandle_t glcd_Device::frameBufferMutex;
-uint8_t glcd_Device::_framebuffer[DISPLAY_HEIGHT / 8][DISPLAY_WIDTH];
+uint8_t glcd_Device::_framebuffer[DEVICE_HEIGHT / 8 * DEVICE_WIDTH];
 uint8_t glcd_Device::_x;
 uint8_t glcd_Device::_y;
 
@@ -179,32 +179,62 @@ void glcd_Device::Init(void) {
     memset(this->_framebuffer, 0x00, sizeof(_framebuffer));
 }
 
+uint8_t reverse(uint8_t b) {
+   b = (b & 0xF0) >> 4 | (b & 0x0F) << 4;
+   b = (b & 0xCC) >> 2 | (b & 0x33) << 2;
+   b = (b & 0xAA) >> 1 | (b & 0x55) << 1;
+   return b;
+}
+
 // Never call this directly, as it has no mutex
 void glcd_Device::_do_display() {
     bool suspend = 0;
 
     uint8_t col, maxcol, p;
+
+  uint8_t txBuffer[1024];
+
+  switch (_rotation)
+  {
+    case ROTATION_0:
+        memcpy(txBuffer,_framebuffer,sizeof(_framebuffer));
+        break;
+    case ROTATION_90:
+        break;
+    case ROTATION_180:
+        for (uint8_t i = 0; i < sizeof(_framebuffer); i++)
+        {
+              txBuffer[sizeof(_framebuffer)-i] = reverse(_framebuffer[i]);
+        }
+        break;
+    case ROTATION_270:
+        break;
+  }
+
+
     for (p = 0; p < 8; p++) {
+
         _command(CMD_SET_PAGE | pagemap[p]);
         // start at the beginning of the row
         col = 0;
-        maxcol = DISPLAY_WIDTH - 1;
+        maxcol = this->CurrentWidth() - 1;
         _command(CMD_SET_COLUMN_LOWER | ((col + ST7565_STARTBYTES) & 0xf));
         _command(CMD_SET_COLUMN_UPPER |
                  (((col + ST7565_STARTBYTES) >> 4) & 0x0F));
         _command(CMD_RMW);
 
-        uint8_t txBuffer[128];
-        uint8_t rxBuffer[128];
 
+        uint8_t rxBuffer[128]; //discarded
+        debug::logByteArray(txBuffer,1024);
         ::LCDDataDoneFlag = 0;
         digitalWrite(LCD_A0, HIGH); // Select Data Mode
         digitalWrite(LCD_CS, LOW);  // Select LCD (why doesn't SPI do this?)
-        SPI.transferDMA(LCD_CS, _framebuffer[pagemap[p]], rxBuffer, 128,
+        SPI.transferDMA(LCD_CS, _framebuffer + DEVICE_WIDTH  * (pagemap[p]) , rxBuffer, 128,
                         SPI_LAST);
         while (::LCDDataDoneFlag == 0) {
             vTaskDelay(10);
         }
+        digitalWrite(LCD_CS, HIGH);  // De-select LCD (why doesn't SPI do this?)
         ::LCDDataDoneFlag = 0;
     }
 }
@@ -236,8 +266,8 @@ void glcd_Device::_updateDisplay() {
 }
 
 void glcd_Device::GotoXY(uint8_t x, uint8_t y) {
-    if ((x > DISPLAY_WIDTH - 1) ||
-        (y > DISPLAY_HEIGHT - 1)) // exit if coordinates are not legal
+    if ((x > this->CurrentWidth() - 1) ||
+        (y > this->CurrentHeight() - 1)) // exit if coordinates are not legal
     {
         return;
     }
@@ -247,11 +277,11 @@ void glcd_Device::GotoXY(uint8_t x, uint8_t y) {
 
 // Never call this directly, as it has no mutex
 uint8_t glcd_Device::_do_ReadData() {
-    if (_x >= DISPLAY_WIDTH) {
+    if (_x >= this->CurrentWidth()) {
         return (0);
     }
     // Read from the frame buffer
-    return this->_framebuffer[_y / 8][_x];
+    return this->_framebuffer[_y /8 * this->CurrentWidth() + _x];
 }
 
 uint8_t glcd_Device::ReadData() {
@@ -274,14 +304,15 @@ uint8_t glcd_Device::ReadData() {
 // Never call this directly, as it has no mutex
 void glcd_Device::_do_WriteData(uint8_t data) {
     uint8_t displayData, yOffset, chip;
-    if (_x >= DISPLAY_WIDTH) {
+    uint8_t current_width = this->CurrentWidth();
+    if (_x >= current_width) {
         return;
     }
 
     yOffset = _y % 8;
     if (yOffset != 0) {
         // first page
-        displayData = this->_framebuffer[_y / 8][_x];
+        displayData = this->_framebuffer[_y / 8 * current_width + _x];
 
         /*
         * Strip out bits we need to update.
@@ -289,7 +320,7 @@ void glcd_Device::_do_WriteData(uint8_t data) {
         // displayData &= (_BV(yOffset)-1);
 
         displayData |= data << yOffset;
-        this->_framebuffer[_y / 8][_x] = displayData; // save to read cache
+        this->_framebuffer[_y / 8 * current_width+ _x] = displayData; // save to read cache
 
         // second page
         /*
@@ -297,26 +328,26 @@ void glcd_Device::_do_WriteData(uint8_t data) {
         * and ensure that we don't fall off the bottom of the display.
         */
         uint8_t ysave = _y;
-        if (((ysave + 8) & ~7) >= DISPLAY_HEIGHT) {
+        if (((ysave + 8) & ~7) >= this->CurrentHeight()) {
             _x++;
             return;
         }
 
         //_y = ((ysave+8) & ~7);
 
-        displayData = this->_framebuffer[_y / 8][_x];
+        displayData = this->_framebuffer[_y / 8 * current_width + _x];
         /*
         * Strip out bits we need to update.
         */
         displayData &= ~(_BV(yOffset) - 1);
 
         displayData |= data >> (8 - yOffset);
-        this->_framebuffer[_y / 8][_x] = displayData; // save to read cache
+        this->_framebuffer[_y / 8 * current_width + _x] = displayData; // save to read cache
         _x++;
         _y = ysave;
     } else {
         // just this code gets executed if the write is on a single page
-        this->_framebuffer[_y / 8][_x] = data; // save to read cache
+        this->_framebuffer[_y / 8 * current_width + _x] = data; // save to read cache
         _x++;
     }
 }
@@ -348,4 +379,42 @@ void glcd_Device::WaitForUpdate() {
                           portMAX_DELAY); // Sleep until there is a message
         }
     }
+}
+
+uint8_t glcd_Device::CurrentWidth()
+{
+  switch(_rotation)
+  {
+    case ROTATION_0:
+    case ROTATION_180:
+      return DEVICE_WIDTH;
+      break;
+    default:
+      return DEVICE_HEIGHT;
+      break;
+  }
+}
+
+uint8_t glcd_Device::CurrentHeight()
+{
+  switch(_rotation)
+  {
+    case ROTATION_0:
+    case ROTATION_180:
+      return DEVICE_HEIGHT;
+      break;
+    default:
+      return DEVICE_WIDTH;
+      break;
+  }
+}
+
+rotation_t glcd_Device::GetRotation()
+{
+  return _rotation;
+}
+
+void glcd_Device::SetRotation(rotation_t rotation)
+{
+  _rotation = rotation;
 }

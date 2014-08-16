@@ -38,8 +38,9 @@ commands to a GLCD device.
 
 #define GLCD_Device 1 // software version of this class
 
-#define DISPLAY_WIDTH 128
-#define DISPLAY_HEIGHT 64
+#define DEVICE_WIDTH 128
+#define DEVICE_HEIGHT 64
+
 
 // useful user constants
 #define NON_INVERTED false
@@ -76,6 +77,15 @@ typedef struct {
 * @brief Low level device functions
 *
 */
+
+typedef enum
+{
+  ROTATION_0,
+  ROTATION_90,
+  ROTATION_180,
+  ROTATION_270
+} rotation_t;
+
 class glcd_Device : public Print {
   private:
 // Control functions
@@ -90,7 +100,7 @@ class glcd_Device : public Print {
     void _init();
     static uint8_t _x;
     static uint8_t _y;
-    static uint8_t _framebuffer[DISPLAY_HEIGHT / 8][DISPLAY_WIDTH];
+    static uint8_t _framebuffer[DEVICE_HEIGHT / 8 * DEVICE_WIDTH];
     static QueueHandle_t _updateWaiting;
     void _updateDisplay();
     static SemaphoreHandle_t frameBufferMutex;
@@ -99,7 +109,7 @@ class glcd_Device : public Print {
     void _do_WriteData(uint8_t data);
     void _spiwrite(uint8_t c);
     static uint8_t LCDDataDoneFlag;
-
+    rotation_t _rotation;
   public:
     glcd_Device();
     void WaitForUpdate(void);
@@ -107,6 +117,10 @@ class glcd_Device : public Print {
     void WriteData(uint8_t);
     void Init();
     void Display();
+    uint8_t CurrentWidth();
+    uint8_t CurrentHeight();
+    void SetRotation(rotation_t);
+    rotation_t GetRotation();
 
   protected:
     void SetDot(uint8_t x, uint8_t y, uint8_t color);

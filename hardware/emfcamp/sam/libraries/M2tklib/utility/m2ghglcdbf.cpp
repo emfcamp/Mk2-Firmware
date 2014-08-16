@@ -1,9 +1,9 @@
 /*
 
   m2ghglcdbf.cpp
-  
+
   m2tklib = Mini Interative Interface Toolkit Library
-  
+
   Copyright (C) 2011  olikraus@gmail.com
 
   This program is free software: you can redistribute it and/or modify
@@ -40,8 +40,8 @@ extern "C" uint8_t m2_gh_glcd_bf(m2_gfx_arg_p  arg)
 	GLCD.Init(NON_INVERTED);   // initialise the library, non inverted writes pixels onto a clear screen
 	m2_is_glcd_init = 1;
       }
-      GLCD.ClearScreen();  
-      //GLCD.FillRect(0, 0, 64, 61, BLACK); 
+      GLCD.ClearScreen();
+      //GLCD.FillRect(0, 0, 64, 61, BLACK);
       break;
     case M2_GFX_MSG_END:
       break;
@@ -61,19 +61,19 @@ extern "C" uint8_t m2_gh_glcd_bf(m2_gfx_arg_p  arg)
     case M2_GFX_MSG_DRAW_SMALL_FOCUS:
       m2_gh_glcd_draw_xorbox(arg->x, arg->y, arg->w, arg->h);
       break;
-    
+
     case M2_GFX_MSG_DRAW_NORMAL_DATA_ENTRY:
       GLCD.DrawHLine(arg->x, m2_gh_glcd_y(arg->y), arg->w-1);
       break;
     case M2_GFX_MSG_DRAW_SMALL_DATA_ENTRY:
       GLCD.DrawHLine(arg->x, m2_gh_glcd_y(arg->y), arg->w-1);
       break;
-    
+
     case M2_GFX_MSG_DRAW_GO_UP:
       m2_gh_glcd_draw_xorbox(arg->x, arg->y, arg->w, arg->h/2);
       return 0;
     case M2_GFX_MSG_DRAW_ICON:
-      m2_gh_glcd_draw_icon(arg->x,arg->y+m2_gh_glcd_get_font_corrcetion(arg), 
+      m2_gh_glcd_draw_icon(arg->x,arg->y+m2_gh_glcd_get_font_corrcetion(arg),
 	  m2_gh_glcd_get_font_height(arg), m2_gh_glcd_get_font_height(arg), arg->icon);
       return 0;
     case M2_GFX_MSG_GET_TEXT_WIDTH:
@@ -114,7 +114,7 @@ extern "C" uint8_t m2_gh_glcd_bf(m2_gfx_arg_p  arg)
       return 0;
     case M2_GFX_MSG_GET_SMALL_BORDER_Y_OFFSET:
       return 0;
-      
+
     case M2_GFX_MSG_GET_READONLY_BORDER_HEIGHT:
       return 0;
     case M2_GFX_MSG_GET_READONLY_BORDER_WIDTH:
@@ -128,9 +128,9 @@ extern "C" uint8_t m2_gh_glcd_bf(m2_gfx_arg_p  arg)
     case M2_GFX_MSG_GET_LIST_OVERLAP_WIDTH:
       return 0;
     case M2_GFX_MSG_GET_DISPLAY_WIDTH:
-      return GLCD.Width;
+      return GLCD.CurrentWidth();
     case M2_GFX_MSG_GET_DISPLAY_HEIGHT:
-      return GLCD.Height;
+      return GLCD.CurrentHeight();
     case M2_GFX_MSG_IS_FRAME_DRAW_AT_END:
       return 1;
     case M2_GFX_MSG_DRAW_VERTICAL_SCROLL_BAR:
@@ -141,15 +141,14 @@ extern "C" uint8_t m2_gh_glcd_bf(m2_gfx_arg_p  arg)
       m2_gh_glcd_draw_frame(arg->x, arg->y, arg->w, arg->h);
       {
 	uint16_t h, y;
-	
-	h = m2_utl_sb_get_slider_height(arg->h-2, arg->total, arg->visible);
-	y = m2_utl_sb_get_slider_position(arg->h-2, h, arg->total, arg->visible, arg->top); 
 
-	
+	h = m2_utl_sb_get_slider_height(arg->h-2, arg->total, arg->visible);
+	y = m2_utl_sb_get_slider_position(arg->h-2, h, arg->total, arg->visible, arg->top);
+
+
 	m2_gh_glcd_draw_xorbox(arg->x+1, arg->y+arg->h-1-h-y, arg->w-2, h);
       }
       return 1;
   }
   return m2_gh_dummy(arg);
 }
-

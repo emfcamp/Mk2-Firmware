@@ -220,7 +220,6 @@ uint8_t m2_HandleKeyM2(m2_p m2)
       return 1;	/* break and let redraw */
 
     key = m2_GetKeyFromQueue(m2, &arg1, &arg2);
-    
     /* if there are no more keys, break out of the loop */
     if ( key == M2_KEY_NONE )
       break;

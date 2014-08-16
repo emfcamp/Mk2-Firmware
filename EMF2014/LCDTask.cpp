@@ -93,7 +93,6 @@ void LCDTask::task() {
   while(true) {
     GLCD.WaitForUpdate();
     // Write framebuffer to display
-    //debug::log("[LCDTask::task()] call _display");
     GLCD.Display();
     // Sleep for 40ms, to limit updates to 25fps
     vTaskDelay(40);

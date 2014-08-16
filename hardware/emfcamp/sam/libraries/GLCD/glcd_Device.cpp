@@ -35,7 +35,7 @@ configuration.
 #define _BV(bit) (1 << (bit))
 #endif
 
-glcd_Device::glcd_Device() {}
+glcd_Device::glcd_Device() {_rotation = ROTATION_0;}
 
 /**
 * set pixel at x,y to the given color
@@ -57,7 +57,7 @@ glcd_Device::glcd_Device() {}
 void glcd_Device::SetDot(uint8_t x, uint8_t y, uint8_t color) {
     uint8_t data;
 
-    if ((x >= DISPLAY_WIDTH) || (y >= DISPLAY_HEIGHT))
+    if ((x >= this->CurrentWidth()) || (y >= this->CurrentHeight()))
         return;
 
     this->GotoXY(x, y - y % 8); // read data from display memory

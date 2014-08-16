@@ -117,22 +117,6 @@ class glcd : public gText {
     using glcd_Device::SetPixels;
 #endif
 
-    /*@}*/
-    // Device Properties - these are read only constants
-    static const uint8_t Width = DISPLAY_WIDTH; /**< Display width in pixels */
-    static const uint8_t Height =
-        DISPLAY_HEIGHT; /**< Display height in pixels */
-    static const uint8_t Right =
-        DISPLAY_WIDTH - 1; /**< Right most pixel on Display (equals Width -1)*/
-    static const uint8_t Bottom =
-        DISPLAY_HEIGHT -
-        1; /**< Bottom most pixel on Display (equals Height -1)*/
-    static const uint8_t CenterX =
-        DISPLAY_WIDTH /
-        2; /**< Horizontal center pixel on Display (equals Width/2)*/
-    static const uint8_t CenterY =
-        DISPLAY_HEIGHT /
-        2; /**< Vertical center pixel on Display (equals Height/2)*/
 };
 
 extern glcd GLCD;

@@ -46,7 +46,7 @@ extern "C" {
 // if multiple glcd instances need to be supported
 gText::gText() {
     // device = (glcd_Device*)&GLCD;
-    this->DefineArea(0, 0, DISPLAY_WIDTH - 1, DISPLAY_HEIGHT - 1,
+    this->DefineArea(0, 0, this->CurrentWidth() - 1, this->CurrentHeight() - 1,
                      DEFAULT_SCROLLDIR); // this should never fail
 }
 
@@ -55,7 +55,7 @@ gText::gText() {
 gText::gText(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, textMode mode) {
     // device = (glcd_Device*)&GLCD;
     if (!this->DefineArea(x1, y1, x2, y2, mode)) {
-        this->DefineArea(0, 0, DISPLAY_WIDTH - 1, DISPLAY_HEIGHT - 1,
+        this->DefineArea(0, 0, this->CurrentWidth() - 1, this->CurrentHeight() - 1,
                          mode); // this should never fail
     }
 }
@@ -63,7 +63,7 @@ gText::gText(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, textMode mode) {
 gText::gText(predefinedArea selection, textMode mode) {
     // device = (glcd_Device*)&GLCD;
     if (!this->DefineArea(selection, mode)) {
-        this->DefineArea(0, 0, DISPLAY_WIDTH - 1, DISPLAY_HEIGHT - 1,
+        this->DefineArea(0, 0, this->CurrentWidth() - 1, this->CurrentHeight() - 1,
                          mode); // this should never fail
     }
 }
@@ -72,7 +72,7 @@ gText::gText(uint8_t x1, uint8_t y1, uint8_t columns, uint8_t rows, Font_t font,
              textMode mode) {
     // device = (glcd_Device*)&GLCD;
     if (!this->DefineArea(x1, y1, columns, rows, font, mode)) {
-        this->DefineArea(0, 0, DISPLAY_WIDTH - 1, DISPLAY_HEIGHT - 1,
+        this->DefineArea(0, 0, this->CurrentWidth() - 1, this->CurrentHeight() - 1,
                          mode); // this should never fail
         this->SelectFont(font);
     }
@@ -183,14 +183,14 @@ uint8_t gText::DefineArea(uint8_t x, uint8_t y, uint8_t columns, uint8_t rows,
 uint8_t gText::DefineArea(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2,
                           textMode mode) {
     uint8_t ret = false;
-    if ((x1 >= x2) || (y1 >= y2) || (x1 >= DISPLAY_WIDTH) ||
-        (y1 >= DISPLAY_HEIGHT) || (x2 >= DISPLAY_WIDTH) ||
-        (y2 >= DISPLAY_WIDTH)) {
+    if ((x1 >= x2) || (y1 >= y2) || (x1 >= this->CurrentWidth()) ||
+        (y1 >= this->CurrentHeight()) || (x2 >= this->CurrentWidth()) ||
+        (y2 >= this->CurrentWidth())) {
         // failed sanity check so set defaults and return false
         this->tarea.x1 = 0;
         this->tarea.y1 = 0;
-        this->tarea.x2 = DISPLAY_WIDTH - 1;
-        this->tarea.y2 = DISPLAY_HEIGHT - 1;
+        this->tarea.x2 = this->CurrentWidth() - 1;
+        this->tarea.y2 = this->CurrentHeight() - 1;
         this->tarea.mode = DEFAULT_SCROLLDIR;
     } else {
         this->tarea.x1 = x1;
@@ -311,7 +311,7 @@ void gText::ScrollUp(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2,
                 /*
                 * If we just crossed over, then we should be done.
                 */
-                if (sy < DISPLAY_HEIGHT) {
+                if (sy < this->CurrentHeight()) {
                     glcd_Device::GotoXY(col, sy & ~7);
                     sbyte = this->ReadData();
                 }
