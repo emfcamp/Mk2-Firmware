@@ -27,11 +27,13 @@
  */
 
 #include "RadioReceiveTask.h"
-#include "DebugTask.h"
 #include "IncomingRadioMessage.h"
 #include "Utils.h"
 
 #include <FreeRTOS_ARM.h>
+#include <debug.h>
+
+#include "IncomingRadioMessage.h"
 
 #define NO_CURRENT_MESSAGE 65535
 #define NO_CHANNEL_DISCOVERED 255
@@ -256,4 +258,3 @@ inline void RadioReceiveTask::_initialiseReceiveState() {
 inline void RadioReceiveTask::_clearSerialBuffer() {
 	while (RADIO_SERIAL.available()) RADIO_SERIAL.read();
 }
-

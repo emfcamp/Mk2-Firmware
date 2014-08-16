@@ -26,7 +26,7 @@
  SOFTWARE.
  */
 #include <FreeRTOS_ARM.h>
-#include "DebugTask.h"
+#include <debug.h>
 
 #include "Task.h"
 
@@ -90,3 +90,4 @@ void Task::taskCaller() {
 void Task::_task(void* self) {
     static_cast<Task*>(self)->taskCaller();
 }
+

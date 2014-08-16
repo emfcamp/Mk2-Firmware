@@ -322,6 +322,7 @@ static const uint8_t CAN1TX = 107;
     
 //Piezo
 #define PIEZO                 (66u)
+#define PIEZO_PWM             (111u)
 
 #ifdef __cplusplus
 }

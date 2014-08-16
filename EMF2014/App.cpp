@@ -26,7 +26,6 @@
  SOFTWARE.
  */
 #include <FreeRTOS_ARM.h>
-#include "DebugTask.h"
 
 #include "App.h"
 

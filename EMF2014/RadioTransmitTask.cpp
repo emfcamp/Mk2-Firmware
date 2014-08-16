@@ -27,9 +27,9 @@
  */
 
 #include <FreeRTOS_ARM.h>
+#include <debug.h>
 
 #include "RadioTransmitTask.h"
-#include "DebugTask.h"
 #include "Utils.h"
 #include "Tilda.h"
 #include "SettingsStore.h"
