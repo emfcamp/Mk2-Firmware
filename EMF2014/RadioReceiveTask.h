@@ -1,7 +1,7 @@
 /*
  TiLDA Mk2
 
- RadioTask
+ RadioReceiveTask
  This handles the periodic wake of the radio for all our need communication with the gateway's.
  Incoming request are passed back to the TiLDATask
  Outgoing request from TiLDATask are sent at the next opportunity.
@@ -38,7 +38,7 @@
 #include "Task.h"
 #include "MessageCheckTask.h"
 
-class RadioTask: public Task {
+class RadioReceiveTask: public Task {
 private:
 	enum RadioState : uint8_t {
 		RADIO_STATE_DISCOVERY,
@@ -47,12 +47,17 @@ private:
 	};
 
 public:
-	RadioTask(MessageCheckTask& aMessageCheckTask, RTC_clock& aRealTimeClock);
+	RadioReceiveTask(MessageCheckTask& aMessageCheckTask, RTC_clock& aRealTimeClock);
 
 	String getName() const;
 protected:
 	void task();
+
 private:
+	RadioReceiveTask(const RadioReceiveTask& that)
+		:mMessageCheckTask(that.mMessageCheckTask),
+		mRealTimeClock(that.mRealTimeClock) {}
+
 	inline void _enterAtMode();
 	inline void _leaveAtMode();
 
