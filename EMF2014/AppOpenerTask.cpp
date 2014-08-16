@@ -42,10 +42,10 @@ String AppOpenerTask::getName() const {
 }
 
 void AppOpenerTask::task() {
-    ButtonSubscription buttonSubscription = Tilda::createButtonSubscription(LIGHT | B);
+    ButtonSubscription* buttonSubscription = Tilda::createButtonSubscription(LIGHT | B);
 
     while(true) {
-        Button button = buttonSubscription.waitForPress();
+        Button button = buttonSubscription->waitForPress();
         if (button == LIGHT) {
             if (mAppManager.getActiveAppName() == "FlashLight") {
                 mAppManager.open("HomeScreen");
@@ -57,4 +57,5 @@ void AppOpenerTask::task() {
         }
     }
 
+    delete buttonSubscription;
 }

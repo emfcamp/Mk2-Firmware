@@ -38,9 +38,9 @@ RTC_clock *Tilda::_realTimeClock = NULL;
 
 Tilda::Tilda() {}
 
-ButtonSubscription Tilda::createButtonSubscription(uint16_t buttons) {
-    ButtonSubscription result;
-    result.addButtons(LIGHT | A | B | UP | DOWN | LEFT | RIGHT | CENTER);
+ButtonSubscription* Tilda::createButtonSubscription(uint16_t buttons) {
+    ButtonSubscription* result = new ButtonSubscription;
+    result->addButtons(LIGHT | A | B | UP | DOWN | LEFT | RIGHT | CENTER);
     return result;
 }
 

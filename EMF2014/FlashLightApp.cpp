@@ -36,7 +36,7 @@
 #include "Tilda.h"
 
 FlashLightApp::FlashLightApp()
-    :_lightLevel(8), _buttonSubscription(NULL)
+    :mLightLevel(8), mButtonSubscription(NULL)
 {
 
 }
@@ -47,35 +47,37 @@ String FlashLightApp::getName() const {
 }
 
 void FlashLightApp::updateLeds() {
-    uint8_t actualLightLevel = 1 << _lightLevel;
-    if (_lightLevel == 8) {
+    uint8_t actualLightLevel = 1 << mLightLevel;
+    if (mLightLevel == 8) {
         actualLightLevel = 255;
     }
     Tilda::setLedColor({actualLightLevel, actualLightLevel, actualLightLevel});
 }
 
 void FlashLightApp::task() {
-    ButtonSubscription buttonSubscription = Tilda::createButtonSubscription(UP | DOWN);
-    _buttonSubscription = &buttonSubscription;
+    mButtonSubscription = Tilda::createButtonSubscription(UP | DOWN);
+
     updateLeds();
     while(true) {
-        Button button = _buttonSubscription->waitForPress(( TickType_t ) 1000);
+        Button button = mButtonSubscription->waitForPress(( TickType_t ) 1000);
         if (button == UP) {
-            if (_lightLevel < 8) {
-                _lightLevel++;
+            if (mLightLevel < 8) {
+                mLightLevel++;
             } else {
-                _lightLevel = 8;
+                mLightLevel = 8;
             }
             updateLeds();
         } else if (button == DOWN) {
-            if (_lightLevel > 1) {
-                _lightLevel--;
+            if (mLightLevel > 1) {
+                mLightLevel--;
             } else {
-                _lightLevel = 0;
+                mLightLevel = 0;
             }
             updateLeds();
         }
     }
+
+    delete mButtonSubscription;
 }
 
 void FlashLightApp::afterSuspension() {
@@ -83,9 +85,9 @@ void FlashLightApp::afterSuspension() {
 }
 
 void FlashLightApp::beforeResume() {
-    if (_buttonSubscription) {
+    if (mButtonSubscription) {
         // Clear Button Queue of any up/down button pressed that have occured durind suspension
-        _buttonSubscription->clear();
+        mButtonSubscription->clear();
     }
     updateLeds();
 }

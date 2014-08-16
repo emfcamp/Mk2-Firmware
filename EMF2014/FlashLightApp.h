@@ -47,6 +47,6 @@ protected:
     void beforeResume();
 private:
 	void updateLeds();
-	unsigned char _lightLevel;
-	ButtonSubscription *_buttonSubscription;
+	unsigned char mLightLevel;
+	ButtonSubscription* mButtonSubscription;
 };
