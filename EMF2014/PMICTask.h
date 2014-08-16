@@ -41,7 +41,7 @@
 #include "EMF2014Config.h"
 #include "Task.h"
 
-#define PMIC_DEFAULT_SAMPLE     500000 // 5 minutes
+#define PMIC_DEFAULT_RATE       15000 // 15 seconds
 #define PMIC_CHARGING           LOW
 #define PMIC_NOTCHARGING        HIGH
 

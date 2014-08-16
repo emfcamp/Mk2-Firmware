@@ -27,6 +27,7 @@
  */
 
 #include "PMICTask.h"
+#include <debug.h>
 
 // EventGroup bita
 #define PMIC_CHAREG_STATE_BIT   (1 << 0)
@@ -40,21 +41,23 @@
 // Callbacks
 static void PMICChargeStateInterrupt(void)
 {
-    static BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-    
-    // set the Charge state bit to wake the PMIC Task
-    xEventGroupSetBitsFromISR(PMIC.eventGroup,
-                              PMIC_CHAREG_STATE_BIT,
-                              &xHigherPriorityTaskWoken);
-    
-    if (xHigherPriorityTaskWoken) {
-        portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+    if (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING) {
+        static BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+        
+        // set the Charge state bit to wake the PMIC Task
+        xEventGroupSetBitsFromISR(PMIC.eventGroup,
+                                  PMIC_CHAREG_STATE_BIT,
+                                  &xHigherPriorityTaskWoken);
+        
+        if (xHigherPriorityTaskWoken) {
+            portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+        }
     }
 }
 
 
 // Public
-String PMICTask::getName()
+String PMICTask::getName() const
 {
     return "PMICTask";
 }
@@ -92,20 +95,30 @@ void PMICTask::task()
 {
     pinMode(MCP_STAT, INPUT_PULLUP);
     pinMode(VBATT_MON, INPUT);
-    sampleRate = PMIC_DEFAULT_SAMPLE;
+    sampleRate = PMIC_DEFAULT_RATE;
     
     eventGroup = xEventGroupCreate();
     if (eventGroup == NULL) {
-        // bugger
+        debug::log("PMICTask: failed to create event group");
     }
     
     attachInterrupt(MCP_STAT, PMICChargeStateInterrupt, CHANGE);
-        
+    EventBits_t uxBits;
     
+    // initial reading
+    batteryReading = analogRead(VBATT_MON);
+    chargeState = digitalRead(MCP_STAT);
+    debug::log("PMICTask: Battery: " + String(getBatteryVoltage()) + " Charging: " + chargeState);
+    
+    if (batteryReading <= PMIC_BATTERY_VERYLOW) {
+        // TODO: Panic and Charge now notifications
+        debug::log("PMICTask: Battery Very Low on startup");
+    } else if (batteryReading <= PMIC_BATTERY_LOW) {
+        // TODO: Low battery notification
+        debug::log("PMICTask: Battery Low on startup");
+    }
+       
     while(true) {
-        
-        EventBits_t uxBits;
-        
         /* Wait a maximum of 100ms for either bit 0 or bit 4 to be set within
          the event group.  Clear the bits before exiting. */
         uxBits = xEventGroupWaitBits(eventGroup,
@@ -114,16 +127,16 @@ void PMICTask::task()
                                      pdFALSE,
                                      (sampleRate/portTICK_PERIOD_MS) );
         
-        if( ( uxBits & PMIC_SAMPLE_RATE_BIT ) != 0 ) {
+        if ((uxBits & PMIC_SAMPLE_RATE_BIT) != 0 ) {
             // new sample rate notting todo but clear the bit and re enter the wait
             xEventGroupClearBits(eventGroup,
                                  PMIC_SAMPLE_RATE_BIT);
             
-        } else if( ( uxBits & PMIC_CHAREG_STATE_BIT ) != 0 ) {
+        } else if ((uxBits & PMIC_CHAREG_STATE_BIT) != 0 ) {
             chargeState = digitalRead(MCP_STAT);
             xEventGroupClearBits(eventGroup,
-                                 PMIC_SAMPLE_RATE_BIT);
-            
+                                 PMIC_CHAREG_STATE_BIT);
+            debug::log("PMICTask: New charge state: " + String(chargeState));
             // TODO: notify others that want to know about state change
             
             
@@ -131,12 +144,14 @@ void PMICTask::task()
             // wait timed out, time to sample the battery voltage
             batteryReading = analogRead(VBATT_MON);
             chargeState = digitalRead(MCP_STAT);
-            
+            debug::log("PMICTask: Battery: " + String(getBatteryVoltage()) + " Charging: " + chargeState);
             // check battery state and notify others
             if (batteryReading <= PMIC_BATTERY_VERYLOW) {
                 // TODO: Panic and Charge now notifications
+                debug::log("PMICTask: Battery Very Low");
             } else if (batteryReading <= PMIC_BATTERY_LOW) {
                 // TODO: Low battery notification
+                debug::log("PMICTask: Battery Low");
             }
         }
         
