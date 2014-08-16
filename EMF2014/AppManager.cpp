@@ -26,7 +26,7 @@
  SOFTWARE.
  */
 #include <FreeRTOS_ARM.h>
-#include "debug.h"
+#include <debug.h>
 #include "EMF2014Config.h"
 #include "AppManager.h"
 

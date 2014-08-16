@@ -27,9 +27,11 @@
  */
 
 #include "RadioTask.h"
-#include "IncomingRadioMessage.h"
-#include "debug.h"
+
 #include <FreeRTOS_ARM.h>
+#include <debug.h>
+
+#include "IncomingRadioMessage.h"
 
 #define NO_CURRENT_MESSAGE 65535
 #define NO_CHANNEL_DISCOVERED 255

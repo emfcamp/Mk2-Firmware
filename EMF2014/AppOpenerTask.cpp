@@ -28,10 +28,11 @@
 #include "AppOpenerTask.h"
 
 #include <FreeRTOS_ARM.h>
+#include <debug.h>
 
 #include "ButtonSubscription.h"
 #include "Tilda.h"
-#include "debug.h"
+
 
 AppOpenerTask::AppOpenerTask(AppManager& aAppManager)
     :mAppManager(aAppManager)

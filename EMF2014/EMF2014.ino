@@ -37,6 +37,7 @@
 
 // Reference all libraries that are used here, otherwise Arduino won't include them :(
 #include <FreeRTOS_ARM.h>
+#include <debug.h>
 #include <Sha1.h>
 #include <DueFlashStorage.h>
 #include <TinyPacks.h>
@@ -46,7 +47,6 @@
 
 // These are the includes actually needed for this file:
 #include "EMF2014Config.h"
-#include "debug.h"
 #include "RGBTask.h"
 #include "ButtonTask.h"
 #include "RadioTask.h"

@@ -27,7 +27,7 @@
  */
 
 #include "ButtonTask.h"
-#include "debug.h"
+#include <debug.h>
 #include <FreeRTOS_ARM.h>
 #include "ButtonSubscription.h"
 #include "Tilda.h"

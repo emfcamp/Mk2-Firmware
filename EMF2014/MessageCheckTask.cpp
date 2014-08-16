@@ -30,7 +30,7 @@
 
 #include <uECC.h> 
 #include <Sha1.h>
-#include "debug.h"
+#include <debug.h>
 #include "DataStore.h"
 
 MessageCheckTask::MessageCheckTask() {

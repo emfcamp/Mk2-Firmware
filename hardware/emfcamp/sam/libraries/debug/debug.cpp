@@ -67,8 +67,12 @@ namespace debug {
     }
 
     void logHWM() {
-        UBaseType_t uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
-        DEBUG_SERIAL.println("HWM: " + String(uxHighWaterMark));
+         if (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING) {
+            UBaseType_t uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
+            DEBUG_SERIAL.println("HWM: " + String(uxHighWaterMark));
+        } else {
+            DEBUG_SERIAL.println("HWM: not running");
+        }
     }
 
     void logFromISR(String text) {

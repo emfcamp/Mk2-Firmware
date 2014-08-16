@@ -27,7 +27,7 @@
  */
 
 #include "DataStore.h"
-#include "debug.h"
+#include <debug.h>
 
 #define CONTENT_RID_WEATHER_FORECAST 40962
 #define CONTENT_RID_SCHEDULE_FRIDAY 40963

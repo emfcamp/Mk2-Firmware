@@ -28,9 +28,9 @@
 #include "FlashLightApp.h"
 
 #include <FreeRTOS_ARM.h>
+#include <debug.h>
 
 #include "ButtonSubscription.h"
-#include "debug.h"
 #include "RGBTask.h"
 #include "AppManager.h"
 #include "Tilda.h"

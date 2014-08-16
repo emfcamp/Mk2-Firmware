@@ -74,5 +74,3 @@ enum Button {
     RIGHT        = 64,
     CENTER       = 128
 };
-
-#endif // _EMF2014_CONFIG_H_
