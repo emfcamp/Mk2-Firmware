@@ -42,16 +42,22 @@ String RadioTransmitTask::getName() const {
 
 void RadioTransmitTask::transmit() {
 	if( mQueue == 0 ) {
-		debug::log("MessageCheckTask: incomingMessages queue has not been created");
+		debug::log("RadioTransmitTask: incomingMessages queue has not been created");
 	} else {
 		if(xQueueSendToBack(mQueue, NULL, (TickType_t) 0) != pdPASS) {
-	        debug::log("MessageCheckTask: Could not queue incoming message");
+	        debug::log("RadioTransmitTask: Could not queue incoming message");
 	    }
 	}
 }
 
 void RadioTransmitTask::task() {
-	while (true) {
+	mQueue = xQueueCreate(10, 1);
 
+	while(true) {
+		void* message;
+		if(xQueueReceive(mQueue, &message, portMAX_DELAY) == pdTRUE) {
+			debug::log("RadioTransmitTask: told to transmit");
+        }
 	}
+
 }
