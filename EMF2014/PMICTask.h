@@ -2,9 +2,14 @@
  TiLDA Mk2
  
  PMICTask
- This task looks after Power Managnet IC, and lipo battery charging
- It notifies the TiLDATask of our battery voltage, charge state and battery fault
- Also might look after USOTG voltage
+ This task looks after Power Management keeping and eye on battery voltage, lipo battery charging
+ It notifies other task of the battery voltage, charge state.
+ 
+ make current charge sate available
+ read voltage at regular intervals and make available
+ notify on significant points
+ notify on charge state change
+ allow interval period change (for sleeping at night)
  
  The MIT License (MIT)
  
@@ -34,4 +39,37 @@
 #include <Arduino.h>
 #include <FreeRTOS_ARM.h>
 #include "EMF2014Config.h"
+#include "Task.h"
 
+#define PMIC_DEFAULT_RATE       15000 // 15 seconds
+#define PMIC_CHARGING           LOW
+#define PMIC_NOTCHARGING        HIGH
+
+#define PMIC_BATTERY_FULL 652               // 100%
+#define PMIC_BATTERY_GOOD 512               // 25%
+#define PMIC_BATTERY_LOW 496                // 17%
+#define PMIC_BATTERY_VERYLOW 481            // 9%
+#define PMIC_BATTERY_FLAT 465               // 0%
+#define PMIC_BATTERY_PERCENT_RATIO 0.534
+
+
+static void PMICChargeStateInterrupt(void);
+
+class PMICTask: public Task {
+public:
+    String getName() const;
+    uint32_t getBatteryReading();
+    float getBatteryVoltage();
+    uint8_t getBatteryPercent();
+    uint8_t getChargeState();
+    int8_t setSampleRate(TickType_t ms);
+    EventGroupHandle_t eventGroup;
+protected:
+    void task();
+private:
+    uint8_t chargeState;
+    uint32_t batteryReading;
+    TickType_t sampleRate;
+};
+
+extern PMICTask PMIC;

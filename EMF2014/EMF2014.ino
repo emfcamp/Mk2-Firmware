@@ -61,6 +61,7 @@
 #include "IMUTask.h"
 #include "Tilda.h"
 #include "SettingsStore.h"
+#include "PMICTask.h"
 
 /*
  * Setup is the main entry point for an Arduino sketch.
@@ -110,6 +111,7 @@ void setup() {
     messageCheckTask.start();
     radioTask.start();
     appOpenerTask.start();
+    PMIC.start();
 
     // Applications
     appManager.add(homeScreenApp);
