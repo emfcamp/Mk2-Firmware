@@ -27,10 +27,11 @@
  */
 
 #include "RadioTask.h"
-#include "DebugTask.h"
-#include "IncomingRadioMessage.h"
 
 #include <FreeRTOS_ARM.h>
+#include <debug.h>
+
+#include "IncomingRadioMessage.h"
 
 #define NO_CURRENT_MESSAGE 65535
 #define NO_CHANNEL_DISCOVERED 255
@@ -296,4 +297,3 @@ inline uint32_t RadioTask::_bytesToInt(byte b1, byte b2, byte b3, byte b4) {
 inline String RadioTask::_intToHex(uint8_t input) {
 	return String("0123456789abcdef"[input>>4]) + String("0123456789abcdef"[input&0xf]);
 }
-
