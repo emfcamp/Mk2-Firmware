@@ -30,6 +30,6 @@
 
 OutgoingMessagesManager::OutgoingMessagesManager() {}
 
-void OutgoingMessagesManager::startTransmissionWindow(TickType_t duration) {
+void OutgoingMessagesManager::handleTransmissionWindow(TickType_t duration) {
 
 }
