@@ -22,6 +22,7 @@
 */
 
 #include "utility/m2.h"
+#include "utility/m2ghglcd.h"
 
 class M2tk
 {

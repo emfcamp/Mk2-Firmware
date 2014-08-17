@@ -46,7 +46,6 @@
 #include "SPI.h"
 #include "glcd.h"
 #include "M2tk.h"
-#include "utility/m2ghglcd.h"
 #include <Arduino.h>
 
 // These are the includes actually needed for this file:
