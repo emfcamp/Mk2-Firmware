@@ -40,7 +40,7 @@ Task::~Task() {
 
 void Task::start() {
     if (mTaskHandle == NULL) {
-        debug::log("Start task: " + getName());
+        debug::log("Creating task: " + getName());
         
         // get and convert the task name
         String taskName = getName();
