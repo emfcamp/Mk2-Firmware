@@ -1,7 +1,13 @@
 /*
  TiLDA Mk2
 
- SettingsStore
+ OutgoingMessagesManager
+
+ This class takes care of messages that are meant to be sent via the radio.
+ That includes:
+ * Queueing up of external messages
+ * Creating sytem/protocol specific outgoing messages
+ * Sending outgoing message during transmit window
 
  The MIT License (MIT)
 
@@ -26,28 +32,21 @@
  SOFTWARE.
  */
 
-#include "SettingsStore.h"
-#include <DueFlashStorage.h>
+#ifndef _OUTGOING_MESSAGES_MANAGER_H_
+#define _OUTGOING_MESSAGES_MANAGER_H_
 
-#define BADGE_ID_UNKOWN 0;
+#include <Arduino.h>
+#include <FreeRTOS_ARM.h>
+#include "EMF2014Config.h"
 
-SettingsStore::SettingsStore() {
-    _badgeId = BADGE_ID_UNKOWN;
-}
+class OutgoingMessagesManager {
+public:
+    OutgoingMessagesManager();
 
-bool SettingsStore::getUniqueId(uint32_t* unique_id) const {
-    return flash_init(FLASH_ACCESS_MODE_128, 4) == FLASH_RC_OK &&
-           flash_read_unique_id(unique_id, 4) == FLASH_RC_OK;
-}
+    /* This is a blocking method */
+    void handleTransmissionWindow(TickType_t duration);
+private:
 
-uint16_t SettingsStore::getBadgeId() const {
-    return _badgeId;
-}
+};
 
-void SettingsStore::setBadgeId(uint16_t badgeId) {
-    _badgeId = badgeId;
-}
-
-bool SettingsStore::hasBadgeId() const {
-    return _badgeId != BADGE_ID_UNKOWN;
-}
+#endif // _OUTGOING_MESSAGES_MANAGER_H_

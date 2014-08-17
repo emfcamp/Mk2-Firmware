@@ -32,17 +32,36 @@
 #include <Sha1.h>
 #include <debug.h>
 #include "DataStore.h"
+#include "RadioMessageHandler.h"
+
+#define MAX_HANDLERS 20
 
 MessageCheckTask::MessageCheckTask() {
-	mDataStore = new DataStore;
+	mHandlers = new HandlerItem*[MAX_HANDLERS];
+
+	for (int i = 0 ; i < MAX_HANDLERS ; ++i) {
+		mHandlers[i] = NULL;
+	}
 }
 
 MessageCheckTask::~MessageCheckTask() {
-	delete mDataStore;
+	delete[] mHandlers;
 }
 
 String MessageCheckTask::getName() const {
 	return "MessageCheckTask";
+}
+
+void MessageCheckTask::subscribe(RadioMessageHandler& aHandler, uint16_t aRangeStart, uint16_t aRangeEnd) {
+	for (int i = 0 ; i < MAX_HANDLERS ; ++i) {
+		if (mHandlers[i] == NULL) {
+			mHandlers[i] = new HandlerItem;
+			mHandlers[i]->mHandler = &aHandler;
+			mHandlers[i]->mRangeStart = aRangeStart;
+			mHandlers[i]->mRangeEnd = aRangeEnd;
+			break;
+		}
+	}
 }
 
 void MessageCheckTask::addIncomingMessage(IncomingRadioMessage *message) {
@@ -69,16 +88,21 @@ void MessageCheckTask::task() {
 			if (memcmp(digest, message->hash(), 12) != 0) {
 				debug::log("MessageCheckTask: Can't validate message, checksum doesn't match.");
 			} else {
-
 			    // Check ECC
-			    TickType_t start = xTaskGetTickCount();
-			    if (!uECC_verify(EMF_PUBLIC_KEY, digest, message->signature())) {
-			        debug::log("MessageCheckTask: Can't validate message, ecc doesn't check out.");
-			    } else {
-			    	mDataStore->addContent(message->receiver(), message->content(), message->length());
-			    	TickType_t end = xTaskGetTickCount();
-			    	TickType_t duration = end - start;
-			    	//debug::log("MessageCheckTask: Duration for SHA1 and ECC verify: " + String(duration) + "ms");
+				if (!uECC_verify(EMF_PUBLIC_KEY, digest, message->signature())) {
+					debug::log("MessageCheckTask: Can't validate message, ecc doesn't check out.");
+				} else {
+					// we have a valid message so tell the handlers
+					debug::log("MessageCheckTask: valid message.");
+
+					for (int i = 0 ; i < MAX_HANDLERS ; ++i) {
+						if (mHandlers[i] != NULL
+								&& message->rid() >= mHandlers[i]->mRangeStart
+								&& message->rid() <= mHandlers[i]->mRangeEnd) {
+							debug::log("MessageCheckTask: dispatched!");
+							mHandlers[i]->mHandler->handleMessage(*message);
+						}
+					}
 			    }
 			}
 

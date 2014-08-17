@@ -1,7 +1,7 @@
 /*
  TiLDA Mk2
 
- RadioTask
+ RadioReceiveTask
 
  The MIT License (MIT)
 
@@ -26,7 +26,9 @@
  SOFTWARE.
  */
 
-#include "RadioTask.h"
+#include "RadioReceiveTask.h"
+#include "IncomingRadioMessage.h"
+#include "Utils.h"
 
 #include <FreeRTOS_ARM.h>
 #include <debug.h>
@@ -36,31 +38,16 @@
 #define NO_CURRENT_MESSAGE 65535
 #define NO_CHANNEL_DISCOVERED 255
 
-RadioTask::RadioTask(MessageCheckTask& aMessageCheckTask, RTC_clock& aRealTimeClock)
+RadioReceiveTask::RadioReceiveTask(MessageCheckTask& aMessageCheckTask, RTC_clock& aRealTimeClock)
 	:mMessageCheckTask(aMessageCheckTask), mRealTimeClock(aRealTimeClock)
 {
 }
 
-String RadioTask::getName() const {
-	return "RadioTask";
+String RadioReceiveTask::getName() const {
+	return "RadioReceiveTask";
 }
 
-void RadioTask::task() {
-
-	// Temporary: Remove me soon!
-	_outgoingPacketBuffer[0] = 0x90;
-	_outgoingPacketBuffer[1] = 0x03; // ping service
-	for (uint8_t i=2; i<RADIO_PACKET_LENGTH; i++) {
-		_outgoingPacketBuffer[i] = i - 2;
-	}
-	_outgoingPacketAvailable = true;
-
-	// Setup radio communitcation
-	RADIO_SERIAL.begin(RADIO_SERIAL_BAUD);
-
-	// Setup AT Mode pin
-	pinMode(RADIO_AT_MODE_PIN, OUTPUT);
-
+void RadioReceiveTask::task() {
 	_clearSerialBuffer();
 	_initialiseDiscoveryState();
 
@@ -92,16 +79,16 @@ void RadioTask::task() {
 	}
 }
 
-inline void RadioTask::_enterAtMode() {
+inline void RadioReceiveTask::_enterAtMode() {
 	digitalWrite(RADIO_AT_MODE_PIN, LOW);
 }
 
-inline void RadioTask::_leaveAtMode() {
+inline void RadioReceiveTask::_leaveAtMode() {
 	vTaskDelay(10);
 	digitalWrite(RADIO_AT_MODE_PIN, HIGH);
 }
 
-inline uint8_t RadioTask::_parsePacketBuffer(byte packetBuffer[], uint8_t packetBufferLength) {
+inline uint8_t RadioReceiveTask::_parsePacketBuffer(byte packetBuffer[], uint8_t packetBufferLength) {
 	// Have we received a whole packet yet?
 	bool receivedWholePacket =
 		packetBufferLength >= 5 + 1 && // Has to have at least one byte payload
@@ -127,7 +114,7 @@ inline uint8_t RadioTask::_parsePacketBuffer(byte packetBuffer[], uint8_t packet
 
 		packetBufferLength = 0;
 	} else if (packetBufferLength == RADIO_PACKET_WITH_RSSI_LENGTH) {
-		debug::log("RadioTask: Packet does not conform");
+		debug::log("RadioReceiveTask: Packet does not conform");
 		//debug::logByteArray(packetBuffer, 58);
 		// Something's wrong, we received enough bytes but it's not formated correctly.
 		packetBufferLength = 0;
@@ -136,9 +123,9 @@ inline uint8_t RadioTask::_parsePacketBuffer(byte packetBuffer[], uint8_t packet
 	return packetBufferLength;
 }
 
-inline void RadioTask::_handleDiscoveryPacket(byte packetBuffer[], uint8_t packetBufferLength, uint8_t rssi) {
+inline void RadioReceiveTask::_handleDiscoveryPacket(byte packetBuffer[], uint8_t packetBufferLength, uint8_t rssi) {
 	uint8_t channel = packetBuffer[0];
-	uint32_t timestamp = _bytesToInt(packetBuffer[1], packetBuffer[2], packetBuffer[3], packetBuffer[4]);
+	uint32_t timestamp = Utils::bytesToInt(packetBuffer[1], packetBuffer[2], packetBuffer[3], packetBuffer[4]);
 	if (!mRealTimeClock.has_been_set()) {
 		debug::log("Setting time to " + String(timestamp));
 		mRealTimeClock.set_unixtime(timestamp);
@@ -154,12 +141,12 @@ inline void RadioTask::_handleDiscoveryPacket(byte packetBuffer[], uint8_t packe
 	}
 }
 
-inline void RadioTask::_handleReceivePacket(byte packetBuffer[], uint8_t packetBufferLength) {
+inline void RadioReceiveTask::_handleReceivePacket(byte packetBuffer[], uint8_t packetBufferLength) {
 	// the first two bytes are always describing the receiver
-	int packetReceiver = _bytesToInt(packetBuffer[0], packetBuffer[1]);
+	int packetReceiver = Utils::bytesToInt(packetBuffer[0], packetBuffer[1]);
 
 	/*if (_currentMessageReceiver != packetReceiver) {
-		debug::log("RadioTask: Still waiting for packets, but got new receiver. Was waiting for " + String(_remainingMessageLength) + " bytes");
+		debug::log("RadioReceiveTask: Still waiting for packets, but got new receiver. Was waiting for " + String(_remainingMessageLength) + " bytes");
 	}*/
 
 	// parsing the packet - is it payload or header?
@@ -172,7 +159,7 @@ inline void RadioTask::_handleReceivePacket(byte packetBuffer[], uint8_t packetB
 		// Set meta data variables
 		_messageBufferPosition = 0;
 		_currentMessageReceiver = packetReceiver;
-		_remainingMessageLength = _bytesToInt(packetBuffer[2], packetBuffer[3], packetBuffer[4], packetBuffer[5]);
+		_remainingMessageLength = Utils::bytesToInt(packetBuffer[2], packetBuffer[3], packetBuffer[4], packetBuffer[5]);
 		memcpy(_currentMessageHash, packetBuffer + 6, 12);
 		memcpy(_currentMessageSignature, packetBuffer + 18, 40);
 	} else {
@@ -200,7 +187,7 @@ inline void RadioTask::_handleReceivePacket(byte packetBuffer[], uint8_t packetB
 	}
 }
 
-inline void RadioTask::_verifyMessage() {
+inline void RadioReceiveTask::_verifyMessage() {
 	// We're not actually verifying messages in this task, they're passed
 	// on to the MessageCheckTask
 	uint32_t messageLength = _messageBufferPosition;
@@ -215,11 +202,11 @@ inline void RadioTask::_verifyMessage() {
 	mMessageCheckTask.addIncomingMessage(message);
 }
 
-inline void RadioTask::_checkForStateChange() {
+inline void RadioReceiveTask::_checkForStateChange() {
 	if (_radioState == RADIO_STATE_DISCOVERY) {
 		if (_discoveryFinishingTime <= xTaskGetTickCount()) {
 			if (_bestChannel == NO_CHANNEL_DISCOVERED) {
-				debug::log("RadioTask: No channel discovered during this discovery period. Will sleep for certain time and try again");
+				debug::log("RadioReceiveTask: No channel discovered during this discovery period. Will sleep for certain time and try again");
 				vTaskDelay(RADIO_UNSUCCESSFUL_DISCOVERY_SLEEP);
 				_initialiseDiscoveryState();
 			} else {
@@ -228,14 +215,14 @@ inline void RadioTask::_checkForStateChange() {
 		}
 	} else if (_radioState == RADIO_STATE_RECEIVE) {
 		if (_lastMessageReceived + RADIO_RECEIVE_TIMEOUT <= xTaskGetTickCount()) {
-			debug::log("RadioTask: Main channel timeout - Going back to disovery");
+			debug::log("RadioReceiveTask: Main channel timeout - Going back to disovery");
 			_initialiseDiscoveryState();
 		}
 	}
 }
 
-inline void RadioTask::_initialiseDiscoveryState() {
-	debug::log("RadioTask: Starting discovery state");
+inline void RadioReceiveTask::_initialiseDiscoveryState() {
+	debug::log("RadioReceiveTask: Starting discovery state");
 	_bestRssi = 255;
 	_bestChannel = NO_CHANNEL_DISCOVERED;
 	_radioState = RADIO_STATE_DISCOVERY;
@@ -252,13 +239,13 @@ inline void RadioTask::_initialiseDiscoveryState() {
 	_clearSerialBuffer();
 }
 
-inline void RadioTask::_initialiseReceiveState() {
-	debug::log("RadioTask: Starting to receive on channel " + String(_bestChannel));
+inline void RadioReceiveTask::_initialiseReceiveState() {
+	debug::log("RadioReceiveTask: Starting to receive on channel " + String(_bestChannel));
 
 	_enterAtMode();
 	RADIO_SERIAL.println("ATZD3");  // output format <payload>|<rssi>
 	RADIO_SERIAL.println("ATPK3A"); // 58byte packet length
-	RADIO_SERIAL.println("ATCN" + _intToHex(_bestChannel)); // Channel
+	RADIO_SERIAL.println("ATCN" + Utils::intToHex(_bestChannel)); // Channel
 	RADIO_SERIAL.println("ATAC");   // apply
 	RADIO_SERIAL.flush();
 	_leaveAtMode();
@@ -268,32 +255,6 @@ inline void RadioTask::_initialiseReceiveState() {
 	_clearSerialBuffer();
 }
 
-inline void RadioTask::_clearSerialBuffer() {
+inline void RadioReceiveTask::_clearSerialBuffer() {
 	while (RADIO_SERIAL.available()) RADIO_SERIAL.read();
-}
-
-inline void RadioTask::_sendOutgoingBuffer() {
-	RADIO_SERIAL.write(_outgoingPacketBuffer, RADIO_PACKET_LENGTH);
-	RADIO_SERIAL.flush();
-	debug::log("RadioTask: Outgoing message sent");
-	//_outgoingPacketAvailable = false;
-}
-
-// ToDo: These could probably live somewhere else
-inline uint16_t RadioTask::_bytesToInt(byte b1, byte b2) {
-	int result = 0;
-	result = (result << 8) + b1;
-	result = (result << 8) + b2;
-	return result;
-}
-inline uint32_t RadioTask::_bytesToInt(byte b1, byte b2, byte b3, byte b4) {
-	int result = 0;
-	result = (result << 8) + b1;
-	result = (result << 8) + b2;
-	result = (result << 8) + b3;
-	result = (result << 8) + b4;
-	return result;
-}
-inline String RadioTask::_intToHex(uint8_t input) {
-	return String("0123456789abcdef"[input>>4]) + String("0123456789abcdef"[input&0xf]);
 }

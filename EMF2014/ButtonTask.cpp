@@ -40,10 +40,10 @@ String ButtonTask::getName() const {
 }
 
 void ButtonTask::task() {
-    ButtonSubscription allButtons = Tilda::createButtonSubscription(LIGHT | A | B | UP | DOWN | LEFT | RIGHT | CENTER);
+    ButtonSubscription* allButtons = Tilda::createButtonSubscription(LIGHT | A | B | UP | DOWN | LEFT | RIGHT | CENTER);
 
     while(true) {
-        Button button = allButtons.waitForPress(( TickType_t ) 1000);
+        Button button = allButtons->waitForPress(( TickType_t ) 1000);
         if (button != NONE) {
             // ToDo: Add some activity tracking in here for backlight etc..
             debug::log("Button pressed: " + String(button));
@@ -51,6 +51,8 @@ void ButtonTask::task() {
 
         vTaskDelay((1000/portTICK_PERIOD_MS));
     }
+
+    delete allButtons;
 }
 
 

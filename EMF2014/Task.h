@@ -35,14 +35,26 @@
 
 class Task {
 public:
+    Task();
     virtual ~Task();
     
 	void start();
+    void suspend();
+
 	virtual String getName() const = 0;
+
+private:
+    Task(const Task&);
+
 protected:
-    virtual void task()=0;
-    TaskHandle_t taskHandle;
+    virtual void task() = 0;
+    virtual void afterSuspension();
+    virtual void beforeResume();
+
 private:
 	void taskCaller();
-	static void _task(void *referenceToClass);
+	static void _task(void* self);
+
+protected:
+    TaskHandle_t mTaskHandle;
 };

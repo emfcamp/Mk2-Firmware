@@ -1,7 +1,7 @@
 /*
  TiLDA Mk2
 
- SettingsStore
+ Utils
 
  The MIT License (MIT)
 
@@ -26,28 +26,24 @@
  SOFTWARE.
  */
 
-#include "SettingsStore.h"
-#include <DueFlashStorage.h>
+#include "Utils.h"
 
-#define BADGE_ID_UNKOWN 0;
-
-SettingsStore::SettingsStore() {
-    _badgeId = BADGE_ID_UNKOWN;
+uint16_t Utils::bytesToInt(byte b1, byte b2) {
+    int result = 0;
+    result = (result << 8) + b1;
+    result = (result << 8) + b2;
+    return result;
 }
 
-bool SettingsStore::getUniqueId(uint32_t* unique_id) const {
-    return flash_init(FLASH_ACCESS_MODE_128, 4) == FLASH_RC_OK &&
-           flash_read_unique_id(unique_id, 4) == FLASH_RC_OK;
+uint32_t Utils::bytesToInt(byte b1, byte b2, byte b3, byte b4) {
+    int result = 0;
+    result = (result << 8) + b1;
+    result = (result << 8) + b2;
+    result = (result << 8) + b3;
+    result = (result << 8) + b4;
+    return result;
 }
 
-uint16_t SettingsStore::getBadgeId() const {
-    return _badgeId;
-}
-
-void SettingsStore::setBadgeId(uint16_t badgeId) {
-    _badgeId = badgeId;
-}
-
-bool SettingsStore::hasBadgeId() const {
-    return _badgeId != BADGE_ID_UNKOWN;
+String Utils::intToHex(uint8_t input) {
+    return String("0123456789abcdef"[input>>4]) + String("0123456789abcdef"[input&0xf]);
 }

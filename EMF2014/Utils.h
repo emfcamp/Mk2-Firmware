@@ -1,7 +1,7 @@
 /*
  TiLDA Mk2
 
- SettingsStore
+ Utils
 
  The MIT License (MIT)
 
@@ -26,28 +26,16 @@
  SOFTWARE.
  */
 
-#include "SettingsStore.h"
-#include <DueFlashStorage.h>
+#pragma once
 
-#define BADGE_ID_UNKOWN 0;
+#include <Arduino.h>
 
-SettingsStore::SettingsStore() {
-    _badgeId = BADGE_ID_UNKOWN;
-}
+class Utils {
+private:
+    Utils();
 
-bool SettingsStore::getUniqueId(uint32_t* unique_id) const {
-    return flash_init(FLASH_ACCESS_MODE_128, 4) == FLASH_RC_OK &&
-           flash_read_unique_id(unique_id, 4) == FLASH_RC_OK;
-}
-
-uint16_t SettingsStore::getBadgeId() const {
-    return _badgeId;
-}
-
-void SettingsStore::setBadgeId(uint16_t badgeId) {
-    _badgeId = badgeId;
-}
-
-bool SettingsStore::hasBadgeId() const {
-    return _badgeId != BADGE_ID_UNKOWN;
-}
+public:
+    static uint16_t bytesToInt(byte b1, byte b2);
+    static uint32_t bytesToInt(byte b1, byte b2, byte b3, byte b4);
+    static String intToHex(uint8_t input);
+};

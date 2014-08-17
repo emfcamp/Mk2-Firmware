@@ -49,7 +49,8 @@
 #include "EMF2014Config.h"
 #include "RGBTask.h"
 #include "ButtonTask.h"
-#include "RadioTask.h"
+#include "RadioReceiveTask.h"
+#include "RadioTransmitTask.h"
 #include "MessageCheckTask.h"
 #include "AppOpenerTask.h"
 #include "AppManager.h"
@@ -58,6 +59,7 @@
 #include "TiLDAButtonInterrupts.h"
 #include "Tilda.h"
 #include "SettingsStore.h"
+#include "DataStore.h"
 #include "PMICTask.h"
 
 /*
@@ -69,16 +71,26 @@
 RTC_clock realTimeClock(RC);
 SettingsStore settingsStore;
 AppManager appManager;
+
+DataStore dataStore;
 RGBTask rgbTask;
 ButtonTask buttonTask;
 MessageCheckTask messageCheckTask;
-RadioTask radioTask(messageCheckTask, realTimeClock);
+RadioReceiveTask radioReceiveTask(messageCheckTask, realTimeClock);
+RadioTransmitTask radioTransmitTask(radioReceiveTask, settingsStore);
 AppOpenerTask appOpenerTask(appManager);
 
 FlashLightApp flashLightApp;
 HomeScreenApp homeScreenApp;
 
 void setup() {
+    randomSeed(analogRead(RANDOM_SEED_PIN));
+
+    // Setup radio communitcation
+    RADIO_SERIAL.begin(RADIO_SERIAL_BAUD);
+    // Setup AT Mode pin
+    pinMode(RADIO_AT_MODE_PIN, OUTPUT);
+
     debug::setup();
     Tilda::setupTasks(&appManager, &rgbTask, &realTimeClock);
 
@@ -94,11 +106,20 @@ void setup() {
     tildaButtonAttachInterrupts();
     tildaButtonInterruptPriority();
 
+    messageCheckTask.subscribe(dataStore,
+                                RID_RANGE_CONTENT_START,
+                                RID_RANGE_CONTENT_END);
+
+    messageCheckTask.subscribe(radioTransmitTask,
+                                RID_START_TRANSMIT_WINDOW,
+                                RID_START_TRANSMIT_WINDOW);
+
     // Background tasks
     rgbTask.start();
     buttonTask.start();
     messageCheckTask.start();
-    radioTask.start();
+    radioReceiveTask.start();
+    radioTransmitTask.start();
     appOpenerTask.start();
     PMIC.start();
 

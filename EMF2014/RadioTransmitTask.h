@@ -1,7 +1,7 @@
 /*
  TiLDA Mk2
 
- RadioTask
+ RadioTransmitTask
  This handles the periodic wake of the radio for all our need communication with the gateway's.
  Incoming request are passed back to the TiLDATask
  Outgoing request from TiLDATask are sent at the next opportunity.
@@ -33,62 +33,34 @@
 
 #include <Arduino.h>
 #include <FreeRTOS_ARM.h>
-#include <rtc_clock.h>
+
 #include "EMF2014Config.h"
 #include "Task.h"
-#include "MessageCheckTask.h"
+#include "RadioReceiveTask.h"
+#include "RadioMessageHandler.h"
 
-class RadioTask: public Task {
-private:
-	enum RadioState : uint8_t {
-		RADIO_STATE_DISCOVERY,
-		RADIO_STATE_RECEIVE,
-		RADIO_STATE_TRANSMIT
-	};
+class SettingsStore;
 
+class RadioTransmitTask: public Task, public RadioMessageHandler {
 public:
-	RadioTask(MessageCheckTask& aMessageCheckTask, RTC_clock& aRealTimeClock);
+	RadioTransmitTask(RadioReceiveTask& aRadioReceiveTask, const SettingsStore& aSettingsStore);
 
 	String getName() const;
+
+private:
+    RadioTransmitTask(const RadioTransmitTask&);
+
+    void respond();
+
+private: // from RadioMessageHandler
+	void handleMessage(const IncomingRadioMessage& aIncomingRadioMessage);
+
 protected:
 	void task();
-private:
-	inline void _enterAtMode();
-	inline void _leaveAtMode();
-
-	inline uint16_t _bytesToInt(byte b1, byte b2);
-	inline uint32_t _bytesToInt(byte b1, byte b2, byte b3, byte b4);
-	inline String _intToHex(uint8_t input);
-
-	inline uint8_t _parsePacketBuffer(byte packetBuffer[], uint8_t packetBufferLength);
-
-	inline void _handleReceivePacket(byte packetBuffer[], uint8_t packetBufferLength);
-	inline void _handleDiscoveryPacket(byte packetBuffer[], uint8_t packetBufferLength, uint8_t rssi);
-	inline void _verifyMessage();
-	inline void _checkForStateChange();
-	inline void _initialiseDiscoveryState();
-	inline void _initialiseReceiveState();
-	inline void _clearSerialBuffer();
-	inline void _sendOutgoingBuffer();
 
 private:
-	MessageCheckTask& mMessageCheckTask;
-	RTC_clock& mRealTimeClock;
+	RadioReceiveTask& mRadioReceiveTask;
+    const SettingsStore& mSettingsStore;
 
-	byte _messageBuffer[RADIO_MAX_MESSAGE_BUFFER_LENGTH];
-	uint16_t _messageBufferPosition;
-	uint32_t _remainingMessageLength;
-	uint16_t _currentMessageReceiver;
-	byte _currentMessageHash[12];
-	byte _currentMessageSignature[40];
-
-	uint8_t _bestRssi;
-	uint8_t _bestChannel;
-	TickType_t _discoveryFinishingTime;
-	TickType_t _lastMessageReceived;
-
-	byte _outgoingPacketBuffer[RADIO_PACKET_LENGTH];
-	bool _outgoingPacketAvailable;
-
-	RadioState _radioState;
+	QueueHandle_t mQueue;
 };
