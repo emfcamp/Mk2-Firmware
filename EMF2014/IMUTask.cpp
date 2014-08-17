@@ -3,6 +3,17 @@
  
  IMUTask
  
+ TODO: look at mpu_lp_accel_mode() and mpu_lp_motion_interrupt() for low power sleep modes
+ TODO: look at pedemoter
+    int dmp_get_pedometer_step_count(unsigned long *count);
+    int dmp_set_pedometer_step_count(unsigned long count);
+    int dmp_get_pedometer_walk_time(unsigned long *time);
+    int dmp_set_pedometer_walk_time(unsigned long time);
+ TODO: look at using this to lower int rate, as we may have little need from anything else
+    dmp_set_interrupt_mode(DMP_INT_GESTURE);
+ 
+ 
+ 
  Parts of this code are borrowed from the Nav6 project by Kauai Labs which is under the MIT license
  <link>
  
@@ -284,7 +295,6 @@ int8_t IMUTask::MPUSetup()
     
     dmp_register_tap_cb(IMU_tap_cb);
     dmp_register_android_orient_cb(IMU_android_orient_cb);
-    
     
     return 0;
 }
