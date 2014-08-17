@@ -221,14 +221,41 @@ void glcd_Device::_do_display() {
             memcpy(txBuffer,_framebuffer,sizeof(txBuffer));
             break;
         case ROTATION_90:
+        case ROTATION_270:
+        {
+            uint16_t i = 0;
+            memset(txBuffer,0,1024); //Clear txBuffer
+            // Loop array
+            for (; i < 1024; i++) {
+                uint8_t x,y,nx,ny;
+                uint8_t byte = _framebuffer[i];
+                x = i % DEVICE_HEIGHT; // Height is width when portrait
+                // Loop round byte
+                uint8_t b=0;
+                //debug::logByteArray(&byte,1);
+                for (; b < 8; b++) {
+                    y = i / DEVICE_HEIGHT * 8 + b;
+                    if (_rotation == ROTATION_90) {
+                        // Set the pixel rotated new x,y = DEVICE_WIDTH-y,x
+                        nx = DEVICE_WIDTH-y-1;
+                        ny = x;
+                    } else {
+                        nx = y;
+                        ny = DEVICE_HEIGHT-x-1;
+                    }
+                    if (byte & (1 << b)) {
+                        txBuffer[nx+ (ny/8)*128] |= _BV((ny%8)); // From adafruit lib
+                    }
+                }
+            }
+
             break;
+        }
         case ROTATION_180:
             for (uint16_t i = 0; i < 1024; i++)
             {
                 txBuffer[1023-i] = reverse(_framebuffer[i]);
             }
-            break;
-        case ROTATION_270:
             break;
     }
 
