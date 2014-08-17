@@ -43,6 +43,9 @@
 #include <TinyPacks.h>
 #include <rtc_clock.h>
 #include <uECC.h>
+#include <SPI.h>
+#include <glcd.h>
+#include <M2tk.h>
 #include <Arduino.h>
 
 // These are the includes actually needed for this file:
@@ -59,6 +62,7 @@
 #include "TiLDAButtonInterrupts.h"
 #include "Tilda.h"
 #include "SettingsStore.h"
+#include "LCDTask.h"
 #include "DataStore.h"
 #include "PMICTask.h"
 
@@ -78,13 +82,19 @@ ButtonTask buttonTask;
 MessageCheckTask messageCheckTask;
 RadioReceiveTask radioReceiveTask(messageCheckTask, realTimeClock);
 RadioTransmitTask radioTransmitTask(radioReceiveTask, settingsStore);
+LCDTask lcdTask;
 AppOpenerTask appOpenerTask(appManager);
 
 FlashLightApp flashLightApp;
 HomeScreenApp homeScreenApp;
 
+
+
 void setup() {
     randomSeed(analogRead(RANDOM_SEED_PIN));
+
+    //Initalize LCD
+    GLCD.Init();
 
     // Setup radio communitcation
     RADIO_SERIAL.begin(RADIO_SERIAL_BAUD);
@@ -120,6 +130,7 @@ void setup() {
     messageCheckTask.start();
     radioReceiveTask.start();
     radioTransmitTask.start();
+    lcdTask.start();
     appOpenerTask.start();
     PMIC.start();
 
@@ -130,8 +141,8 @@ void setup() {
     // Boot into home screen
     Tilda::openApp("HomeScreen");
 
-    // Start scheduler
     debug::log("Start Scheduler");
+    // Start scheduler
     vTaskStartScheduler();
 
     debug::log("Insufficient RAM");
