@@ -38,7 +38,7 @@ public:
                             const byte* aBuffer,
                             const byte* aHash,
                             const byte* aSignature,
-                            uint16_t aReciever);
+                            uint16_t aRID);
     ~IncomingRadioMessage();
 
     byte* Sha1Result() const;
@@ -47,7 +47,7 @@ public:
     uint32_t length() const;
     const byte* hash() const;
     const byte* signature() const;
-    uint16_t receiver() const;
+    uint16_t rid() const;
 
 private:
     IncomingRadioMessage(){;}
@@ -58,5 +58,5 @@ private:
     uint32_t mLength;
     byte mHash[12];
     byte mSignature[40];
-    uint16_t mReceiver;
+    uint16_t mRID;
 };

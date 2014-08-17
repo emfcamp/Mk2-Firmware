@@ -31,6 +31,7 @@
 #include <debug.h>
 #include "RGBTask.h"
 #include "AppManager.h"
+#include "PMICTask.h"
 
 RGBTask *Tilda::_rgbTask = NULL;
 AppManager *Tilda::_appManager = NULL;
@@ -38,9 +39,9 @@ RTC_clock *Tilda::_realTimeClock = NULL;
 
 Tilda::Tilda() {}
 
-ButtonSubscription Tilda::createButtonSubscription(uint16_t buttons) {
-    ButtonSubscription result;
-    result.addButtons(LIGHT | A | B | UP | DOWN | LEFT | RIGHT | CENTER);
+ButtonSubscription* Tilda::createButtonSubscription(uint16_t buttons) {
+    ButtonSubscription* result = new ButtonSubscription;
+    result->addButtons(LIGHT | A | B | UP | DOWN | LEFT | RIGHT | CENTER);
     return result;
 }
 
@@ -77,6 +78,19 @@ void Tilda::openApp(String name) {
 RTC_clock* Tilda::getClock() {
     return _realTimeClock;
 }
+
+
+static float getBatteryVoltage() {
+    return PMIC.getBatteryVoltage();
+}
+
+static uint8_t getBatteryPercent() {
+    return PMIC.getBatteryPercent();
+}
+static uint8_t getChargeState() {
+    return PMIC.getChargeState();
+}
+
 
 void Tilda::setupTasks(AppManager* appManager, RGBTask* rgbTask, RTC_clock* realTimeClock) {
     _appManager = appManager;

@@ -1,7 +1,8 @@
 /*
  TiLDA Mk2
 
- SettingsStore
+ FlashLightApp
+ Torch Mode - Press the light button and both RGB LEDs light up.
 
  The MIT License (MIT)
 
@@ -26,28 +27,11 @@
  SOFTWARE.
  */
 
-#include "SettingsStore.h"
-#include <DueFlashStorage.h>
+#pragma once
 
-#define BADGE_ID_UNKOWN 0;
+#include "IncomingRadioMessage.h"
 
-SettingsStore::SettingsStore() {
-    _badgeId = BADGE_ID_UNKOWN;
-}
-
-bool SettingsStore::getUniqueId(uint32_t* unique_id) const {
-    return flash_init(FLASH_ACCESS_MODE_128, 4) == FLASH_RC_OK &&
-           flash_read_unique_id(unique_id, 4) == FLASH_RC_OK;
-}
-
-uint16_t SettingsStore::getBadgeId() const {
-    return _badgeId;
-}
-
-void SettingsStore::setBadgeId(uint16_t badgeId) {
-    _badgeId = badgeId;
-}
-
-bool SettingsStore::hasBadgeId() const {
-    return _badgeId != BADGE_ID_UNKOWN;
-}
+class RadioMessageHandler {
+public:
+    virtual void handleMessage(const IncomingRadioMessage&) = 0;
+};

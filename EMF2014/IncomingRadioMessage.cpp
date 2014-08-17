@@ -34,8 +34,8 @@ IncomingRadioMessage::IncomingRadioMessage(uint32_t aLength,
                                             const byte* aBuffer,
                                             const byte* aHash,
                                             const byte* aSignature,
-                                            uint16_t aReciever)
-    :mLength(aLength), mReceiver(aReciever)
+                                            uint16_t aRID)
+    :mLength(aLength), mRID(aRID)
 {
     mContent = new byte[mLength];
     memcpy(mContent, aBuffer, mLength);
@@ -51,10 +51,10 @@ byte* IncomingRadioMessage::Sha1Result() const {
     // Create SHA1 digest
     Sha1.init();
 
-    char receiverHi = mReceiver >> 8;
-    char receiverLo = mReceiver & 0xFF;
-    Sha1.print(receiverHi);
-    Sha1.print(receiverLo);
+    char ridHi = mRID >> 8;
+    char ridLo = mRID & 0xFF;
+    Sha1.print(ridHi);
+    Sha1.print(ridLo);
 
     for (uint32_t i=0; i<mLength; i++) {
         Sha1.print((char)mContent[i]);
@@ -79,6 +79,6 @@ const byte* IncomingRadioMessage::signature() const {
     return mSignature;
 }
 
-uint16_t IncomingRadioMessage::receiver() const {
-    return mReceiver;
+uint16_t IncomingRadioMessage::rid() const {
+    return mRID;
 }

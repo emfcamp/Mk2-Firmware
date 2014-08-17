@@ -26,27 +26,6 @@
  SOFTWARE.
  */
 #include <FreeRTOS_ARM.h>
-#include <debug.h>
 
 #include "App.h"
 
-void App::start() {
-    if (!running) {
-        if (taskHandle == NULL) {
-            debug::log("Start app");
-            Task::start();
-        } else {
-            beforeResume();
-            vTaskResume(taskHandle);
-        }
-        running = true;
-    }
-}
-
-void App::suspend() {
-    if (running) {
-        vTaskSuspend(taskHandle);
-        afterSuspension();
-        running = false;
-    } 
-}
