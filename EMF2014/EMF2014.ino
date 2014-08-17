@@ -43,9 +43,9 @@
 #include <TinyPacks.h>
 #include <rtc_clock.h>
 #include <uECC.h>
-#include "SPI.h"
-#include "glcd.h"
-#include "M2tk.h"
+#include <SPI.h>
+#include <glcd.h>
+#include <M2tk.h>
 #include <Arduino.h>
 
 // These are the includes actually needed for this file:

@@ -23,7 +23,7 @@
 
 #include <string.h>
 #include "m2.h"
-#include "glcd.h"
+#include <glcd.h>
 #include "m2ghglcd.h"
 
 

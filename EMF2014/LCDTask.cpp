@@ -81,7 +81,7 @@ The functions affected are:
 
 #include "LCDTask.h"
 #include <FreeRTOS_ARM.h>
-#include "glcd.h"
+#include <glcd.h>
 
 String LCDTask::getName() const
 {
