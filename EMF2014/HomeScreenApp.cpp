@@ -37,11 +37,17 @@ String HomeScreenApp::getName() const {
 
 void HomeScreenApp::task() {
     while(true) {
-        Tilda::setLedColor({255, 0, 0});
+        Tilda::setLedColor({2, 0, 0});
         Tilda::delay(300);
-        Tilda::setLedColor({0, 255, 0});
+        Tilda::setLedColor({0, 2, 0});
         Tilda::delay(300);
-        Tilda::setLedColor({0, 0, 255});
+        Tilda::setLedColor({0, 0, 2});
+        Tilda::delay(300);
+        Tilda::setLedColor({2, 2, 0});
+        Tilda::delay(300);
+        Tilda::setLedColor({0, 2, 2});
+        Tilda::delay(300);
+        Tilda::setLedColor({2, 0, 2});
         Tilda::delay(300);
     }
 }
