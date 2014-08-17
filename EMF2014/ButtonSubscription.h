@@ -45,6 +45,9 @@ public:
     void clear();
 
 private:
+    ButtonSubscription(const ButtonSubscription&) {}
+
+private:
     uint16_t mButtons;
     QueueHandle_t mQueue;
 };

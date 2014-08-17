@@ -29,18 +29,18 @@
 #include "SettingsStore.h"
 #include <DueFlashStorage.h>
 
-const uint16_t SettingsStore::BADGE_ID_UNKOWN = 0x0;
+#define BADGE_ID_UNKOWN 0;
 
 SettingsStore::SettingsStore() {
     _badgeId = BADGE_ID_UNKOWN;
 }
 
-bool SettingsStore::getUniqueId(uint32_t unique_id[]) {
+bool SettingsStore::getUniqueId(uint32_t* unique_id) const {
     return flash_init(FLASH_ACCESS_MODE_128, 4) == FLASH_RC_OK &&
            flash_read_unique_id(unique_id, 4) == FLASH_RC_OK;
 }
 
-uint16_t SettingsStore::getBadgeId() {
+uint16_t SettingsStore::getBadgeId() const {
     return _badgeId;
 }
 
@@ -48,6 +48,6 @@ void SettingsStore::setBadgeId(uint16_t badgeId) {
     _badgeId = badgeId;
 }
 
-bool SettingsStore::hasBadgeId() {
+bool SettingsStore::hasBadgeId() const {
     return _badgeId != BADGE_ID_UNKOWN;
 }

@@ -36,14 +36,44 @@
 #include "IncomingRadioMessage.h"
 #include "EMF2014Config.h"
 #include "Task.h"
-#include "DataStore.h"
+
+//Unidentified Badges
+#define RID_RANGE_UNINDENTIFIED_BADGE 0x0000 
+// Badge IDs (16384 badges max)
+#define RID_RANGE_BADGE_ID_START 0x0001
+#define RID_RANGE_BADGE_ID_END 0x8FFF
+//Special backend service (e.g. badge id negotiation)
+#define RID_RANGE_SPECIAL_START 0x9000
+#define RID_RANGE_SPECIAL_END 0x9FFF 
+//Content (e.g. Schedule Saturday, Weather forecast)
+#define RID_RANGE_CONTENT_START 0xA000
+#define RID_RANGE_CONTENT_END 0xAFFF 
+//Special non-content broadcasts (e.g. start reply-window, reply with badge id)
+#define RID_RANGE_NON_CONTENT_START 0xB000
+#define RID_RANGE_NON_CONTENT_END 0xBFFF 
+//Reserved
+#define RID_RANGE_RESERVED_START 0xC000
+#define RID_RANGE_RESERVED_RESERVED_END 0xFFFF
+
+#define RID_START_TRANSMIT_WINDOW 0xB001
+
+class RadioMessageHandler;
 
 class MessageCheckTask: public Task {
+private:
+    struct HandlerItem {
+        RadioMessageHandler* mHandler;
+        uint16_t mRangeStart;
+        uint16_t mRangeEnd;
+    };
+
 public:
     MessageCheckTask();
     ~MessageCheckTask();
 
 	String getName() const;
+
+    void subscribe(RadioMessageHandler& aHandler, uint16_t aRangeStart, uint16_t aRangeEnd); 
 
 	void addIncomingMessage(IncomingRadioMessage *message);
 
@@ -55,5 +85,6 @@ protected:
 
 private:
 	QueueHandle_t mIncomingMessages;
-    DataStore* mDataStore;
+
+    HandlerItem** mHandlers;
 };

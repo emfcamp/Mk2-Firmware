@@ -45,13 +45,17 @@
 #include <TinyPacks.h>
 #include <rtc_clock.h>
 #include <uECC.h>
+#include <SPI.h>
+#include <glcd.h>
+#include <M2tk.h>
 #include <Arduino.h>
 
 // These are the includes actually needed for this file:
 #include "EMF2014Config.h"
 #include "RGBTask.h"
 #include "ButtonTask.h"
-#include "RadioTask.h"
+#include "RadioReceiveTask.h"
+#include "RadioTransmitTask.h"
 #include "MessageCheckTask.h"
 #include "AppOpenerTask.h"
 #include "AppManager.h"
@@ -61,6 +65,8 @@
 #include "IMUTask.h"
 #include "Tilda.h"
 #include "SettingsStore.h"
+#include "LCDTask.h"
+#include "DataStore.h"
 #include "PMICTask.h"
 
 /*
@@ -72,23 +78,32 @@
 RTC_clock realTimeClock(RC);
 SettingsStore settingsStore;
 AppManager appManager;
+
+DataStore dataStore;
 RGBTask rgbTask;
 ButtonTask buttonTask;
 MessageCheckTask messageCheckTask;
-RadioTask radioTask(messageCheckTask, realTimeClock);
+RadioReceiveTask radioReceiveTask(messageCheckTask, realTimeClock);
+RadioTransmitTask radioTransmitTask(radioReceiveTask, settingsStore);
+LCDTask lcdTask;
 AppOpenerTask appOpenerTask(appManager);
 
 FlashLightApp flashLightApp;
 HomeScreenApp homeScreenApp;
 
+
+
 void setup() {
-    
-    pinMode(PIN_LED_TXL, OUTPUT);
-    pinMode(PIN_LED_RXL, OUTPUT);
-    digitalWrite(PIN_LED_TXL, HIGH);
-    digitalWrite(PIN_LED_RXL, HIGH);
-    
-   
+    randomSeed(analogRead(RANDOM_SEED_PIN));
+
+    //Initalize LCD
+    GLCD.Init();
+
+    // Setup radio communitcation
+    RADIO_SERIAL.begin(RADIO_SERIAL_BAUD);
+    // Setup AT Mode pin
+    pinMode(RADIO_AT_MODE_PIN, OUTPUT);
+
     debug::setup();
     Tilda::setupTasks(&appManager, &rgbTask, &realTimeClock);
 
@@ -104,12 +119,22 @@ void setup() {
     tildaButtonAttachInterrupts();
     tildaButtonInterruptPriority();
 
+    messageCheckTask.subscribe(dataStore,
+                                RID_RANGE_CONTENT_START,
+                                RID_RANGE_CONTENT_END);
+
+    messageCheckTask.subscribe(radioTransmitTask,
+                                RID_START_TRANSMIT_WINDOW,
+                                RID_START_TRANSMIT_WINDOW);
+
     // Background tasks
     imuTask.start();
     rgbTask.start();
     buttonTask.start();
     messageCheckTask.start();
-    radioTask.start();
+    radioReceiveTask.start();
+    radioTransmitTask.start();
+    lcdTask.start();
     appOpenerTask.start();
     PMIC.start();
 
@@ -120,8 +145,8 @@ void setup() {
     // Boot into home screen
     Tilda::openApp("HomeScreen");
 
-    // Start scheduler
     debug::log("Start Scheduler");
+    // Start scheduler
     vTaskStartScheduler();
 
     debug::log("Insufficient RAM");

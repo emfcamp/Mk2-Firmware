@@ -30,12 +30,15 @@
 #include <debug.h>
 #include "HomeScreenApp.h"
 #include "Tilda.h"
+#include <glcd.h>
+#include "logo.h"
 
 String HomeScreenApp::getName() const {
     return "HomeScreen";
 }
 
 void HomeScreenApp::task() {
+    GLCD.DrawBitmap(logo,0,8);
     while(true) {
         Tilda::setLedColor({2, 0, 0});
         Tilda::delay(300);
