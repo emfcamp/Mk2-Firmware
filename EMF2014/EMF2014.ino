@@ -94,6 +94,9 @@ HomeScreenApp homeScreenApp;
 void setup() {
     randomSeed(analogRead(RANDOM_SEED_PIN));
 
+    //Initalize LCD
+    GLCD.Init();
+
     // Setup radio communitcation
     RADIO_SERIAL.begin(RADIO_SERIAL_BAUD);
     // Setup AT Mode pin
@@ -128,6 +131,7 @@ void setup() {
     messageCheckTask.start();
     radioReceiveTask.start();
     radioTransmitTask.start();
+    lcdTask.start();
     appOpenerTask.start();
     PMIC.start();
 
