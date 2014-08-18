@@ -117,6 +117,20 @@
 #define configUSE_COUNTING_SEMAPHORES	1
 #define configGENERATE_RUN_TIME_STATS	0
 
+/* Use tickless idle */
+#define configUSE_TICKLESS_IDLE         1
+#if configUSE_TICKLESS_IDLE == 1
+    #define configEXPECTED_IDLE_TIME_BEFORE_SLEEP 2
+    /* The configPRE_SLEEP_PROCESSING() and configPOST_SLEEP_PROCESSING() macros
+     allow the application writer to add additional code before and after the MCU is
+     placed into the low power state respectively.  The empty implementations
+     provided in this demo can be extended to save even more power. */
+    extern void vPreSleepProcessing( unsigned long xExpectedIdleTime ) __attribute__ ((weak));
+    extern void vPostSleepProcessing( unsigned long xExpectedIdleTime ) __attribute__ ((weak));
+    #define configPRE_SLEEP_PROCESSING( xExpectedIdleTime ) vPreSleepProcessing( xExpectedIdleTime );
+    #define configPOST_SLEEP_PROCESSING( xExpectedIdleTime ) vPostSleepProcessing( xExpectedIdleTime );
+#endif 
+
 /* Co-routine definitions. */
 #define configUSE_CO_ROUTINES 			0
 #define configMAX_CO_ROUTINE_PRIORITIES ( 2 )

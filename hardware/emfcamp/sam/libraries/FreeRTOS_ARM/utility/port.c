@@ -642,6 +642,32 @@ void xPortSysTickHandler( void )
 			portEXIT_CRITICAL();
 		}
 	}
+    /*-----------------------------------------------------------*/
+
+    __attribute__(( weak )) void vPreSleepProcessing( unsigned long ulExpectedIdleTime )
+    {
+        /* Called by the kernel before it places the MCU into a sleep mode because
+         configPRE_SLEEP_PROCESSING() is #defined to vPreSleepProcessing().
+         
+         NOTE:  Additional actions can be taken here to get the power consumption
+         even lower.  For example, peripherals can be turned	off here, and then back
+         on again in the post sleep processing function.  For maximum power saving
+         ensure all unused pins are in their lowest power state. */
+        
+        /* Avoid compiler warnings about the unused parameter. */
+        ( void ) ulExpectedIdleTime;
+    }
+    /*-----------------------------------------------------------*/
+
+    __attribute__(( weak )) void vPostSleepProcessing( unsigned long ulExpectedIdleTime )
+    {
+        /* Called by the kernel when the MCU exits a sleep mode because
+         configPOST_SLEEP_PROCESSING is #defined to vPostSleepProcessing(). */
+        
+        /* Avoid compiler warnings about the unused parameter. */
+        ( void ) ulExpectedIdleTime;
+    }
+    /*-----------------------------------------------------------*/
 
 #endif /* #if configUSE_TICKLESS_IDLE */
 /*-----------------------------------------------------------*/
@@ -652,10 +678,6 @@ void xPortSysTickHandler( void )
  */
 __attribute__(( weak )) void vPortSetupTimerInterrupt( void )
 {
-    // can't replace weak version in same file
-    sysTickEnabled = 1; // WHG for Arduino
-    return;  // WHG
-    
 	/* Calculate the constants required to configure the tick interrupt. */
 	#if configUSE_TICKLESS_IDLE == 1
 	{
@@ -664,8 +686,12 @@ __attribute__(( weak )) void vPortSetupTimerInterrupt( void )
 		ulStoppedTimerCompensation = portMISSED_COUNTS_FACTOR / ( configCPU_CLOCK_HZ / configSYSTICK_CLOCK_HZ );
 	}
 	#endif /* configUSE_TICKLESS_IDLE */
-
-	/* Configure SysTick to interrupt at the requested rate. */
+    
+    // can't replace weak version in same file
+    sysTickEnabled = 1; // WHG for Arduino
+    return;  // WHG
+	
+    /* Configure SysTick to interrupt at the requested rate. */
 	portNVIC_SYSTICK_LOAD_REG = ( configSYSTICK_CLOCK_HZ / configTICK_RATE_HZ ) - 1UL;
 	portNVIC_SYSTICK_CTRL_REG = ( portNVIC_SYSTICK_CLK_BIT | portNVIC_SYSTICK_INT_BIT | portNVIC_SYSTICK_ENABLE_BIT );
 }
