@@ -33,7 +33,6 @@
 #include <Arduino.h>
 #include <FreeRTOS_ARM.h>
 
-#include "IncomingRadioMessage.h"
 #include "EMF2014Config.h"
 #include "Task.h"
 
@@ -59,6 +58,7 @@
 #define RID_BADGE_ID 0xB002
 
 class RadioMessageHandler;
+class IncomingRadioMessage;
 
 class MessageCheckTask: public Task {
 private:
@@ -89,4 +89,5 @@ private:
 	QueueHandle_t mIncomingMessages;
 
     HandlerItem** mHandlers;
+    SemaphoreHandle_t mHandlersSemaphore;
 };

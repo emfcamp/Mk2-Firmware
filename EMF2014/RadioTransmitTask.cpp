@@ -34,6 +34,7 @@
 #include "Tilda.h"
 #include "SettingsStore.h"
 #include "MessageCheckTask.h"
+#include "IncomingRadioMessage.h"
 
 RadioTransmitTask::RadioTransmitTask(RadioReceiveTask& aRadioRecieveTask,
 										const SettingsStore& aSettingsStore,
