@@ -28,6 +28,7 @@
 
 #include "DataStore.h"
 #include "IncomingRadioMessage.h"
+#include "MessageCheckTask.h"
 
 #include <debug.h>
 
@@ -36,13 +37,18 @@
 
 #define MAX_TEXT_LENGTH 160
 
-DataStore::DataStore() {
+DataStore::DataStore(MessageCheckTask& aMessageCheckTask)
+	:mMessageCheckTask(aMessageCheckTask)
+{
 	mWeatherForecast.valid = false;
 	mSchedule.events = new Event[0];
 	mSchedule.numEvents = 0;
+
+    mMessageCheckTask.subscribe(this, RID_RANGE_CONTENT_START, RID_RANGE_CONTENT_END);
 }
  
 DataStore::~DataStore() {
+    mMessageCheckTask.unsubscribe(this);
 }
 
 void DataStore::handleMessage(const IncomingRadioMessage& aIncomingRadioMessage) {

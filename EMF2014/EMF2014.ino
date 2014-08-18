@@ -76,12 +76,12 @@ RTC_clock realTimeClock(RC);
 SettingsStore settingsStore;
 AppManager appManager;
 
-DataStore dataStore;
+MessageCheckTask messageCheckTask;
+DataStore dataStore(messageCheckTask);
 RGBTask rgbTask;
 ButtonTask buttonTask;
-MessageCheckTask messageCheckTask;
 RadioReceiveTask radioReceiveTask(messageCheckTask, realTimeClock);
-RadioTransmitTask radioTransmitTask(radioReceiveTask, settingsStore);
+RadioTransmitTask radioTransmitTask(radioReceiveTask, settingsStore, messageCheckTask);
 LCDTask lcdTask;
 AppOpenerTask appOpenerTask(appManager);
 
@@ -115,18 +115,6 @@ void setup() {
     tildaButtonSetup();
     tildaButtonAttachInterrupts();
     tildaButtonInterruptPriority();
-
-    messageCheckTask.subscribe(dataStore,
-                                RID_RANGE_CONTENT_START,
-                                RID_RANGE_CONTENT_END);
-
-    messageCheckTask.subscribe(radioTransmitTask,
-                                RID_START_TRANSMIT_WINDOW,
-                                RID_START_TRANSMIT_WINDOW);
-
-    messageCheckTask.subscribe(settingsStore,
-                                RID_BADGE_ID,
-                                RID_BADGE_ID);
 
     // Background tasks
     rgbTask.start();

@@ -33,10 +33,21 @@
 #include "Utils.h"
 #include "Tilda.h"
 #include "SettingsStore.h"
+#include "MessageCheckTask.h"
 
-RadioTransmitTask::RadioTransmitTask(RadioReceiveTask& aRadioRecieveTask, const SettingsStore& aSettingsStore)
-	:mRadioReceiveTask(aRadioRecieveTask), mSettingsStore(aSettingsStore)
-{}
+RadioTransmitTask::RadioTransmitTask(RadioReceiveTask& aRadioRecieveTask,
+										const SettingsStore& aSettingsStore,
+										MessageCheckTask& aMessageCheckTask)
+	:mRadioReceiveTask(aRadioRecieveTask),
+	mSettingsStore(aSettingsStore),
+	mMessageCheckTask(aMessageCheckTask)
+{
+	   mMessageCheckTask.subscribe(this, RID_START_TRANSMIT_WINDOW, RID_START_TRANSMIT_WINDOW);
+}
+
+RadioTransmitTask::~RadioTransmitTask() {
+	mMessageCheckTask.unsubscribe(this);
+}
 
 String RadioTransmitTask::getName() const {
 	return "RadioTransmitTask";

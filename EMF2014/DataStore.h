@@ -41,10 +41,11 @@
 #include "RadioMessageHandler.h"
 
 class IncomingRadioMessage;
+class MessageCheckTask;
 
 class DataStore: public RadioMessageHandler {
 public:
-	DataStore();
+	DataStore(MessageCheckTask& aMessageCheckTask);
 	~DataStore();
 
 	const WeatherForecast& getWeatherForecast() const;
@@ -62,6 +63,7 @@ private:
 	static String _getString(PackReader& reader);
 
 private:
+	MessageCheckTask& mMessageCheckTask;
 	WeatherForecast mWeatherForecast;
 	Schedule mSchedule;
 

@@ -74,7 +74,8 @@ public:
 
 	String getName() const;
 
-    void subscribe(RadioMessageHandler& aHandler, uint16_t aRangeStart, uint16_t aRangeEnd); 
+    void subscribe(RadioMessageHandler* aHandler, uint16_t aRangeStart, uint16_t aRangeEnd); 
+    void unsubscribe(RadioMessageHandler* aHandler); 
 
 	void addIncomingMessage(IncomingRadioMessage *message);
 

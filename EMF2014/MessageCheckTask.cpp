@@ -52,14 +52,23 @@ String MessageCheckTask::getName() const {
 	return "MessageCheckTask";
 }
 
-void MessageCheckTask::subscribe(RadioMessageHandler& aHandler, uint16_t aRangeStart, uint16_t aRangeEnd) {
+void MessageCheckTask::subscribe(RadioMessageHandler* aHandler, uint16_t aRangeStart, uint16_t aRangeEnd) {
 	for (int i = 0 ; i < MAX_HANDLERS ; ++i) {
 		if (mHandlers[i] == NULL) {
 			mHandlers[i] = new HandlerItem;
-			mHandlers[i]->mHandler = &aHandler;
+			mHandlers[i]->mHandler = aHandler;
 			mHandlers[i]->mRangeStart = aRangeStart;
 			mHandlers[i]->mRangeEnd = aRangeEnd;
 			break;
+		}
+	}
+}
+
+void MessageCheckTask::unsubscribe(RadioMessageHandler* aHandler) {
+	for (int i = 0 ; i < MAX_HANDLERS ; ++i) {
+		if (mHandlers[i]->mHandler == aHandler) {
+			delete mHandlers[i];
+			mHandlers[i] = NULL;
 		}
 	}
 }

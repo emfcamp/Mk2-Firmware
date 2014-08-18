@@ -34,6 +34,7 @@
 #include <debug.h>
 
 #include "IncomingRadioMessage.h"
+#include "MessageCheckTask.h"
 
 #define NO_CURRENT_MESSAGE 65535
 #define NO_CHANNEL_DISCOVERED 255
