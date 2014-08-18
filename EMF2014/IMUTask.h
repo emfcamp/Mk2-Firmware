@@ -46,13 +46,11 @@ static void IMU_android_orient_cb(unsigned char orientation);
 class IMUTask: public Task {
 public:
     String getName() const;
-    int8_t setSampleRate(TickType_t ms);
     EventGroupHandle_t eventGroup;
 protected:
     void task();
 private:
     // variables
-    TickType_t sampleRate = 1000;
     uint8_t dmp_state;
     
     // functions

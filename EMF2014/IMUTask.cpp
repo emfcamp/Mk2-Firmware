@@ -46,23 +46,32 @@
 #include <MPU6050.h>
 #include "Tilda.h"
 
-// forward declaration
-int8_t MPUSetup();
-
 // eventGroup Bits
-#define IMU_SAMPLE_RATE_BIT (1 << 0)
-#define IMU_INT_BIT (1 << 1)
+#define IMU_INT_BIT (1 << 0)
 
 #define IMU_DMP_ON  1
 #define IMU_DMP_OFF 0
 
 /* Starting sampling rate. */
-#define IMU_DEFAULT_MPU_HZ    (1)
+#define IMU_DEFAULT_MPU_HZ    (4)
 
-// TODO: work out orientation for badge
-static signed char gyro_orientation[9] = { 1, 0, 0,
-                                           0, 1, 0,
-                                           0, 0, 1};
+
+/* 
+ * This is not documented well in the invenses stuff but managed to work it out.
+ * Matrix is aranged in a grid with real XYZ in the coll's and mapped XYZ in the rows
+ * Positve 1 means in the same direction from the chip
+ * Negative -1 means in the oppsite direction
+ *
+ * Chip default
+ *   X  Y  Z
+ * { 1, 0, 0,   X
+ *   0, 1, 0,   Y
+ *   0, 0, 1}   Z
+ *
+ */
+static signed char gyro_orientation[9] = { 1, 0, 0,             // X axis mapping
+                                           0, -1, 0,            // Y axis mapping
+                                           0, 0, -1};           // Z axis mapping
 
 
 // Callbacks
@@ -171,17 +180,12 @@ void IMUTask::task()
     while(true) {
 
         uxBits = xEventGroupWaitBits(eventGroup,
-                                     IMU_SAMPLE_RATE_BIT | IMU_INT_BIT,
+                                     IMU_INT_BIT,
                                      pdFALSE,
                                      pdFALSE,
-                                     (sampleRate/portTICK_PERIOD_MS) );
+                                     portMAX_DELAY);
         
-        if( ( uxBits & IMU_SAMPLE_RATE_BIT ) != 0 ) {
-            // new sample rate notting todo but clear the bit and re enter the wait
-            xEventGroupClearBits(eventGroup,
-                                 IMU_SAMPLE_RATE_BIT);
-            
-        } else if( ( uxBits & IMU_INT_BIT ) != 0 ) {
+        if( ( uxBits & IMU_INT_BIT ) != 0 ) {
             // interrupt has fired
             if (dmp_state == IMU_DMP_ON) {
                 // interrupt as a result of DMP
@@ -208,6 +212,8 @@ void IMUTask::task()
                     //hal.new_gyro = 0;
                     // TODO: more data to pull need a way to fetch it
                 }
+                
+                // lets try printing the
              
             } else {
                 // TODO: interrupt not from DMP
@@ -217,7 +223,7 @@ void IMUTask::task()
                                  IMU_INT_BIT);
         } else {
             // wait timed out
-            SerialUSB.println("IMUTask: Wait time out");
+            // SerialUSB.println("IMUTask: Wait time out");
         }
         
     }
@@ -275,10 +281,11 @@ int8_t IMUTask::MPUSetup()
      * then the interrupts will be at 200Hz even if fifo rate
      * is set at a different rate. To avoid this issue include the DMP_FEATURE_TAP
      */
-    unsigned short dmp_features = DMP_FEATURE_TAP |                 // Don't remove this, see above
-                                  DMP_FEATURE_ANDROID_ORIENT |      // we use this
-                                  DMP_FEATURE_SEND_RAW_ACCEL |
-                                  DMP_FEATURE_SEND_RAW_GYRO;
+    unsigned short dmp_features = DMP_FEATURE_TAP |                // Don't remove this, see above
+                                  DMP_FEATURE_ANDROID_ORIENT;      // we use this for the screen
+                                                                   // Disableing the rest for now as we dont yet have a use for them
+                                                                   //      DMP_FEATURE_SEND_RAW_ACCEL |
+                                                                   //      DMP_FEATURE_SEND_RAW_GYRO;
     
     result = dmp_enable_feature(dmp_features);
     if (result != 0) {
@@ -295,6 +302,7 @@ int8_t IMUTask::MPUSetup()
     
     dmp_register_tap_cb(IMU_tap_cb);
     dmp_register_android_orient_cb(IMU_android_orient_cb);
+    dmp_set_interrupt_mode(DMP_INT_GESTURE);
     
     return 0;
 }
