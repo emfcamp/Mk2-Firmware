@@ -32,6 +32,9 @@
 
 #pragma once
 
+#include <Arduino.h>
+#include <FreeRTOS_ARM.h>
+
 struct Event {
     uint8_t stageId;
     uint8_t typeId;
@@ -41,7 +44,20 @@ struct Event {
     String title;
 };
 
-struct Schedule {
-    Event* events;
-    tp_integer_t numEvents;
+class Schedule {
+public:
+    Schedule(Event* aEvents, int32_t aEventCount);
+    ~Schedule();
+
+    Schedule(const Schedule& that);
+
+    int32_t getEventCount() const;
+    Event* getEvents() const;
+
+private:
+    Schedule();
+
+private:
+    Event* mEvents;
+    int32_t mEventCount;
 };
