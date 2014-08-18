@@ -37,8 +37,13 @@
 
 class HomeScreenApp: public App {
 public:
+    static App* New();
+
 	String getName() const;
-protected:
+private:
+    HomeScreenApp();
+    HomeScreenApp(const HomeScreenApp&);
+
     void task();
     void afterSuspension();
     void beforeResume();

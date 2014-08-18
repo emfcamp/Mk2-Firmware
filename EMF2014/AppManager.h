@@ -35,19 +35,21 @@
 #include "App.h"
 
 class AppManager {
+private:
+    struct AppItem {
+        App* mApp;
+        App* (*mNew)();
+    };
+
 public:
 	AppManager();
 	~AppManager();
 
-	void add(App& app);
-	void open(const String& app);
-	void open(App& app);
-	uint8_t getAppCount();
-	App& getById(uint8_t id);
-	App& getByName(const String& name) const;
+    // Your app should have a `static App* New()` that creates the app
+    // which can be passed in here like `MyApp::New`
+	void open(App* (*aNew)());
 	String getActiveAppName() const;
 
 private:
-	App* _apps[MAX_APPS];
-	App* activeApp;
+    AppItem mActiveAppItem;
 };

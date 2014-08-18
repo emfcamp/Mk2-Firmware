@@ -29,74 +29,39 @@
 #include <debug.h>
 
 #include "EMF2014Config.h"
+
 #include "AppManager.h"
 
 AppManager::AppManager() {
-    for (uint8_t i=0; i<MAX_APPS; i++) {
-        _apps[i] = NULL;
-    }
+    mActiveAppItem.mApp = NULL;
+    mActiveAppItem.mNew = NULL;
 }
 
 AppManager::~AppManager() {
-
-}
-
-void AppManager::add(App& app) {
-    for (uint8_t i=0; i<MAX_APPS; i++) {
-        if (_apps[i] == NULL) {
-            _apps[i] =& app;
-            break;
-        }
-    }
-}
-
-uint8_t AppManager::getAppCount() {
-    for (uint8_t i=0; i<MAX_APPS; i++) {
-        if (_apps[i] == NULL) {
-           return i;
-        }
-    }
-    return MAX_APPS;
-}
-
-App& AppManager::getById(uint8_t id) {
-    return *_apps[id];
-}
-
-App& AppManager::getByName(const String& name) const {
-    for (uint8_t i=0; i<MAX_APPS; i++) {
-        if (_apps[i] != NULL) {
-            if (_apps[i]->getName() == name) {
-                return *_apps[i];
-            }
-        }
-    }
-    debug::log("Error: Trying to start App that doesn't exist: " + name);
-    return *_apps[0];
-}
-
-void AppManager::open(App& app) {
-    debug::log("Opening " + app.getName());
-    if (activeApp) {
-        debug::log("Current Active App " + activeApp->getName());
-    }
-    if (activeApp == &app) {
-        return; // App is already active
-    }
-    if (activeApp != NULL) {
-        activeApp->suspend();
-    }
-    app.start();
-    activeApp = &app;
+    delete mActiveAppItem.mApp;
 }
 
 String AppManager::getActiveAppName() const {
-    if (activeApp) {
-        return activeApp->getName();
+    if (mActiveAppItem.mApp) {
+        return mActiveAppItem.mApp->getName();
     }
     return "";
 }
 
-void AppManager::open(const String& name) {
-    open(getByName(name));
+void AppManager::open(App* (*aNew)()) {
+    if (mActiveAppItem.mApp)
+        debug::log("Current active app: " + mActiveAppItem.mApp->getName());
+
+    if (mActiveAppItem.mNew == aNew) {
+        debug::log("Same app");
+        return;
+    }
+
+    // destroy the old active app, create and start the new one
+    delete mActiveAppItem.mApp;
+    mActiveAppItem.mNew = aNew;
+    mActiveAppItem.mApp = mActiveAppItem.mNew();
+    mActiveAppItem.mApp->start();
+
+    debug::log("New active app: " + mActiveAppItem.mApp->getName());
 }

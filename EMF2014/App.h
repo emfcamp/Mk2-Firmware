@@ -38,4 +38,6 @@
 class App: public Task {
 public:
 protected:
+    App();
+    App(const App&);
 };

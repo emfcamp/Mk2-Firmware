@@ -57,7 +57,6 @@
 #include "MessageCheckTask.h"
 #include "AppOpenerTask.h"
 #include "AppManager.h"
-#include "FlashLightApp.h"
 #include "HomeScreenApp.h"
 #include "TiLDAButtonInterrupts.h"
 #include "Tilda.h"
@@ -84,11 +83,6 @@ RadioReceiveTask radioReceiveTask(messageCheckTask, realTimeClock);
 RadioTransmitTask radioTransmitTask(radioReceiveTask, settingsStore, messageCheckTask);
 LCDTask lcdTask;
 AppOpenerTask appOpenerTask(appManager);
-
-FlashLightApp flashLightApp;
-HomeScreenApp homeScreenApp;
-
-
 
 void setup() {
     randomSeed(analogRead(RANDOM_SEED_PIN));
@@ -126,12 +120,8 @@ void setup() {
     appOpenerTask.start();
     PMIC.start();
 
-    // Applications
-    appManager.add(homeScreenApp);
-    appManager.add(flashLightApp);
-
     // Boot into home screen
-    Tilda::openApp("HomeScreen");
+    Tilda::openApp(HomeScreenApp::New);
 
     debug::log("Start Scheduler");
     // Start scheduler

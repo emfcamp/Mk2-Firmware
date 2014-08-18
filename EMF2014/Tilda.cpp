@@ -69,9 +69,9 @@ void Tilda::setLedColor(RGBColor color) {
     }
 }
 
-void Tilda::openApp(String name) {
+void Tilda::openApp(App* (*New)()) {
     if (_appManager) {
-        _appManager->open(name);
+        _appManager->open(New);
     }
 }
 
