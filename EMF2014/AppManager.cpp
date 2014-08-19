@@ -27,7 +27,7 @@
  */
 #include <FreeRTOS_ARM.h>
 #include <debug.h>
- 
+
 #include "EMF2014Config.h"
 #include "AppManager.h"
 
@@ -48,7 +48,20 @@ void AppManager::add(App& app) {
             break;
         }
     }
-}   
+}
+
+uint8_t AppManager::getAppCount() {
+    for (uint8_t i=0; i<MAX_APPS; i++) {
+        if (_apps[i] == NULL) {
+           return i;
+        }
+    }
+    return MAX_APPS;
+}
+
+App& AppManager::getById(uint8_t id) {
+    return *_apps[id];
+}
 
 App& AppManager::getByName(const String& name) const {
     for (uint8_t i=0; i<MAX_APPS; i++) {
@@ -56,17 +69,17 @@ App& AppManager::getByName(const String& name) const {
             if (_apps[i]->getName() == name) {
                 return *_apps[i];
             }
-        } 
+        }
     }
     debug::log("Error: Trying to start App that doesn't exist: " + name);
     return *_apps[0];
-}  
+}
 
 void AppManager::open(App& app) {
     debug::log("Opening " + app.getName());
     if (activeApp) {
         debug::log("Current Active App " + activeApp->getName());
-    } 
+    }
     if (activeApp == &app) {
         return; // App is already active
     }
@@ -75,7 +88,7 @@ void AppManager::open(App& app) {
     }
     app.start();
     activeApp = &app;
-} 
+}
 
 String AppManager::getActiveAppName() const {
     if (activeApp) {
