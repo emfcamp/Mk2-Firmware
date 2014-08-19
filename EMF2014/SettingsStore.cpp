@@ -30,6 +30,7 @@
 #include <DueFlashStorage.h>
 #include <debug.h>
 #include "Utils.h"
+#include "IncomingRadioMessage.h"
 
 #define BADGE_ID_UNKOWN 0;
 
