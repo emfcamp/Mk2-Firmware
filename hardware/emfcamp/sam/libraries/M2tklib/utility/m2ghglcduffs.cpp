@@ -32,14 +32,8 @@ extern "C" uint8_t m2_gh_glcd_uffs(m2_gfx_arg_p arg)
   switch(arg->msg)
   {
     case M2_GFX_MSG_INIT:
-      m2_is_glcd_init=0;
       break;
     case M2_GFX_MSG_START:
-      if ( m2_is_glcd_init == 0 )
-      {
-	GLCD.Init(NON_INVERTED);   // initialise the library, non inverted writes pixels onto a clear screen
-	m2_is_glcd_init = 1;
-      }
       GLCD.ClearScreen();
       break;
     case M2_GFX_MSG_END:
