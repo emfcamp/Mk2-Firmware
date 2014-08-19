@@ -72,7 +72,7 @@
  * and in FreeRTOS we will start the scheduler
  */
 
-RTC_clock realTimeClock(RC);
+RTC_clock realTimeClock(XTAL);
 SettingsStore settingsStore;
 AppManager appManager;
 
