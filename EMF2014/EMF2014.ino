@@ -65,6 +65,7 @@
 #include "LCDTask.h"
 #include "DataStore.h"
 #include "PMICTask.h"
+#include "GUITask.h"
 
 /*
  * Setup is the main entry point for an Arduino sketch.
@@ -83,6 +84,7 @@ MessageCheckTask messageCheckTask;
 RadioReceiveTask radioReceiveTask(messageCheckTask, realTimeClock);
 RadioTransmitTask radioTransmitTask(radioReceiveTask, settingsStore);
 LCDTask lcdTask;
+GUITask guiTask;
 AppOpenerTask appOpenerTask(appManager);
 
 FlashLightApp flashLightApp;
@@ -131,6 +133,7 @@ void setup() {
     radioReceiveTask.start();
     radioTransmitTask.start();
     lcdTask.start();
+    guiTask.start();
     appOpenerTask.start();
     PMIC.start();
 

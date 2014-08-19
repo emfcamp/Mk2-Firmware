@@ -32,6 +32,7 @@
 #include "Tilda.h"
 #include <glcd.h>
 #include "logo.h"
+#include <M2tk.h>
 
 String HomeScreenApp::getName() const {
     return "HomeScreen";
@@ -39,6 +40,7 @@ String HomeScreenApp::getName() const {
 
 void HomeScreenApp::task() {
     GLCD.DrawBitmap(logo,0,8);
+    Tilda::delay(5000);
     while(true) {
         Tilda::setLedColor({2, 0, 0});
         Tilda::delay(300);
