@@ -44,7 +44,7 @@ MessageCheckTask::MessageCheckTask() {
 		mHandlers[i] = NULL;
 	}
 
-	mHandlersSemaphore = xSemaphoreCreateBinary();
+	mHandlersSemaphore = xSemaphoreCreateMutex();
 }
 
 MessageCheckTask::~MessageCheckTask() {

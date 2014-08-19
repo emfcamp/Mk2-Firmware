@@ -46,8 +46,8 @@ DataStore::DataStore(MessageCheckTask& aMessageCheckTask)
 	mWeatherForecast->valid = false;
 	mSchedule = new Schedule(NULL, 0);
 
-	mWeatherSemaphore = xSemaphoreCreateBinary();
-	mScheduleSemaphore = xSemaphoreCreateBinary();
+	mWeatherSemaphore = xSemaphoreCreateMutex();
+	mScheduleSemaphore = xSemaphoreCreateMutex();
 
     mMessageCheckTask.subscribe(this, RID_RANGE_CONTENT_START, RID_RANGE_CONTENT_END);
 }
