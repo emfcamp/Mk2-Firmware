@@ -124,6 +124,10 @@ void setup() {
                                 RID_START_TRANSMIT_WINDOW,
                                 RID_START_TRANSMIT_WINDOW);
 
+    messageCheckTask.subscribe(settingsStore,
+                                RID_BADGE_ID,
+                                RID_BADGE_ID);
+
     // Background tasks
     rgbTask.start();
     buttonTask.start();

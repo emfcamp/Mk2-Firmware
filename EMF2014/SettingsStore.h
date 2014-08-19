@@ -37,10 +37,11 @@
 #include <Arduino.h>
 #include <FreeRTOS_ARM.h>
 #include "EMF2014Config.h"
+#include "RadioMessageHandler.h"
 
+class IncomingRadioMessage;
 
-
-class SettingsStore {
+class SettingsStore: public RadioMessageHandler {
 public:
     SettingsStore();
 
@@ -54,6 +55,8 @@ public:
 
 private:
     SettingsStore(const SettingsStore&);
+
+    void handleMessage(const IncomingRadioMessage&);
 
 private:
     uint16_t _badgeId;
