@@ -32,3 +32,14 @@
 #include <FreeRTOS_ARM.h>
 #include "EMF2014Config.h"
 
+#include "Task.h"
+
+class TiLDATask: public Task {
+public:
+    TiLDATask();
+
+    String getName() const;
+
+private:
+    void task();
+};

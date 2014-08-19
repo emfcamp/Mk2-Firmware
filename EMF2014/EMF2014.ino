@@ -48,80 +48,30 @@
 #include <M2tk.h>
 #include <Arduino.h>
 
-// These are the includes actually needed for this file:
-#include "EMF2014Config.h"
-#include "RGBTask.h"
-#include "ButtonTask.h"
-#include "RadioReceiveTask.h"
-#include "RadioTransmitTask.h"
-#include "MessageCheckTask.h"
-#include "AppOpenerTask.h"
-#include "AppManager.h"
-#include "HomeScreenApp.h"
+#include "TiLDATask.h"
 #include "TiLDAButtonInterrupts.h"
-#include "Tilda.h"
-#include "SettingsStore.h"
-#include "LCDTask.h"
-#include "DataStore.h"
-#include "PMICTask.h"
 
-/*
- * Setup is the main entry point for an Arduino sketch.
- * Here is where we will do a lot of work in getting the system running
- * and in FreeRTOS we will start the scheduler
- */
-
-RTC_clock realTimeClock(RC);
-SettingsStore settingsStore;
-AppManager appManager;
-
-MessageCheckTask messageCheckTask;
-DataStore dataStore(messageCheckTask);
-RGBTask rgbTask;
-ButtonTask buttonTask;
-RadioReceiveTask radioReceiveTask(messageCheckTask, realTimeClock);
-RadioTransmitTask radioTransmitTask(radioReceiveTask, settingsStore, messageCheckTask);
-LCDTask lcdTask;
-AppOpenerTask appOpenerTask(appManager);
+TiLDATask tiLDATask;
 
 void setup() {
     randomSeed(analogRead(RANDOM_SEED_PIN));
-
-    //Initalize LCD
-    GLCD.Init();
 
     // Setup radio communitcation
     RADIO_SERIAL.begin(RADIO_SERIAL_BAUD);
     // Setup AT Mode pin
     pinMode(RADIO_AT_MODE_PIN, OUTPUT);
 
-    debug::setup();
-    Tilda::setupTasks(&appManager, &rgbTask, &realTimeClock);
-
-    // Uncomment this if you want to see serial output during startup
-    // This will require you to send a character over serial before unblocking
-    // the startup
-
-    debug::waitForKey();
-
-    realTimeClock.init();
-
     tildaButtonSetup();
     tildaButtonAttachInterrupts();
     tildaButtonInterruptPriority();
 
-    // Background tasks
-    rgbTask.start();
-    buttonTask.start();
-    messageCheckTask.start();
-    radioReceiveTask.start();
-    radioTransmitTask.start();
-    lcdTask.start();
-    appOpenerTask.start();
-    PMIC.start();
+    debug::setup();
+    // Uncomment this if you want to see serial output during startup
+    // This will require you to send a character over serial before unblocking
+    // the startup
+    debug::waitForKey();
 
-    // Boot into home screen
-    Tilda::openApp(HomeScreenApp::New);
+    tiLDATask.start();
 
     debug::log("Start Scheduler");
     // Start scheduler
