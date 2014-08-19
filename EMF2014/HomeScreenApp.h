@@ -44,6 +44,8 @@ private:
     HomeScreenApp();
     HomeScreenApp(const HomeScreenApp&);
 
+    bool keepAlive() const;
+
     void task();
     void afterSuspension();
     void beforeResume();

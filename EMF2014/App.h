@@ -37,6 +37,8 @@
 
 class App: public Task {
 public:
+    virtual bool keepAlive() const;
+
 protected:
     App();
     App(const App&);

@@ -43,6 +43,10 @@ String HomeScreenApp::getName() const {
     return "HomeScreen";
 }
 
+bool HomeScreenApp::keepAlive() const {
+    return true;
+}
+
 void HomeScreenApp::task() {
     GLCD.DrawBitmap(logo,0,8);
     while(true) {

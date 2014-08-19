@@ -30,3 +30,7 @@
 #include "App.h"
 
 App::App() {}
+
+bool App::keepAlive() const {
+    return false;
+}

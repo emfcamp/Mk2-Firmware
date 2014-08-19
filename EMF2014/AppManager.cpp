@@ -32,36 +32,102 @@
 
 #include "AppManager.h"
 
-AppManager::AppManager() {
-    mActiveAppItem.mApp = NULL;
-    mActiveAppItem.mNew = NULL;
+#define MAX_APPS 10
+
+AppManager::AppItem::AppItem(App* (*aNew)())
+    :mNew(aNew)
+{
+    mApp = mNew();
+    mApp->start();
+}
+
+AppManager::AppItem::~AppItem() {
+    delete mApp;
+}
+
+AppManager::AppManager()
+    :mActiveAppItem(NULL)
+{
+    mAppItems = new AppItem*[MAX_APPS];
+    for (int i = 0 ; i < MAX_APPS ; ++i) {
+        mAppItems[i] = NULL;
+    }
 }
 
 AppManager::~AppManager() {
-    delete mActiveAppItem.mApp;
+    // no need to delete the active ap as
+    // it'll be in the list of all apps
+    delete[] mAppItems; 
 }
 
 String AppManager::getActiveAppName() const {
-    if (mActiveAppItem.mApp) {
-        return mActiveAppItem.mApp->getName();
+    if (mActiveAppItem) {
+        return mActiveAppItem->mApp->getName();
     }
     return "";
 }
 
-void AppManager::open(App* (*aNew)()) {
-    if (mActiveAppItem.mApp)
-        debug::log("Current active app: " + mActiveAppItem.mApp->getName());
-
-    if (mActiveAppItem.mNew == aNew) {
-        debug::log("Same app");
-        return;
+AppManager::AppItem* AppManager::createAndAddApp(App* (*aNew)()) {
+    for (int i = 0 ; i < MAX_APPS ; ++i) {
+        if (mAppItems[i] == NULL) {
+            mAppItems[i] = new AppItem(aNew);
+            return mAppItems[i];
+        } 
     }
 
-    // destroy the old active app, create and start the new one
-    delete mActiveAppItem.mApp;
-    mActiveAppItem.mNew = aNew;
-    mActiveAppItem.mApp = mActiveAppItem.mNew();
-    mActiveAppItem.mApp->start();
+    return NULL;
+}
 
-    debug::log("New active app: " + mActiveAppItem.mApp->getName());
+AppManager::AppItem* AppManager::getExistingApp(App* (*aNew)()) {
+    for (int i = 0 ; i < MAX_APPS ; ++i) {
+        if (mAppItems[i]->mNew == aNew) {
+            return mAppItems[i];
+        } 
+    }
+
+    return NULL;
+}
+
+void AppManager::open(App* (*aNew)()) {
+    if (mActiveAppItem) {
+        debug::log("Current active app: " + mActiveAppItem->mApp->getName());
+
+        if (mActiveAppItem->mNew == aNew) {
+            debug::log("Same app so we do nothing");
+            return;
+        }
+    }
+
+    // stop the active app
+    if (mActiveAppItem) {
+        if (mActiveAppItem->mApp->keepAlive()) {
+            // This app should not be detroyed so just suspend it
+            mActiveAppItem->mApp->suspend();
+        } else {
+            // This app is getting destroyed and removed from the list
+            for (int i = 0 ; i < MAX_APPS ; ++i) {
+                if (mAppItems[i]->mNew == mActiveAppItem->mNew) {
+                    delete mAppItems[i];
+                    mAppItems[i] = NULL;
+                    break;
+                }
+            }
+
+            mActiveAppItem = NULL;
+        }
+    }
+
+    // is the app already in our list?
+    AppItem* existingApp = getExistingApp(aNew);
+
+    if (existingApp) {
+        // the app already exists so just restart it
+        existingApp->mApp->start();
+        mActiveAppItem = existingApp;
+    } else {
+        // We need to create the app
+        mActiveAppItem = createAndAddApp(aNew);
+    }
+
+    debug::log("New active app: " + mActiveAppItem->mApp->getName());
 }

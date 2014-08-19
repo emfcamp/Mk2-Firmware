@@ -36,9 +36,14 @@
 
 class AppManager {
 private:
-    struct AppItem {
+    class AppItem {
+    public:
+        AppItem(App* (*aNew)());
+        ~AppItem();
+
+    public:
         App* mApp;
-        App* (*mNew)();
+        App* (*mNew)(); // the function pointer to create the app is used as an app id
     };
 
 public:
@@ -51,5 +56,10 @@ public:
 	String getActiveAppName() const;
 
 private:
-    AppItem mActiveAppItem;
+    AppItem* createAndAddApp(App* (*aNew)());
+    AppItem* getExistingApp(App* (*aNew)());
+
+private:
+    AppItem* mActiveAppItem;
+    AppItem** mAppItems;
 };

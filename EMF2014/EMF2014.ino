@@ -51,6 +51,7 @@
 #include "TiLDATask.h"
 #include "TiLDAButtonInterrupts.h"
 
+// All setup of tasks is now done within the TilDATask
 TiLDATask tiLDATask;
 
 void setup() {
