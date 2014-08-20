@@ -33,15 +33,19 @@
 #include <FreeRTOS_ARM.h>
 #include "EMF2014Config.h"
 #include "Task.h"
+#include <M2tk.h>
 
 class GUITask: public Task {
 
 private:
   // Control functions
+  M2tk* _m2;
 
 protected:
 
 public:
     String getName() const;
     void task();
+
+    void setM2Root(m2_rom_void_p newRoot);
 };

@@ -138,6 +138,7 @@ void setup() {
     PMIC.start();
 
     // Applications
+    homeScreenApp.setGUITask(&guiTask);
     appManager.add(homeScreenApp);
     appManager.add(flashLightApp);
 
