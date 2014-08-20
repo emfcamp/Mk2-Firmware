@@ -81,6 +81,8 @@ void RadioReceiveTask::task() {
 			packetBufferLength = _parsePacketBuffer(packetBuffer, packetBufferLength);
 
 			_lastMessageReceived = xTaskGetTickCount();
+		} else {
+			vTaskDelay(1);
 		}
 
 		_checkForStateChange();
