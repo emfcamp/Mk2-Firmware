@@ -52,6 +52,7 @@ public:
 	String getName() const;
 protected:
 	void task();
+	void beforeResume();
 
 private:
 	RadioReceiveTask(const RadioReceiveTask& that);
