@@ -63,10 +63,21 @@ void RadioReceiveTask::task() {
 	byte packetBuffer[RADIO_PACKET_WITH_RSSI_LENGTH];
 	uint8_t packetBufferLength = 0;
 
+	#ifdef RADIO_DEBUG_MODE
+		uint8_t serialRingBufferHWM = 0;
+	#endif
+
 	_currentMessageReceiver = NO_CURRENT_MESSAGE;
 	while (true) {
 		uint8_t availableBytes = RADIO_SERIAL.available();
 		if (availableBytes > 0) {
+			#ifdef RADIO_DEBUG_MODE
+				if (serialRingBufferHWM < availableBytes) {
+					serialRingBufferHWM = availableBytes;
+					debug::log("RadioReceiveTask: serialRingBufferHWM=" + String(serialRingBufferHWM));
+				}
+			#endif
+
 			while (availableBytes > 0) {
 				packetBuffer[packetBufferLength] = RADIO_SERIAL.read();
 				packetBufferLength++;
@@ -82,7 +93,7 @@ void RadioReceiveTask::task() {
 
 			_lastMessageReceived = xTaskGetTickCount();
 		} else {
-			vTaskDelay(5);
+			vTaskDelay(RADIO_NO_DATA_SLEEP_DURATION);
 		}
 
 		_checkForStateChange();
@@ -124,9 +135,14 @@ inline uint8_t RadioReceiveTask::_parsePacketBuffer(byte packetBuffer[], uint8_t
 
 		packetBufferLength = 0;
 	} else if (packetBufferLength == RADIO_PACKET_WITH_RSSI_LENGTH) {
-		debug::log("RadioReceiveTask: Packet does not conform");
-		debug::logByteArray(packetBuffer, 58);
+		#ifdef RADIO_DEBUG_MODE
+			debug::log("RadioReceiveTask: Packet does not conform");
+			debug::logByteArray(packetBuffer, 58);
+		#endif
 		// Something's wrong, we received enough bytes but it's not formated correctly.
+		// Let's sleep a while and clear the buffer. Hopefully that'll fix it.
+		vTaskDelay(7);
+		_clearSerialBuffer();
 		packetBufferLength = 0;
 	}
 

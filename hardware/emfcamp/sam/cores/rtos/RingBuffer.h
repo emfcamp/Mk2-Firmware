@@ -25,7 +25,7 @@
 // using a ring buffer (I think), in which head is the index of the location
 // to which to write the next incoming character and tail is the index of the
 // location from which to read.
-#define SERIAL_BUFFER_SIZE 256 // Used to be 64 - Increased to make the RadioReceiverTask more battery efficient
+#define SERIAL_BUFFER_SIZE 255 // Used to be 64 - Increased to make the RadioReceiverTask more battery efficient
 
 class RingBuffer
 {

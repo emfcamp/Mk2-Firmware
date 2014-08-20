@@ -56,6 +56,10 @@
 // Time spend without incoming messages before badge goes back into
 // discovery mode (in ticks)
 #define RADIO_RECEIVE_TIMEOUT 5000
+// Sleep time for the receiver task when no serial data is available
+#define RADIO_NO_DATA_SLEEP_DURATION 5
+
+#define RADIO_DEBUG_MODE
 
 // EMF2014 Public Key
 const uint8_t EMF_PUBLIC_KEY[40] = {0x8a, 0x5a, 0x14, 0xcc, 0xf8, 0x45, 0x21, 0x59, 0x4c, 0xe1,
