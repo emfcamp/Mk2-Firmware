@@ -82,7 +82,7 @@ void RadioReceiveTask::task() {
 
 			_lastMessageReceived = xTaskGetTickCount();
 		} else {
-			vTaskDelay(1);
+			vTaskDelay(5);
 		}
 
 		_checkForStateChange();
