@@ -56,6 +56,7 @@
 #define RID_RANGE_RESERVED_RESERVED_END 0xFFFF
 
 #define RID_START_TRANSMIT_WINDOW 0xB001
+#define RID_BADGE_ID 0xB002
 
 class RadioMessageHandler;
 

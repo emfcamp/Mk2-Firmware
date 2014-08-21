@@ -1,12 +1,8 @@
 /*
  TiLDA Mk2
 
- SettingsStore
-
- This class stores information like badgeId, preferences and whatever
- else we can think of. This goes into the flash memory.
-
- See: https://github.com/sebnil/DueFlashStorage/blob/master/flash_efc.cpp#L845
+ BadgeNotifications
+ This class collects, organises and exposes Notifications.
 
  The MIT License (MIT)
 
@@ -31,35 +27,30 @@
  SOFTWARE.
  */
 
-#ifndef _SETTINGS_STORE_H_
-#define _SETTINGS_STORE_H_
+#pragma once
 
 #include <Arduino.h>
 #include <FreeRTOS_ARM.h>
 #include "EMF2014Config.h"
-#include "RadioMessageHandler.h"
+#include "RGBTask.h"
 
-class IncomingRadioMessage;
-
-class SettingsStore: public RadioMessageHandler {
+class BadgeNotification {
 public:
-    SettingsStore();
-
-    bool getUniqueId(uint32_t* unique_id) const;
-
-    uint16_t getBadgeId() const;
-    void setBadgeId(uint16_t badgeId);
-    bool hasBadgeId() const;
-
-    static const uint16_t BADGE_ID_UNKOWN;
-
+    BadgeNotification(String text, RGBColor led1, RGBColor led2, boolean sound) :_text(text), _led1(led1), _led2(led2), _sound(sound) {};
+    String text() const;
+    RGBColor led1() const;
+    RGBColor led2() const;
+    boolean sound() const;
 private:
-    SettingsStore(const SettingsStore&);
-
-    void handleMessage(const IncomingRadioMessage&);
-
-private:
-    uint16_t _badgeId;
+    String _text;
+    RGBColor _led1;
+    RGBColor _led2;
+    boolean _sound;
 };
 
-#endif // _SETTINGS_STORE_H_
+class BadgeNotifications {
+public:
+    static BadgeNotification* popNotification();
+private:
+
+};

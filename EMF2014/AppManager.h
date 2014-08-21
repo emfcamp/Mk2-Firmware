@@ -36,16 +36,18 @@
 
 class AppManager {
 public:
-    AppManager();
-    ~AppManager();
+	AppManager();
+	~AppManager();
 
 	void add(App& app);
 	void open(const String& app);
 	void open(App& app);
-	App& getByName(const String& name) const; 
+	uint8_t getAppCount();
+	App& getById(uint8_t id);
+	App& getByName(const String& name) const;
 	String getActiveAppName() const;
 
 private:
-    App* _apps[MAX_APPS];
-    App* activeApp;
+	App* _apps[MAX_APPS];
+	App* activeApp;
 };

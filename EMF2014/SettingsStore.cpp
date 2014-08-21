@@ -28,11 +28,39 @@
 
 #include "SettingsStore.h"
 #include <DueFlashStorage.h>
+#include <debug.h>
+#include "Utils.h"
 
 #define BADGE_ID_UNKOWN 0;
 
 SettingsStore::SettingsStore() {
     _badgeId = BADGE_ID_UNKOWN;
+}
+
+void SettingsStore::handleMessage(const IncomingRadioMessage& radioMessage) {
+    uint32_t uniqueId[4];
+    if (getUniqueId(uniqueId)) {
+        bool ourUniqueId = true;
+
+        for (int i = 0 ; i < 4 ; ++i) {
+            uint32_t receivedUniqueId = Utils::bytesToInt(radioMessage.content()[(i * 4) + 3],
+                                                            radioMessage.content()[(i * 4) + 2],
+                                                            radioMessage.content()[(i * 4) + 1],
+                                                            radioMessage.content()[(i * 4) + 0]);
+
+            ourUniqueId = ourUniqueId && receivedUniqueId == uniqueId[i];
+
+            if (!ourUniqueId)
+                debug::log("**** " + String(uniqueId[i]) + ":" + String(receivedUniqueId));
+        }
+
+        if (ourUniqueId) {
+            _badgeId = Utils::bytesToInt(radioMessage.content()[16], radioMessage.content()[17]);
+            debug::log("got badge id: " + String(_badgeId));
+        } else {
+            debug::log("not our unique id");
+        }
+    }
 }
 
 bool SettingsStore::getUniqueId(uint32_t* unique_id) const {

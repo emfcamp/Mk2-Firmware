@@ -1,12 +1,7 @@
 /*
  TiLDA Mk2
 
- SettingsStore
-
- This class stores information like badgeId, preferences and whatever
- else we can think of. This goes into the flash memory.
-
- See: https://github.com/sebnil/DueFlashStorage/blob/master/flash_efc.cpp#L845
+ BadgeNotifications
 
  The MIT License (MIT)
 
@@ -31,35 +26,14 @@
  SOFTWARE.
  */
 
-#ifndef _SETTINGS_STORE_H_
-#define _SETTINGS_STORE_H_
+#include "BadgeNotifications.h"
 
-#include <Arduino.h>
-#include <FreeRTOS_ARM.h>
-#include "EMF2014Config.h"
-#include "RadioMessageHandler.h"
+String BadgeNotification::text() const { return _text; }
+RGBColor BadgeNotification::led1() const { return _led1; }
+RGBColor BadgeNotification::led2() const { return _led2; }
+boolean BadgeNotification::sound() const { return _sound; }
 
-class IncomingRadioMessage;
-
-class SettingsStore: public RadioMessageHandler {
-public:
-    SettingsStore();
-
-    bool getUniqueId(uint32_t* unique_id) const;
-
-    uint16_t getBadgeId() const;
-    void setBadgeId(uint16_t badgeId);
-    bool hasBadgeId() const;
-
-    static const uint16_t BADGE_ID_UNKOWN;
-
-private:
-    SettingsStore(const SettingsStore&);
-
-    void handleMessage(const IncomingRadioMessage&);
-
-private:
-    uint16_t _badgeId;
-};
-
-#endif // _SETTINGS_STORE_H_
+BadgeNotification* BadgeNotifications::popNotification() {
+    // ToDo: Actually implement this mock
+    return new BadgeNotification(String("Hello World!"), {255, 128, 0}, {0, 128, 255}, true);
+}
