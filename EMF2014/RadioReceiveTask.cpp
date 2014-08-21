@@ -48,6 +48,14 @@ String RadioReceiveTask::getName() const {
 	return "RadioReceiveTask";
 }
 
+void RadioReceiveTask::beforeResume() {
+	// Don't count suspended time towards timeout!
+	_lastMessageReceived = xTaskGetTickCount();
+
+	// Get rid of garbage collected during transmit period (like talk of other radios)
+	_clearSerialBuffer();
+}
+
 void RadioReceiveTask::task() {
 	_clearSerialBuffer();
 	_initialiseDiscoveryState();
@@ -116,7 +124,7 @@ inline uint8_t RadioReceiveTask::_parsePacketBuffer(byte packetBuffer[], uint8_t
 		packetBufferLength = 0;
 	} else if (packetBufferLength == RADIO_PACKET_WITH_RSSI_LENGTH) {
 		debug::log("RadioReceiveTask: Packet does not conform");
-		//debug::logByteArray(packetBuffer, 58);
+		debug::logByteArray(packetBuffer, 58);
 		// Something's wrong, we received enough bytes but it's not formated correctly.
 		packetBufferLength = 0;
 	}
