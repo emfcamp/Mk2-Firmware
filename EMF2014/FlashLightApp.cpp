@@ -52,10 +52,6 @@ String FlashLightApp::getName() const {
     return "FlashLight";
 }
 
-bool FlashLightApp::keepAlive() const {
-    return true;
-}
-
 void FlashLightApp::updateLeds() {
     uint8_t actualLightLevel = 1 << mLightLevel;
     if (mLightLevel == 8) {

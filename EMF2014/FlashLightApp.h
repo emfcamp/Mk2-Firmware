@@ -42,8 +42,7 @@ public:
     ~FlashLightApp();
 
 	String getName() const;
-    bool keepAlive() const;
-
+    
 private:
     FlashLightApp();
     FlashLightApp(FlashLightApp&);
