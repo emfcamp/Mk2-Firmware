@@ -38,7 +38,6 @@ AppManager::AppItem::AppItem(App* (*aNew)())
     :mNew(aNew)
 {
     mApp = mNew();
-    mApp->start();
 }
 
 AppManager::AppItem::~AppItem() {
@@ -100,10 +99,9 @@ void AppManager::open(App* (*aNew)()) {
 
     // stop the active app
     if (mActiveAppItem) {
-        if (mActiveAppItem->mApp->keepAlive()) {
-            // This app should not be detroyed so just suspend it
-            mActiveAppItem->mApp->suspend();
-        } else {
+        mActiveAppItem->mApp->suspend();
+
+        if (!mActiveAppItem->mApp->keepAlive()) {
             // This app is getting destroyed and removed from the list
             for (int i = 0 ; i < MAX_APPS ; ++i) {
                 if (mAppItems[i]->mNew == mActiveAppItem->mNew) {
@@ -119,15 +117,8 @@ void AppManager::open(App* (*aNew)()) {
 
     // is the app already in our list?
     AppItem* existingApp = getExistingApp(aNew);
-
-    if (existingApp) {
-        // the app already exists so just restart it
-        existingApp->mApp->start();
-        mActiveAppItem = existingApp;
-    } else {
-        // We need to create the app
-        mActiveAppItem = createAndAddApp(aNew);
-    }
+    mActiveAppItem = existingApp ? existingApp : createAndAddApp(aNew);
+    mActiveAppItem->mApp->start();
 
     debug::log("New active app: " + mActiveAppItem->mApp->getName());
 }
