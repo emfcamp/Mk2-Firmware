@@ -35,9 +35,9 @@
 
 #define MAX_APPS 10
 
-// Add you app here to appear in the app list
-AppDefinition APPS[] = {AppDefinition("HomeScreen", HomeScreenApp::New),
-                            AppDefinition("FlashLight", FlashLightApp::New)};
+// Add your app here to appear in the app list
+static const AppDefinition APPS[] = {AppDefinition("HomeScreen", HomeScreenApp::New),
+                                        AppDefinition("FlashLight", FlashLightApp::New)};
 
 AppManager::AppItem::AppItem(app_ctor aNew)
     :mNew(aNew)
@@ -116,6 +116,8 @@ void AppManager::open(app_ctor aNew) {
         mActiveAppItem->mApp->suspend();
 
         if (!mActiveAppItem->mApp->keepAlive()) {
+            debug::log("Deleting task: " + mActiveAppItem->mApp->getName());
+
             // This app is getting destroyed and removed from the list
             for (int i = 0 ; i < MAX_APPS ; ++i) {
                 if (mAppItems[i]->mNew == mActiveAppItem->mNew) {
