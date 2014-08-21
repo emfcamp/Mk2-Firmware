@@ -29,12 +29,17 @@
 #include <debug.h>
 
 #include "EMF2014Config.h"
-
+#include "HomeScreenApp.h"
+#include "FlashLightApp.h"
 #include "AppManager.h"
 
 #define MAX_APPS 10
 
-AppManager::AppItem::AppItem(App* (*aNew)())
+// Add you app here to appear in the app list
+AppDefinition APPS[] = {AppDefinition("HomeScreen", HomeScreenApp::New),
+                            AppDefinition("FlashLight", FlashLightApp::New)};
+
+AppManager::AppItem::AppItem(app_ctor aNew)
     :mNew(aNew)
 {
     mApp = mNew();
@@ -59,6 +64,15 @@ AppManager::~AppManager() {
     delete[] mAppItems; 
 }
 
+
+uint8_t AppManager::getAppCount() {
+    return sizeof(APPS) / sizeof(AppDefinition);
+}
+
+AppDefinition AppManager::getById(uint8_t id) {
+    return APPS[id];
+}
+
 String AppManager::getActiveAppName() const {
     if (mActiveAppItem) {
         return mActiveAppItem->mApp->getName();
@@ -66,7 +80,7 @@ String AppManager::getActiveAppName() const {
     return "";
 }
 
-AppManager::AppItem* AppManager::createAndAddApp(App* (*aNew)()) {
+AppManager::AppItem* AppManager::createAndAddApp(app_ctor aNew) {
     for (int i = 0 ; i < MAX_APPS ; ++i) {
         if (mAppItems[i] == NULL) {
             mAppItems[i] = new AppItem(aNew);
@@ -77,7 +91,7 @@ AppManager::AppItem* AppManager::createAndAddApp(App* (*aNew)()) {
     return NULL;
 }
 
-AppManager::AppItem* AppManager::getExistingApp(App* (*aNew)()) {
+AppManager::AppItem* AppManager::getExistingApp(app_ctor aNew) {
     for (int i = 0 ; i < MAX_APPS ; ++i) {
         if (mAppItems[i]->mNew == aNew) {
             return mAppItems[i];
@@ -87,7 +101,7 @@ AppManager::AppItem* AppManager::getExistingApp(App* (*aNew)()) {
     return NULL;
 }
 
-void AppManager::open(App* (*aNew)()) {
+void AppManager::open(app_ctor aNew) {
     if (mActiveAppItem) {
         debug::log("Current active app: " + mActiveAppItem->mApp->getName());
 
