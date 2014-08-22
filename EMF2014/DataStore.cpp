@@ -1,22 +1,22 @@
 /*
  TiLDA Mk2
- 
+
  Data Store
 
  The MIT License (MIT)
- 
+
  Copyright (c) 2014 Electromagnetic Field LTD
- 
+
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
  in the Software without restriction, including without limitation the rights
  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  copies of the Software, and to permit persons to whom the Software is
  furnished to do so, subject to the following conditions:
- 
+
  The above copyright notice and this permission notice shall be included in all
  copies or substantial portions of the Software.
- 
+
  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -34,8 +34,10 @@
 
 #include <debug.h>
 
-#define CONTENT_RID_WEATHER_FORECAST 40962
-#define CONTENT_RID_SCHEDULE_FRIDAY 40963
+#define CONTENT_RID_WEATHER_FORECAST  40962
+#define CONTENT_RID_SCHEDULE_FRIDAY   40963
+#define CONTENT_RID_SCHEDULE_SATURDAY 40964
+#define CONTENT_RID_SCHEDULE_SUNDAY   40965
 
 #define MAX_TEXT_LENGTH 160
 
@@ -44,19 +46,22 @@ DataStore::DataStore(MessageCheckTask& aMessageCheckTask)
 {
 	mWeatherForecast = new WeatherForecast;
 	mWeatherForecast->valid = false;
-	mSchedule = new Schedule(NULL, 0);
+	mSchedule = new Schedule*[3];
+	mSchedule[SCHEDULE_FRIDAY] = new Schedule(NULL, 0);
+	mSchedule[SCHEDULE_SATURDAY] = new Schedule(NULL, 0);
+	mSchedule[SCHEDULE_SUNDAY] = new Schedule(NULL, 0);
 
 	mWeatherSemaphore = xSemaphoreCreateMutex();
 	mScheduleSemaphore = xSemaphoreCreateMutex();
 
     mMessageCheckTask.subscribe(this, RID_RANGE_CONTENT_START, RID_RANGE_CONTENT_END);
 }
- 
+
 DataStore::~DataStore() {
     mMessageCheckTask.unsubscribe(this);
 
     delete mWeatherForecast;
-    delete mSchedule;
+    delete[] mSchedule;
 
     vSemaphoreDelete(mWeatherSemaphore);
     vSemaphoreDelete(mScheduleSemaphore);
@@ -66,7 +71,11 @@ void DataStore::handleMessage(const IncomingRadioMessage& aIncomingRadioMessage)
 	if (aIncomingRadioMessage.rid() == CONTENT_RID_WEATHER_FORECAST) {
 		_addWeatherForecastRaw(aIncomingRadioMessage);
 	} else if (aIncomingRadioMessage.rid() == CONTENT_RID_SCHEDULE_FRIDAY) {
-		_addScheduleFridayRaw(aIncomingRadioMessage);
+		_addScheduleRaw(aIncomingRadioMessage, SCHEDULE_FRIDAY);
+	} else if (aIncomingRadioMessage.rid() == CONTENT_RID_SCHEDULE_SATURDAY) {
+		_addScheduleRaw(aIncomingRadioMessage, SCHEDULE_SATURDAY);
+	} else if (aIncomingRadioMessage.rid() == CONTENT_RID_SCHEDULE_SUNDAY) {
+		_addScheduleRaw(aIncomingRadioMessage, SCHEDULE_SUNDAY);
 	} else {
 		debug::log("DataStore: Rid not supported: " + String(aIncomingRadioMessage.rid()) + " " + String(aIncomingRadioMessage.length()));
 	}
@@ -82,10 +91,10 @@ WeatherForecast* DataStore::getWeatherForecast() const {
 	return weather;
 }
 
-Schedule* DataStore::getSchedule() const {
+Schedule* DataStore::getSchedule(ScheduleDay day) const {
 	Schedule* schedule = NULL;
 	if (xSemaphoreTake(mScheduleSemaphore, portMAX_DELAY) == pdTRUE) {
-		Schedule* schedule = new Schedule(*mSchedule);
+		Schedule* schedule = new Schedule(*mSchedule[day]);
 		xSemaphoreGive(mScheduleSemaphore);
 	}
 	return schedule;
@@ -130,7 +139,7 @@ void DataStore::_addWeatherForecastRaw(const IncomingRadioMessage& aIncomingRadi
 	}
 }
 
-void DataStore::_addScheduleFridayRaw(const IncomingRadioMessage& aIncomingRadioMessage) {
+void DataStore::_addScheduleRaw(const IncomingRadioMessage& aIncomingRadioMessage, ScheduleDay day) {
 	if (xSemaphoreTake(mScheduleSemaphore, portMAX_DELAY) == pdTRUE) {
 		mReader.setBuffer((unsigned char*)aIncomingRadioMessage.content(), aIncomingRadioMessage.length());
 
@@ -147,10 +156,10 @@ void DataStore::_addScheduleFridayRaw(const IncomingRadioMessage& aIncomingRadio
 			events[i].title = _getString(mReader);
 		}
 
-		delete mSchedule;
-		mSchedule = new Schedule(events, eventCount);
+		delete mSchedule[day];
+		mSchedule[day] = new Schedule(events, eventCount);
 
-		debug::log("DataStore: Got schedule: " + String(mSchedule->getEventCount()) + " events");
+		debug::log("DataStore: Got schedule: " + String(mSchedule[day]->getEventCount()) + " events");
 
 		xSemaphoreGive(mScheduleSemaphore);
 	}

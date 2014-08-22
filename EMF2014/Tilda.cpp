@@ -80,14 +80,14 @@ RTC_clock* Tilda::getClock() {
 }
 
 
-static float getBatteryVoltage() {
+float Tilda::getBatteryVoltage() {
     return PMIC.getBatteryVoltage();
 }
 
-static uint8_t getBatteryPercent() {
+uint8_t Tilda::getBatteryPercent() {
     return PMIC.getBatteryPercent();
 }
-static uint8_t getChargeState() {
+uint8_t Tilda::getChargeState() {
     return PMIC.getChargeState();
 }
 
