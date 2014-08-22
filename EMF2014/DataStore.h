@@ -35,20 +35,22 @@
 #include <FreeRTOS_ARM.h>
 #include <TinyPacks.h>
 
-#include "Weather.h"
-#include "Schedule.h"
 #include "EMF2014Config.h"
 #include "RadioMessageHandler.h"
+#include "Schedule.h"
 
 class IncomingRadioMessage;
+class MessageCheckTask;
+class WeatherForecast;
+class WeatherForecastPeriod;
 
 class DataStore: public RadioMessageHandler {
 public:
-	DataStore();
+	DataStore(MessageCheckTask& aMessageCheckTask);
 	~DataStore();
 
-	const WeatherForecast& getWeatherForecast() const;
-	const Schedule& getSchedule(ScheduleDay day) const;
+	WeatherForecast* getWeatherForecast() const;
+	Schedule* getSchedule(ScheduleDay day) const;
 
 private: // from RadioMessageHandler
 	void handleMessage(const IncomingRadioMessage& aIncomingRadioMessage);
@@ -62,8 +64,14 @@ private:
 	static String _getString(PackReader& reader);
 
 private:
-	WeatherForecast mWeatherForecast;
-	Schedule mSchedule[3];
+	MessageCheckTask& mMessageCheckTask;
 
 	PackReader mReader;
+
+	// data
+	WeatherForecast* mWeatherForecast;
+	Schedule** mSchedule;
+
+	SemaphoreHandle_t mWeatherSemaphore;
+	SemaphoreHandle_t mScheduleSemaphore;
 };

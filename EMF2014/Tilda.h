@@ -47,7 +47,7 @@ public:
     static void delay(uint16_t durationInMs);
     static void setLedColor(RGBLed led, RGBColor color);
     static void setLedColor(RGBColor color);
-    static void openApp(String name);
+    static void openApp(app_ctor aNew);
     static RTC_clock* getClock();
     static float getBatteryVoltage();
     static uint8_t getBatteryPercent();

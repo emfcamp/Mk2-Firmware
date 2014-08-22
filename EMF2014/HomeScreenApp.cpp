@@ -33,8 +33,18 @@
 #include <glcd.h>
 #include "logo.h"
 
+App* HomeScreenApp::New() {
+    return new HomeScreenApp;
+}
+
+HomeScreenApp::HomeScreenApp() {}
+
 String HomeScreenApp::getName() const {
     return "HomeScreen";
+}
+
+bool HomeScreenApp::keepAlive() const {
+    return true;
 }
 
 void HomeScreenApp::task() {

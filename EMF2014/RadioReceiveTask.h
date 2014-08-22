@@ -36,7 +36,8 @@
 #include <rtc_clock.h>
 #include "EMF2014Config.h"
 #include "Task.h"
-#include "MessageCheckTask.h"
+
+class MessageCheckTask;
 
 class RadioReceiveTask: public Task {
 private:

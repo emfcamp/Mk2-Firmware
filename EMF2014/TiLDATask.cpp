@@ -29,4 +29,63 @@
  SOFTWARE.
  */
 
+#include <debug.h>
+
 #include "TiLDATask.h"
+
+#include "EMF2014Config.h"
+#include "RGBTask.h"
+#include "ButtonTask.h"
+#include "RadioReceiveTask.h"
+#include "RadioTransmitTask.h"
+#include "MessageCheckTask.h"
+#include "AppOpenerTask.h"
+#include "AppManager.h"
+#include "HomeScreenApp.h"
+#include "Tilda.h"
+#include "SettingsStore.h"
+#include "LCDTask.h"
+#include "DataStore.h"
+#include "PMICTask.h"
+
+
+TiLDATask::TiLDATask() {
+
+}
+
+String TiLDATask::getName() const {
+    return "TiLDATask";
+}
+
+void TiLDATask::task() {
+    RTC_clock* realTimeClock = new RTC_clock(RC);
+    SettingsStore* settingsStore = new SettingsStore;
+    AppManager* appManager = new AppManager;
+
+    MessageCheckTask* messageCheckTask = new MessageCheckTask;
+    DataStore* dataStore = new DataStore(*messageCheckTask);
+    RGBTask* rgbTask = new RGBTask;
+    ButtonTask* buttonTask = new ButtonTask;
+    RadioReceiveTask* radioReceiveTask = new RadioReceiveTask(*messageCheckTask, *realTimeClock);
+    RadioTransmitTask* radioTransmitTask = new RadioTransmitTask(*radioReceiveTask, *settingsStore, *messageCheckTask);
+    LCDTask* lcdTask = new LCDTask;
+    AppOpenerTask* appOpenerTask = new AppOpenerTask(*appManager);
+
+    Tilda::setupTasks(appManager, rgbTask, realTimeClock);
+    realTimeClock->init();
+
+    // Background tasks
+    rgbTask->start();
+    buttonTask->start();
+    messageCheckTask->start();
+    radioReceiveTask->start();
+    radioTransmitTask->start();
+    lcdTask->start();
+    appOpenerTask->start();
+    PMIC.start();
+
+    Tilda::openApp(HomeScreenApp::New);
+
+    suspend();
+}
+
