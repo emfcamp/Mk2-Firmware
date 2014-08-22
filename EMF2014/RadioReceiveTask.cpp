@@ -90,6 +90,11 @@ void RadioReceiveTask::task() {
 				}
 			}
 
+			#ifdef RADIO_DEBUG_MODE_EXTENDED
+				debug::log("RadioReceiveTask: Current buffer:");
+				debug::logByteArray(packetBuffer, packetBufferLength);
+			#endif
+
 			packetBufferLength = _parsePacketBuffer(packetBuffer, packetBufferLength);
 
 			_lastMessageReceived = xTaskGetTickCount();
