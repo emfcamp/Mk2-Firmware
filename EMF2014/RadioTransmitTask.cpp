@@ -87,7 +87,7 @@ void RadioTransmitTask::respond() {
 			debug::log("RadioTransmitTask: send our uniqueId: " + String(uniqueId[0]) + ":" + String(uniqueId[1]) + ":" + String(uniqueId[2]) + ":" + String(uniqueId[3]));
 			byte outgoingPacketBuffer[RADIO_PACKET_LENGTH];
 
-			uint8_t index = 0; 
+			uint8_t index = 0;
 			// RID
 			outgoingPacketBuffer[index++] = 0x90;
 			outgoingPacketBuffer[index++] = 0x02;
@@ -108,6 +108,30 @@ void RadioTransmitTask::respond() {
 
 			RADIO_SERIAL.write(outgoingPacketBuffer, RADIO_PACKET_LENGTH);
 			RADIO_SERIAL.flush();
+		} else {
+			// Oh noes! We should really never get here!
 		}
+	} else {
+		debug::log("RadioTransmitTask: send hello/battery status");
+		byte outgoingPacketBuffer[RADIO_PACKET_LENGTH];
+
+		uint8_t index = 0;
+		// RID
+		outgoingPacketBuffer[index++] = 0x90;
+		outgoingPacketBuffer[index++] = 0x04;
+		// Badge id
+		uint16_t badgeId = mSettingsStore.getBadgeId();
+		outgoingPacketBuffer[index++] = static_cast<byte>(badgeId);
+		outgoingPacketBuffer[index++] = static_cast<byte>(badgeId >> 8);
+		// Battery status
+		outgoingPacketBuffer[index++] = Tilda::getBatteryPercent();
+    	outgoingPacketBuffer[index++] = Tilda::getChargeState();
+
+		while (index < RADIO_PACKET_LENGTH) {
+			outgoingPacketBuffer[index++] = 0;
+		}
+
+		RADIO_SERIAL.write(outgoingPacketBuffer, RADIO_PACKET_LENGTH);
+		RADIO_SERIAL.flush();
 	}
 }
