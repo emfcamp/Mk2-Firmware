@@ -38,15 +38,21 @@
 
 class FlashLightApp: public App {
 public:
-	FlashLightApp();
+    static App* New();
+    ~FlashLightApp();
 
 	String getName() const;
-protected:
+    
+private:
+    FlashLightApp();
+    FlashLightApp(FlashLightApp&);
+
+    void updateLeds();
     void task();
     void afterSuspension();
     void beforeResume();
+
 private:
-	void updateLeds();
 	unsigned char mLightLevel;
 	ButtonSubscription* mButtonSubscription;
 };

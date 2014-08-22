@@ -77,8 +77,18 @@ M2_HLIST(el_hlist, NULL, list_2lmenu);
 M2_ALIGN(top_el_expandable_menu, "-1|1W64H64", &el_hlist);
 
 
+App* HomeScreenApp::New() {
+    return new HomeScreenApp;
+}
+
+HomeScreenApp::HomeScreenApp() {}
+
 String HomeScreenApp::getName() const {
     return "HomeScreen";
+}
+
+bool HomeScreenApp::keepAlive() const {
+    return true;
 }
 
 void HomeScreenApp::task() {

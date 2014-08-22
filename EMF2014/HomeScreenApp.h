@@ -34,16 +34,21 @@
 #include "EMF2014Config.h"
 #include "App.h"
 #include "RGBTask.h"
-#include "GUITask.h"
 
 class HomeScreenApp: public App {
 public:
+    static App* New();
+
 	String getName() const;
-    void setGUITask(GUITask* guiTask) {_guiTask = guiTask;}
-protected:
+private:
+    HomeScreenApp();
+    HomeScreenApp(const HomeScreenApp&);
+
+    bool keepAlive() const;
+
     void task();
     void afterSuspension();
     void beforeResume();
 private:
-    GUITask* _guiTask;
+
 };

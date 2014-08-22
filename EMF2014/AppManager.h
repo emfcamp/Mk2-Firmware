@@ -34,20 +34,44 @@
 #include "EMF2014Config.h"
 #include "App.h"
 
+typedef App* (*app_ctor)();
+
+struct AppDefinition {
+    AppDefinition(String aName, app_ctor aNew):mName(aName),mNew(aNew){}
+    String mName;
+    app_ctor mNew;
+};
+
 class AppManager {
+private:
+    class AppItem {
+    public:
+        AppItem(app_ctor aNew);
+        ~AppItem();
+
+    public:
+        App* mApp;
+        app_ctor mNew; // the function pointer to create the app is used as an app id
+    };
+
 public:
 	AppManager();
 	~AppManager();
 
-	void add(App& app);
-	void open(const String& app);
-	void open(App& app);
-	uint8_t getAppCount();
-	App& getById(uint8_t id);
-	App& getByName(const String& name) const;
+    // The app list
+    uint8_t getAppCount();
+    AppDefinition getById(uint8_t id);
+
+    // Your app should have a `static App* New()` that creates the app
+    // which can be passed in here like `MyApp::New`
+	void open(app_ctor aNew);
 	String getActiveAppName() const;
 
 private:
-	App* _apps[MAX_APPS];
-	App* activeApp;
+    AppItem* createAndAddApp(app_ctor aNew);
+    AppItem* getExistingApp(app_ctor aNew);
+
+private:
+    AppItem* mActiveAppItem;
+    AppItem** mAppItems;
 };

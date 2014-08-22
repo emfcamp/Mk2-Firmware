@@ -33,6 +33,7 @@
 #include <debug.h>
 #include "DataStore.h"
 #include "RadioMessageHandler.h"
+#include "IncomingRadioMessage.h"
 
 #define MAX_HANDLERS 20
 
@@ -42,25 +43,45 @@ MessageCheckTask::MessageCheckTask() {
 	for (int i = 0 ; i < MAX_HANDLERS ; ++i) {
 		mHandlers[i] = NULL;
 	}
+
+	mHandlersSemaphore = xSemaphoreCreateMutex();
 }
 
 MessageCheckTask::~MessageCheckTask() {
 	delete[] mHandlers;
+	vSemaphoreDelete(mHandlersSemaphore);
 }
 
 String MessageCheckTask::getName() const {
 	return "MessageCheckTask";
 }
 
-void MessageCheckTask::subscribe(RadioMessageHandler& aHandler, uint16_t aRangeStart, uint16_t aRangeEnd) {
-	for (int i = 0 ; i < MAX_HANDLERS ; ++i) {
-		if (mHandlers[i] == NULL) {
-			mHandlers[i] = new HandlerItem;
-			mHandlers[i]->mHandler = &aHandler;
-			mHandlers[i]->mRangeStart = aRangeStart;
-			mHandlers[i]->mRangeEnd = aRangeEnd;
-			break;
+void MessageCheckTask::subscribe(RadioMessageHandler* aHandler, uint16_t aRangeStart, uint16_t aRangeEnd) {
+	if (xSemaphoreTake(mHandlersSemaphore, portMAX_DELAY ) == pdTRUE) {
+		for (int i = 0 ; i < MAX_HANDLERS ; ++i) {
+			if (mHandlers[i] == NULL) {
+				mHandlers[i] = new HandlerItem;
+				mHandlers[i]->mHandler = aHandler;
+				mHandlers[i]->mRangeStart = aRangeStart;
+				mHandlers[i]->mRangeEnd = aRangeEnd;
+				break;
+			}
 		}
+
+        xSemaphoreGive(mHandlersSemaphore);
+    }
+}
+
+void MessageCheckTask::unsubscribe(RadioMessageHandler* aHandler) {
+	if (xSemaphoreTake(mHandlersSemaphore, portMAX_DELAY ) == pdTRUE) {
+		for (int i = 0 ; i < MAX_HANDLERS ; ++i) {
+			if (mHandlers[i]->mHandler == aHandler) {
+				delete mHandlers[i];
+				mHandlers[i] = NULL;
+			}
+		}
+
+		xSemaphoreGive(mHandlersSemaphore);
 	}
 }
 
@@ -95,13 +116,17 @@ void MessageCheckTask::task() {
 					// we have a valid message so tell the handlers
 					debug::log("MessageCheckTask: valid message. RID: " + String(message->rid()));
 
-					for (int i = 0 ; i < MAX_HANDLERS ; ++i) {
-						if (mHandlers[i] != NULL
-								&& message->rid() >= mHandlers[i]->mRangeStart
-								&& message->rid() <= mHandlers[i]->mRangeEnd) {
-							debug::log("MessageCheckTask: dispatched!");
-							mHandlers[i]->mHandler->handleMessage(*message);
+					if (xSemaphoreTake(mHandlersSemaphore, portMAX_DELAY) == pdTRUE) {
+						for (int i = 0 ; i < MAX_HANDLERS ; ++i) {
+							if (mHandlers[i] != NULL
+									&& message->rid() >= mHandlers[i]->mRangeStart
+									&& message->rid() <= mHandlers[i]->mRangeEnd) {
+								debug::log("MessageCheckTask: dispatched!");
+								mHandlers[i]->mHandler->handleMessage(*message);
+							}
 						}
+
+						xSemaphoreGive(mHandlersSemaphore);
 					}
 			    }
 			}

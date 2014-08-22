@@ -140,6 +140,14 @@ void addQueueToButton(QueueHandle_t queues[], QueueHandle_t queue) {
     }
 }
 
+void removeQueue(QueueHandle_t queues[], QueueHandle_t queue) {
+    for (uint8_t i=0; i<MAX_BUTTON_SUBSCRIPTIONS; i++) {
+        if (queues[i] == queue) {
+            queues[i] = NULL;
+        }
+    }
+}
+
 void addQueueToButtons(uint32_t buttons, QueueHandle_t queue) {
     if (buttons & LIGHT)    addQueueToButton(lightPressQueues, queue);
     if (buttons & A)        addQueueToButton(aPressQueues, queue);
@@ -149,6 +157,17 @@ void addQueueToButtons(uint32_t buttons, QueueHandle_t queue) {
     if (buttons & DOWN)     addQueueToButton(downPressQueues, queue);
     if (buttons & LEFT)     addQueueToButton(leftPressQueues, queue);
     if (buttons & CENTER)   addQueueToButton(centerPressQueues, queue);
+}
+
+void removeQueue(QueueHandle_t queue) {
+    removeQueue(lightPressQueues, queue);
+    removeQueue(aPressQueues, queue);
+    removeQueue(bPressQueues, queue);
+    removeQueue(upPressQueues, queue);
+    removeQueue(rightPressQueues, queue);
+    removeQueue(downPressQueues, queue);
+    removeQueue(leftPressQueues, queue);
+    removeQueue(centerPressQueues, queue);
 }
 
 void emitToQueues(QueueHandle_t queues[], Button button) {

@@ -54,3 +54,5 @@ void tildaButtonAttachInterrupts();
 void tildaButtonDetachInterrupts();
 
 void addQueueToButtons(uint32_t buttons, QueueHandle_t queue);
+
+void removeQueue(QueueHandle_t queue);

@@ -39,6 +39,7 @@ ButtonSubscription::ButtonSubscription() {
 }
 
 ButtonSubscription::~ButtonSubscription() {
+    removeQueue(mQueue);
     vQueueDelete(mQueue);
 }
 
