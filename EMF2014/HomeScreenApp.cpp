@@ -92,10 +92,9 @@ bool HomeScreenApp::keepAlive() const {
 }
 
 void HomeScreenApp::task() {
-    Tilda::delay(1000);
     GLCD.DrawBitmap(logo,0,8);
     Tilda::delay(5000);
-    _guiTask->setM2Root(&top_el_expandable_menu);
+    Tilda::getGUITask()->setM2Root(&top_el_expandable_menu);
     while(true) {
         Tilda::setLedColor({2, 0, 0});
         Tilda::delay(300);
