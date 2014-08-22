@@ -47,7 +47,7 @@
 #include "LCDTask.h"
 #include "DataStore.h"
 #include "PMICTask.h"
-
+#include "BadgeNotifications.h"
 
 TiLDATask::TiLDATask() {
 
@@ -70,6 +70,7 @@ void TiLDATask::task() {
     RadioTransmitTask* radioTransmitTask = new RadioTransmitTask(*radioReceiveTask, *settingsStore, *messageCheckTask);
     LCDTask* lcdTask = new LCDTask;
     AppOpenerTask* appOpenerTask = new AppOpenerTask(*appManager);
+    BadgeNotifications* badgeNotifications = new BadgeNotifications(*settingsStore, *messageCheckTask, *appManager);
 
     Tilda::setupTasks(appManager, rgbTask, realTimeClock);
     realTimeClock->init();

@@ -34,8 +34,13 @@
 
 #define BADGE_ID_UNKOWN 0;
 
-SettingsStore::SettingsStore() {
-    _badgeId = BADGE_ID_UNKOWN;
+SettingsStore::SettingsStore()
+    :mObserver(NULL) {
+    mBadgeId = BADGE_ID_UNKOWN;
+}
+
+void SettingsStore::setObserver(SettingsStoreObserver* aObserver) {
+    mObserver = aObserver;
 }
 
 void SettingsStore::handleMessage(const IncomingRadioMessage& radioMessage) {
@@ -56,8 +61,8 @@ void SettingsStore::handleMessage(const IncomingRadioMessage& radioMessage) {
         }
 
         if (ourUniqueId) {
-            _badgeId = Utils::bytesToInt(radioMessage.content()[16], radioMessage.content()[17]);
-            debug::log("got badge id: " + String(_badgeId));
+            mBadgeId = Utils::bytesToInt(radioMessage.content()[16], radioMessage.content()[17]);
+            debug::log("got badge id: " + String(mBadgeId));
         } else {
             debug::log("not our unique id");
         }
@@ -70,13 +75,17 @@ bool SettingsStore::getUniqueId(uint32_t* unique_id) const {
 }
 
 uint16_t SettingsStore::getBadgeId() const {
-    return _badgeId;
+    return mBadgeId;
 }
 
-void SettingsStore::setBadgeId(uint16_t badgeId) {
-    _badgeId = badgeId;
+void SettingsStore::setBadgeId(uint16_t aBadgeId) {
+    mBadgeId = aBadgeId;
+
+    if (mObserver) {
+        mObserver->badgeIdChanged(mBadgeId);
+    }
 }
 
 bool SettingsStore::hasBadgeId() const {
-    return _badgeId != BADGE_ID_UNKOWN;
+    return mBadgeId != BADGE_ID_UNKOWN;
 }

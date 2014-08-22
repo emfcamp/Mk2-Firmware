@@ -41,6 +41,11 @@
 
 class IncomingRadioMessage;
 
+class SettingsStoreObserver {
+public:
+    virtual void badgeIdChanged(uint16_t badgeId) = 0;
+};
+
 class SettingsStore: public RadioMessageHandler {
 public:
     SettingsStore();
@@ -48,10 +53,10 @@ public:
     bool getUniqueId(uint32_t* unique_id) const;
 
     uint16_t getBadgeId() const;
-    void setBadgeId(uint16_t badgeId);
+    void setBadgeId(uint16_t aBadgeId);
     bool hasBadgeId() const;
 
-    static const uint16_t BADGE_ID_UNKOWN;
+    void setObserver(SettingsStoreObserver* aObserver);
 
 private:
     SettingsStore(const SettingsStore&);
@@ -59,7 +64,9 @@ private:
     void handleMessage(const IncomingRadioMessage&);
 
 private:
-    uint16_t _badgeId;
+    uint16_t mBadgeId;
+
+    SettingsStoreObserver* mObserver;
 };
 
 #endif // _SETTINGS_STORE_H_

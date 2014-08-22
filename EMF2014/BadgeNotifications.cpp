@@ -26,14 +26,55 @@
  SOFTWARE.
  */
 
+#include "MessageCheckTask.h"
 #include "BadgeNotifications.h"
+#include "IncomingRadioMessage.h"
+#include "AppManager.h" 
+
+BadgeNotification BadgeNotifications::mBadgeNotification(String(""), {255, 128, 0}, {0, 128, 255}, true);
+SemaphoreHandle_t BadgeNotifications::mNotificationMutex = xSemaphoreCreateMutex();
 
 String BadgeNotification::text() const { return _text; }
 RGBColor BadgeNotification::led1() const { return _led1; }
 RGBColor BadgeNotification::led2() const { return _led2; }
 boolean BadgeNotification::sound() const { return _sound; }
 
+BadgeNotifications::BadgeNotifications(SettingsStore& aSettingsStore, MessageCheckTask& aMessageCheckTask, AppManager& aAppManager)
+    :mSettingsStore(aSettingsStore), mMessageCheckTask(aMessageCheckTask), mAppManager(aAppManager)
+{
+    if (mSettingsStore.hasBadgeId()) {
+        uint16_t badgeId = mSettingsStore.getBadgeId();
+        mMessageCheckTask.subscribe(this, badgeId, badgeId);
+    }
+}
+
+BadgeNotifications::~BadgeNotifications() {}
+
+void BadgeNotifications::handleMessage(const IncomingRadioMessage& radioMessage) {
+    // parse the radio message content into mBadgeNotification
+    radioMessage.content();
+    if (xSemaphoreTake(mNotificationMutex, portMAX_DELAY) == pdTRUE) {
+        mBadgeNotification = BadgeNotification(String(""), {255, 128, 0}, {0, 128, 255}, true);
+        xSemaphoreGive(mNotificationMutex);
+    }
+
+    // start the notification app to start it
+    //mAppManager->open(NotificationApp::New);
+}
+
+void BadgeNotifications::badgeIdChanged(uint16_t badgeId) {
+    mMessageCheckTask.unsubscribe(this);
+    mMessageCheckTask.subscribe(this, badgeId, badgeId);
+}
+
 BadgeNotification* BadgeNotifications::popNotification() {
-    // ToDo: Actually implement this mock
-    return new BadgeNotification(String("Hello World!"), {255, 128, 0}, {0, 128, 255}, true);
+
+    BadgeNotification* notification = NULL;
+
+    if (xSemaphoreTake(mNotificationMutex, portMAX_DELAY) == pdTRUE) {
+        notification = new BadgeNotification(mBadgeNotification);
+        xSemaphoreGive(mNotificationMutex);
+    }
+
+    return notification;
 }
