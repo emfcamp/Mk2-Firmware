@@ -69,6 +69,14 @@ void RadioTransmitTask::handleMessage(const IncomingRadioMessage& aIncomingRadio
 	}
 }
 
+inline void RadioTransmitTask::_sleep() {
+	digitalWrite(SRF_SLEEP, HIGH);
+}
+
+inline void RadioTransmitTask::_wakeUp() {
+	digitalWrite(SRF_SLEEP, LOW);
+}
+
 void RadioTransmitTask::task() {
 	mQueue = xQueueCreate(10, sizeof(uint32_t));
 
@@ -82,9 +90,25 @@ void RadioTransmitTask::task() {
 			uint32_t preDelay = random(0, transmitDuration);
 			uint32_t postDelay = transmitDuration - preDelay;
 
-			Tilda::delay(preDelay);
+			if (preDelay > RADIO_WAKEUP_TIME) {
+				_sleep();
+				Tilda::delay(preDelay - RADIO_WAKEUP_TIME);
+				_wakeUp();
+				Tilda::delay(RADIO_WAKEUP_TIME);
+			} else {
+				Tilda::delay(preDelay);
+			}
+
 			respond();
-			Tilda::delay(postDelay);
+
+			if (postDelay > RADIO_WAKEUP_TIME) {
+				_sleep();
+				Tilda::delay(postDelay - RADIO_WAKEUP_TIME);
+				_wakeUp();
+				Tilda::delay(RADIO_WAKEUP_TIME);
+			} else {
+				Tilda::delay(postDelay);
+			}
 
 			mRadioReceiveTask.start();
         }

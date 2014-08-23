@@ -56,7 +56,8 @@ private:
 
 private: // from RadioMessageHandler
 	void handleMessage(const IncomingRadioMessage& aIncomingRadioMessage);
-
+    inline void _sleep();
+    inline void _wakeUp();
 protected:
 	void task();
 
