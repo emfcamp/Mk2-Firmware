@@ -43,6 +43,7 @@
 #include "AppManager.h"
 #include "HomeScreenApp.h"
 #include "SponsorsApp.h"
+#include "BadgeIdApp.h"
 #include "Tilda.h"
 #include "SettingsStore.h"
 #include "LCDTask.h"
@@ -67,6 +68,7 @@ void TiLDATask::task() {
     SettingsStore* settingsStore = new SettingsStore(*messageCheckTask);
     Tilda::_dataStore = new DataStore(*messageCheckTask);
     Tilda::_rgbTask = new RGBTask;
+    Tilda::_settingsStore = settingsStore;
     ButtonTask* buttonTask = new ButtonTask;
     RadioReceiveTask* radioReceiveTask = new RadioReceiveTask(*messageCheckTask, *Tilda::_realTimeClock);
     RadioTransmitTask* radioTransmitTask = new RadioTransmitTask(*radioReceiveTask, *settingsStore, *messageCheckTask);
@@ -88,7 +90,7 @@ void TiLDATask::task() {
     appOpenerTask->start();
     PMIC.start();
 
-    Tilda::openApp(HomeScreenApp::New);
+    Tilda::openApp(BadgeIdApp::New);
 
     suspend();
 }

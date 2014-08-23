@@ -101,6 +101,10 @@ GUITask& Tilda::getGUITask() {
     return *_guiTask;
 }
 
+SettingsStore& Tilda::getSettingsStore() {
+    return *_settingsStore;
+}
+
 float Tilda::getBatteryVoltage() {
     return PMIC.getBatteryVoltage();
 }
