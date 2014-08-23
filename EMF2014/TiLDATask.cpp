@@ -88,7 +88,7 @@ void TiLDATask::task() {
     appOpenerTask->start();
     PMIC.start();
 
-    Tilda::openApp(SponsorsApp::New);
+    Tilda::openApp(HomeScreenApp::New);
 
     suspend();
 }
