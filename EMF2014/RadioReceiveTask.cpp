@@ -282,7 +282,7 @@ inline void RadioReceiveTask::_initialiseDiscoveryState() {
 }
 
 inline void RadioReceiveTask::_initialiseReceiveState() {
-	debug::log("RadioReceiveTask: Starting to receive on channel " + String(_bestChannel));
+	debug::log("RadioReceiveTask: Starting to receive on channel " + String(_bestChannel) + " with RSSI " + String(_bestRssi));
 
 	_enterAtMode();
 	RADIO_SERIAL.println("ATZD3");  // output format <payload>|<rssi>
