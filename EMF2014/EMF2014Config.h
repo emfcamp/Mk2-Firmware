@@ -40,8 +40,6 @@
 // Radio serial port
 #define RADIO_SERIAL Serial3
 #define RADIO_SERIAL_BAUD 115200
-// Radio AT-mode pin
-#define RADIO_AT_MODE_PIN 31
 // Packet length
 #define RADIO_PACKET_LENGTH 58
 #define RADIO_PACKET_WITH_RSSI_LENGTH 58 + 1 + 4

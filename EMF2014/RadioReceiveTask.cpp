@@ -107,12 +107,12 @@ void RadioReceiveTask::task() {
 }
 
 inline void RadioReceiveTask::_enterAtMode() {
-	digitalWrite(RADIO_AT_MODE_PIN, LOW);
+	digitalWrite(SRF_AT_COMMAND, LOW);
 }
 
 inline void RadioReceiveTask::_leaveAtMode() {
 	vTaskDelay(10);
-	digitalWrite(RADIO_AT_MODE_PIN, HIGH);
+	digitalWrite(SRF_AT_COMMAND, HIGH);
 }
 
 inline uint8_t RadioReceiveTask::_parsePacketBuffer(byte packetBuffer[], uint8_t packetBufferLength) {
