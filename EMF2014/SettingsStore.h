@@ -38,6 +38,7 @@
 #include <FreeRTOS_ARM.h>
 #include "EMF2014Config.h"
 #include "RadioMessageHandler.h"
+#include "MessageCheckTask.h"
 
 class IncomingRadioMessage;
 
@@ -48,7 +49,7 @@ public:
 
 class SettingsStore: public RadioMessageHandler {
 public:
-    SettingsStore();
+    SettingsStore(MessageCheckTask& aMessageCheckTask);
     ~SettingsStore();
 
     bool getUniqueId(uint32_t* unique_id) const;
@@ -71,6 +72,8 @@ private:
 
     SettingsStoreObserver** mObservers;
     SemaphoreHandle_t mObserversMutex;
+
+    MessageCheckTask& mMessageCheckTask;
 };
 
 #endif // _SETTINGS_STORE_H_
