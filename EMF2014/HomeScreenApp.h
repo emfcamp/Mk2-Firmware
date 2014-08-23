@@ -34,12 +34,14 @@
 #include "EMF2014Config.h"
 #include "App.h"
 #include "RGBTask.h"
+#include "GUITask.h"
 
 class HomeScreenApp: public App {
 public:
     static App* New();
 
 	String getName() const;
+protected:
 private:
     HomeScreenApp();
     HomeScreenApp(const HomeScreenApp&);
@@ -50,5 +52,4 @@ private:
     void afterSuspension();
     void beforeResume();
 private:
-
 };

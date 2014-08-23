@@ -38,7 +38,8 @@
 #include "ButtonSubscription.h"
 #include "RGBTask.h"
 #include "AppManager.h"
-
+#include "LCDTask.h"
+#include "GUITask.h"
 
 class Tilda {
 public:
@@ -49,15 +50,23 @@ public:
     static void setLedColor(RGBColor color);
     static void openApp(app_ctor aNew);
     static RTC_clock* getClock();
+    static LCDTask* getLCDTask();
+    static GUITask* getGUITask();
     static float getBatteryVoltage();
     static uint8_t getBatteryPercent();
     static uint8_t getChargeState();
     // This is not part of the actual API
-    static void setupTasks(AppManager* appManager, RGBTask* rgbTask, RTC_clock* realTimeClock);
+    static void setupTasks(AppManager* appManager,
+                           RGBTask* rgbTask,
+                           RTC_clock* realTimeClock,
+                           LCDTask* lcdTask,
+                           GUITask* guiTask);
 private:
     Tilda();
 
     static RGBTask* _rgbTask;
     static AppManager* _appManager;
     static RTC_clock* _realTimeClock;
+    static LCDTask* _lcdTask;
+    static GUITask* _guiTask;
 };

@@ -47,7 +47,7 @@
 #include "LCDTask.h"
 #include "DataStore.h"
 #include "PMICTask.h"
-
+#include "GUITask.h"
 
 TiLDATask::TiLDATask() {
 
@@ -69,9 +69,10 @@ void TiLDATask::task() {
     RadioReceiveTask* radioReceiveTask = new RadioReceiveTask(*messageCheckTask, *realTimeClock);
     RadioTransmitTask* radioTransmitTask = new RadioTransmitTask(*radioReceiveTask, *settingsStore, *messageCheckTask);
     LCDTask* lcdTask = new LCDTask;
+    GUITask* guiTask = new GUITask;
     AppOpenerTask* appOpenerTask = new AppOpenerTask(*appManager);
 
-    Tilda::setupTasks(appManager, rgbTask, realTimeClock);
+    Tilda::setupTasks(appManager, rgbTask, realTimeClock, lcdTask, guiTask);
     realTimeClock->init();
 
     // Background tasks
@@ -81,6 +82,7 @@ void TiLDATask::task() {
     radioReceiveTask->start();
     radioTransmitTask->start();
     lcdTask->start();
+    guiTask->start();
     appOpenerTask->start();
     PMIC.start();
 
