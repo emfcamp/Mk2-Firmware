@@ -32,24 +32,33 @@
 #include "AppManager.h" 
 #include "Utils.h"
 
-BadgeNotification BadgeNotifications::mBadgeNotification(String(""), {255, 128, 0}, {0, 128, 255}, true);
-SemaphoreHandle_t BadgeNotifications::mNotificationMutex = xSemaphoreCreateMutex();
-
 String BadgeNotification::text() const { return _text; }
 RGBColor BadgeNotification::led1() const { return _led1; }
 RGBColor BadgeNotification::led2() const { return _led2; }
 boolean BadgeNotification::sound() const { return _sound; }
 
 BadgeNotifications::BadgeNotifications(SettingsStore& aSettingsStore, MessageCheckTask& aMessageCheckTask, AppManager& aAppManager)
-    :mSettingsStore(aSettingsStore), mMessageCheckTask(aMessageCheckTask), mAppManager(aAppManager)
+    :mSettingsStore(aSettingsStore),
+    mMessageCheckTask(aMessageCheckTask),
+    mAppManager(aAppManager),
+    mBadgeNotification(NULL)
+
 {
     if (mSettingsStore.hasBadgeId()) {
         uint16_t badgeId = mSettingsStore.getBadgeId();
         mMessageCheckTask.subscribe(this, badgeId, badgeId);
     }
+
+    mSettingsStore.setObserver(this);
+
+    mNotificationMutex = xSemaphoreMutexCreate();
 }
 
-BadgeNotifications::~BadgeNotifications() {}
+BadgeNotifications::~BadgeNotifications() {
+    mSettingsStore.setObserver(NULL);
+    mMessageCheckTask.unsubscribe(this);
+    delete mBadgeNotification;
+}
 
 RGBColor BadgeNotifications::getRGBColor(PackReader& aReader) {
     uint8_t red = static_cast<uint8_t>(Utils::getInteger(aReader));
@@ -70,7 +79,8 @@ void BadgeNotifications::handleMessage(const IncomingRadioMessage& aIncomingRadi
         boolean sound = Utils::getBoolean(mReader);
         String text = Utils::getString(mReader);
 
-        mBadgeNotification = BadgeNotification(text, rgb1, rgb2, sound);
+        delete mBadgeNotification;
+        mBadgeNotification = new BadgeNotification(text, rgb1, rgb2, sound);
         xSemaphoreGive(mNotificationMutex);
     }
 
@@ -84,11 +94,10 @@ void BadgeNotifications::badgeIdChanged(uint16_t badgeId) {
 }
 
 BadgeNotification* BadgeNotifications::popNotification() {
-
     BadgeNotification* notification = NULL;
 
     if (xSemaphoreTake(mNotificationMutex, portMAX_DELAY) == pdTRUE) {
-        notification = new BadgeNotification(mBadgeNotification);
+        notification = new BadgeNotification(*mBadgeNotification);
         xSemaphoreGive(mNotificationMutex);
     }
 

@@ -39,25 +39,35 @@
 #include "RGBTask.h"
 #include "AppManager.h"
 
+class BadgeNotifications;
+class DataStore;
 
 class Tilda {
+    friend class TiLDATask;
+
 public:
+    // access to things
+    static RTC_clock& getClock();
+    static BadgeNotifications& getBadgeNotifications();
+    static DataStore& getDataStore();
+
+    // helpers
     static ButtonSubscription* createButtonSubscription(uint16_t buttons);
     static void log(String text);
     static void delay(uint16_t durationInMs);
     static void setLedColor(RGBLed led, RGBColor color);
     static void setLedColor(RGBColor color);
     static void openApp(app_ctor aNew);
-    static RTC_clock* getClock();
     static float getBatteryVoltage();
     static uint8_t getBatteryPercent();
     static uint8_t getChargeState();
-    // This is not part of the actual API
-    static void setupTasks(AppManager* appManager, RGBTask* rgbTask, RTC_clock* realTimeClock);
+
 private:
     Tilda();
 
     static RGBTask* _rgbTask;
     static AppManager* _appManager;
     static RTC_clock* _realTimeClock;
+    static BadgeNotifications* _badgeNotifications;
+    static DataStore* _dataStore;
 };

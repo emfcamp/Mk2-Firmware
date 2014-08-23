@@ -59,7 +59,7 @@ public:
     BadgeNotifications(SettingsStore& aSettingsStore, MessageCheckTask& aMessageCheckTask, AppManager& aAppManager);
     ~BadgeNotifications();
 
-    static BadgeNotification* popNotification();
+    BadgeNotification* popNotification();
 
 private: // from RadioMessageHandler
     void handleMessage(const IncomingRadioMessage&);
@@ -74,8 +74,8 @@ private:
     MessageCheckTask& mMessageCheckTask;
     SettingsStore& mSettingsStore;
     AppManager& mAppManager;
-    static BadgeNotification mBadgeNotification;
-    static SemaphoreHandle_t mNotificationMutex;
+    BadgeNotification* mBadgeNotification;
+    SemaphoreHandle_t mNotificationMutex;
 
     PackReader mReader;
 };
