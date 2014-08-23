@@ -37,6 +37,9 @@
 // pin used for seeding the random number generator
 #define RANDOM_SEED_PIN 5
 
+// duration that center has to be pressed to go back to the homescreen
+#define CENTER_BUTTON_PRESS_DURATION_FOR_HOME_SCREEN 500
+
 // Radio serial port
 #define RADIO_SERIAL Serial
 #define RADIO_SERIAL_BAUD 115200
