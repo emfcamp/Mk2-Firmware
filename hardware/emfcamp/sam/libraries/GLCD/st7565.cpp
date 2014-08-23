@@ -86,6 +86,8 @@ The functions affected are:
 #include <debug.h>
 #include <FreeRTOS_ARM.h>
 
+// Use this flag to show debug information
+//#define GLCD_DEBUG
 
 QueueHandle_t glcd_Device::_updateWaiting;
 SemaphoreHandle_t glcd_Device::frameBufferMutex;
@@ -121,7 +123,7 @@ void glcd_Device::Init(void) {
     pinMode(LCD_POWER, OUTPUT);
     digitalWrite(LCD_POWER, LOW);
     pinMode(LCD_BACKLIGHT, OUTPUT);
-    digitalWrite(LCD_BACKLIGHT, LOW);
+    digitalWrite(LCD_BACKLIGHT, HIGH);
     // set pin directions
     pinMode(LCD_A0, OUTPUT);
     pinMode(LCD_RESET, OUTPUT);
@@ -210,8 +212,10 @@ uint8_t reverse(uint8_t b) {
 // Never call this directly, as it has no mutex
 void glcd_Device::_do_display() {
     uint8_t col, maxcol, p;
-    debug::log("[glcd_Device::_do_display()]");
-    debug::logHWM();
+    #ifdef GLCD_DEBUG
+        debug::log("[glcd_Device::_do_display()]");
+        debug::logHWM();
+    #endif
 
     static uint8_t txBuffer[1024];
     //txBuffer=(uint8_t*)malloc(1024*sizeof(uint8_t));
@@ -259,9 +263,13 @@ void glcd_Device::_do_display() {
             break;
     }
 
-    debug::log("[glcd_Device::_do_display()] Starting write to screen");
+    #ifdef GLCD_DEBUG
+        debug::log("[glcd_Device::_do_display()] Starting write to screen");
+    #endif
     for (p = 0; p < 8; p++) {
-        debug::log("page: " + String(p) + " mapped: " + String(pagemap[p]));
+        #ifdef GLCD_DEBUG
+            debug::log("page: " + String(p) + " mapped: " + String(pagemap[p]));
+        #endif
         _command(CMD_SET_PAGE | pagemap[p]);
         // start at the beginning of the row
         col = 0;
