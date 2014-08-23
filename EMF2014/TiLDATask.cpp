@@ -1,25 +1,25 @@
 /*
  TiLDA Mk2
- 
+
  TiLDATask
  This is the main cordinator task responsilbe for all the main logic of passing
  information between the other task decieding on what action may be requires at
  any given time
- 
+
  The MIT License (MIT)
- 
+
  Copyright (c) 2014 Electromagnetic Field LTD
- 
+
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
  in the Software without restriction, including without limitation the rights
  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  copies of the Software, and to permit persons to whom the Software is
  furnished to do so, subject to the following conditions:
- 
+
  The above copyright notice and this permission notice shall be included in all
  copies or substantial portions of the Software.
- 
+
  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -42,6 +42,7 @@
 #include "AppOpenerTask.h"
 #include "AppManager.h"
 #include "HomeScreenApp.h"
+#include "SponsorsApp.h"
 #include "Tilda.h"
 #include "SettingsStore.h"
 #include "LCDTask.h"
@@ -73,7 +74,7 @@ void TiLDATask::task() {
     Tilda::_lcdTask = new LCDTask;
     Tilda::_badgeNotifications = new BadgeNotifications(*settingsStore, *messageCheckTask, *Tilda::_appManager);
     Tilda::_guiTask = new GUITask;
-    
+
     Tilda::_realTimeClock->init();
 
     // Background tasks
@@ -87,7 +88,7 @@ void TiLDATask::task() {
     appOpenerTask->start();
     PMIC.start();
 
-    Tilda::openApp(HomeScreenApp::New);
+    Tilda::openApp(SponsorsApp::New);
 
     suspend();
 }
