@@ -35,17 +35,25 @@
 #define BADGE_ID_UNKOWN 0
 #define MAX_OBSERVERS 10
 
-SettingsStore::SettingsStore() {
+#define CONTENT_RID_RETURN_BADGE_ID 45058
+
+SettingsStore::SettingsStore(MessageCheckTask& aMessageCheckTask)
+    :mMessageCheckTask(aMessageCheckTask)
+{
     mBadgeId = BADGE_ID_UNKOWN;
     mObservers = new SettingsStoreObserver*[MAX_OBSERVERS];
     for (int i = 0 ; i < MAX_OBSERVERS ; ++i) {
         mObservers[i] = NULL;
     }
 
+    mMessageCheckTask.subscribe(this, CONTENT_RID_RETURN_BADGE_ID, CONTENT_RID_RETURN_BADGE_ID);
+
     mObserversMutex = xSemaphoreCreateMutex();
 }
 
 SettingsStore::~SettingsStore() {
+    mMessageCheckTask.unsubscribe(this);
+
     delete[] mObservers;
 }
 
@@ -81,7 +89,7 @@ void SettingsStore::notifyObservers(uint16_t aBadgeId) {
                 mObservers[i]->badgeIdChanged(aBadgeId);
             }
         }
-        
+
         xSemaphoreGive(mObserversMutex);
     }
 }

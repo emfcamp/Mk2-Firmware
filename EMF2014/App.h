@@ -38,6 +38,7 @@
 class App: public Task {
 public:
     virtual bool keepAlive() const;
+    virtual void newOrientation(uint8_t);
 
 protected:
     App();

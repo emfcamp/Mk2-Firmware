@@ -143,6 +143,10 @@ inline uint8_t RadioReceiveTask::_parsePacketBuffer(byte packetBuffer[], uint8_t
 			(packetBuffer[packetBufferLength - 3] - 48) * 100;
 		packetBufferLength -= 5;
 
+		#ifdef RADIO_DEBUG_MODE
+			debug::log("Packet!");
+		#endif
+
 		if (_radioState == RADIO_STATE_DISCOVERY) {
 			_handleDiscoveryPacket(packetBuffer, packetBufferLength, rssi);
 		} else if (_radioState == RADIO_STATE_RECEIVE) {

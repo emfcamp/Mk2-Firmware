@@ -142,3 +142,9 @@ void AppManager::open(app_ctor aNew) {
 
     debug::log("New active app: " + mActiveAppItem->mApp->getName());
 }
+
+void AppManager::orientationCallback(uint8_t orientation) {
+    if(mActiveAppItem) {
+        mActiveAppItem->mApp->newOrientation(orientation);
+    }
+}

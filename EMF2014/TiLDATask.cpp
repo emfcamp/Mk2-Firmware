@@ -50,6 +50,7 @@
 #include "PMICTask.h"
 #include "BadgeNotifications.h"
 #include "GUITask.h"
+#include "IMUTask.h"
 #include <glcd.h>
 
 TiLDATask::TiLDATask() {
@@ -62,10 +63,10 @@ String TiLDATask::getName() const {
 
 void TiLDATask::task() {
     Tilda::_realTimeClock = new RTC_clock(RC);
-    SettingsStore* settingsStore = new SettingsStore;
     Tilda::_appManager = new AppManager;
 
     MessageCheckTask* messageCheckTask = new MessageCheckTask;
+    SettingsStore* settingsStore = new SettingsStore(*messageCheckTask);
     Tilda::_dataStore = new DataStore(*messageCheckTask);
     Tilda::_rgbTask = new RGBTask;
     ButtonTask* buttonTask = new ButtonTask;
@@ -89,6 +90,7 @@ void TiLDATask::task() {
     Tilda::_guiTask->start();
     appOpenerTask->start();
     PMIC.start();
+    imuTask.start();
 
     Tilda::openApp(HomeScreenApp::New);
 
