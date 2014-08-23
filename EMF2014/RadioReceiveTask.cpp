@@ -34,6 +34,7 @@
 #include <debug.h>
 
 #include "IncomingRadioMessage.h"
+#include "MessageCheckTask.h"
 
 #define NO_CURRENT_MESSAGE 65535
 #define NO_CHANNEL_DISCOVERED 255
@@ -47,6 +48,14 @@ String RadioReceiveTask::getName() const {
 	return "RadioReceiveTask";
 }
 
+void RadioReceiveTask::beforeResume() {
+	// Don't count suspended time towards timeout!
+	_lastMessageReceived = xTaskGetTickCount();
+
+	// Get rid of garbage collected during transmit period (like talk of other radios)
+	_clearSerialBuffer();
+}
+
 void RadioReceiveTask::task() {
 	_clearSerialBuffer();
 	_initialiseDiscoveryState();
@@ -55,10 +64,23 @@ void RadioReceiveTask::task() {
 	byte packetBuffer[RADIO_PACKET_WITH_RSSI_LENGTH];
 	uint8_t packetBufferLength = 0;
 
+	#ifdef RADIO_DEBUG_MODE
+		uint8_t serialRingBufferHWM = 0;
+	#endif
+
+	_wakeUp();
+
 	_currentMessageReceiver = NO_CURRENT_MESSAGE;
 	while (true) {
 		uint8_t availableBytes = RADIO_SERIAL.available();
 		if (availableBytes > 0) {
+			#ifdef RADIO_DEBUG_MODE
+				if (serialRingBufferHWM < availableBytes) {
+					serialRingBufferHWM = availableBytes;
+					debug::log("RadioReceiveTask: serialRingBufferHWM=" + String(serialRingBufferHWM));
+				}
+			#endif
+
 			while (availableBytes > 0) {
 				packetBuffer[packetBufferLength] = RADIO_SERIAL.read();
 				packetBufferLength++;
@@ -70,9 +92,16 @@ void RadioReceiveTask::task() {
 				}
 			}
 
+			#ifdef RADIO_DEBUG_MODE_EXTENDED
+				debug::log("RadioReceiveTask: Current buffer:");
+				debug::logByteArray(packetBuffer, packetBufferLength);
+			#endif
+
 			packetBufferLength = _parsePacketBuffer(packetBuffer, packetBufferLength);
 
 			_lastMessageReceived = xTaskGetTickCount();
+		} else {
+			vTaskDelay(RADIO_NO_DATA_SLEEP_DURATION);
 		}
 
 		_checkForStateChange();
@@ -80,12 +109,20 @@ void RadioReceiveTask::task() {
 }
 
 inline void RadioReceiveTask::_enterAtMode() {
-	digitalWrite(RADIO_AT_MODE_PIN, LOW);
+	digitalWrite(SRF_AT_COMMAND, LOW);
 }
 
 inline void RadioReceiveTask::_leaveAtMode() {
 	vTaskDelay(10);
-	digitalWrite(RADIO_AT_MODE_PIN, HIGH);
+	digitalWrite(SRF_AT_COMMAND, HIGH);
+}
+
+inline void RadioReceiveTask::_sleep() {
+	digitalWrite(SRF_SLEEP, HIGH);
+}
+
+inline void RadioReceiveTask::_wakeUp() {
+	digitalWrite(SRF_SLEEP, LOW);
 }
 
 inline uint8_t RadioReceiveTask::_parsePacketBuffer(byte packetBuffer[], uint8_t packetBufferLength) {
@@ -114,9 +151,14 @@ inline uint8_t RadioReceiveTask::_parsePacketBuffer(byte packetBuffer[], uint8_t
 
 		packetBufferLength = 0;
 	} else if (packetBufferLength == RADIO_PACKET_WITH_RSSI_LENGTH) {
-		debug::log("RadioReceiveTask: Packet does not conform");
-		//debug::logByteArray(packetBuffer, 58);
+		#ifdef RADIO_DEBUG_MODE
+			debug::log("RadioReceiveTask: Packet does not conform");
+			debug::logByteArray(packetBuffer, 58);
+		#endif
 		// Something's wrong, we received enough bytes but it's not formated correctly.
+		// Let's sleep a while and clear the buffer. Hopefully that'll fix it.
+		vTaskDelay(7);
+		_clearSerialBuffer();
 		packetBufferLength = 0;
 	}
 
@@ -240,7 +282,7 @@ inline void RadioReceiveTask::_initialiseDiscoveryState() {
 }
 
 inline void RadioReceiveTask::_initialiseReceiveState() {
-	debug::log("RadioReceiveTask: Starting to receive on channel " + String(_bestChannel));
+	debug::log("RadioReceiveTask: Starting to receive on channel " + String(_bestChannel) + " with RSSI " + String(_bestRssi));
 
 	_enterAtMode();
 	RADIO_SERIAL.println("ATZD3");  // output format <payload>|<rssi>

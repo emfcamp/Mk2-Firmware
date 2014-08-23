@@ -32,6 +32,8 @@
 
 #include "ButtonSubscription.h"
 #include "Tilda.h"
+#include "HomeScreenApp.h"
+#include "FlashLightApp.h"
 
 
 AppOpenerTask::AppOpenerTask(AppManager& aAppManager)
@@ -49,12 +51,12 @@ void AppOpenerTask::task() {
         Button button = buttonSubscription->waitForPress();
         if (button == LIGHT) {
             if (mAppManager.getActiveAppName() == "FlashLight") {
-                mAppManager.open("HomeScreen");
+                mAppManager.open(HomeScreenApp::New);
             } else {
-                mAppManager.open("FlashLight");
+                mAppManager.open(FlashLightApp::New);
             }
         } else if (button == B) {
-            mAppManager.open("HomeScreen");
+            mAppManager.open(HomeScreenApp::New);
         }
     }
 

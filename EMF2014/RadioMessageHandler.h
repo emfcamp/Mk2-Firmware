@@ -29,7 +29,7 @@
 
 #pragma once
 
-#include "IncomingRadioMessage.h"
+class IncomingRadioMessage;
 
 class RadioMessageHandler {
 public:

@@ -35,10 +35,16 @@
 #include "AppManager.h"
 #include "Tilda.h"
 
+App* FlashLightApp::New() {
+    return new FlashLightApp();
+}
+
 FlashLightApp::FlashLightApp()
     :mLightLevel(8), mButtonSubscription(NULL)
-{
+{}
 
+FlashLightApp::~FlashLightApp() {
+    delete mButtonSubscription;
 }
 
 // ToDo: Add all the fancy features from https://github.com/emfcamp/Mk2-Firmware/blob/master/frRGBTask/frRGBTask.ino
@@ -55,7 +61,8 @@ void FlashLightApp::updateLeds() {
 }
 
 void FlashLightApp::task() {
-    mButtonSubscription = Tilda::createButtonSubscription(UP | DOWN);
+    if (!mButtonSubscription)
+        mButtonSubscription = Tilda::createButtonSubscription(UP | DOWN);
 
     updateLeds();
     while(true) {
@@ -76,8 +83,6 @@ void FlashLightApp::task() {
             updateLeds();
         }
     }
-
-    delete mButtonSubscription;
 }
 
 void FlashLightApp::afterSuspension() {
