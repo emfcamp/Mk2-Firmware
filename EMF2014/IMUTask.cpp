@@ -98,6 +98,7 @@ static void IMU_tap_cb(unsigned char direction, unsigned char count)
 static void IMU_android_orient_cb(unsigned char orientation)
 {
     debug::log("IMUTask: orient callback(" + String(orientation) + ")");
+    imuTask.setOrientation(orientation);
 }
 
 // Public
@@ -153,6 +154,21 @@ void IMUTask::setup()
 
     
 }
+
+void IMUTask::setOrientation(uint8_t newOrientation) {
+    // TODO: wrap this in mutex?
+    _orientation = newOrientation;
+    
+    Tilda::_appManager->orientationCallback(_orientation);
+    
+}
+
+uint8_t IMUTask::getOrientation() {
+    //TODO: mutex?
+    return _orientation;
+}
+
+
 
 // Protected
 void IMUTask::task()

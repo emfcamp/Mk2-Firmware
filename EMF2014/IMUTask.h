@@ -37,6 +37,9 @@
 #include <FreeRTOS_ARM.h>
 #include "EMF2014Config.h"
 #include "Task.h"
+#include "AppManager.h"
+
+
 
 // callbacks
 static void IMU_interrupt(void);
@@ -47,12 +50,16 @@ class IMUTask: public Task {
 public:
     String getName() const;
     EventGroupHandle_t eventGroup;
+    void setOrientation(uint8_t);
+    uint8_t getOrientation();
+    
 protected:
     void task();
 private:
     // variables
     uint8_t dmp_state;
-    
+    uint8_t _orientation;
+
     // functions
     void setup();
     int8_t MPUSetup();

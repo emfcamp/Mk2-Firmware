@@ -34,3 +34,8 @@ App::App() {}
 bool App::keepAlive() const {
     return false;
 }
+
+void App::newOrientation(uint8_t orientation) {
+    return;
+}
+

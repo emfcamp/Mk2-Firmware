@@ -49,6 +49,7 @@
 #include "PMICTask.h"
 #include "BadgeNotifications.h"
 #include "GUITask.h"
+#include "IMUTask.h"
 
 TiLDATask::TiLDATask() {
 
@@ -86,6 +87,7 @@ void TiLDATask::task() {
     Tilda::_guiTask->start();
     appOpenerTask->start();
     PMIC.start();
+    imuTask.start();
 
     Tilda::openApp(HomeScreenApp::New);
 
