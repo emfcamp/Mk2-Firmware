@@ -112,4 +112,6 @@ void HomeScreenApp::task() {
 }
 
 void HomeScreenApp::afterSuspension() {}
-void HomeScreenApp::beforeResume() {}
+void HomeScreenApp::beforeResume() {
+    Tilda::getGUITask().setM2Root(&top_el_expandable_menu);
+}

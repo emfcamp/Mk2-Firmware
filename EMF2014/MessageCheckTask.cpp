@@ -114,19 +114,27 @@ void MessageCheckTask::task() {
 					debug::log("MessageCheckTask: Can't validate message, ecc doesn't check out.");
 				} else {
 					// we have a valid message so tell the handlers
-					debug::log("MessageCheckTask: valid message. RID: " + String(message->rid()));
+					#ifdef RADIO_DEBUG_MODE
+						debug::log("MessageCheckTask: valid message. RID: " + String(message->rid()));
+					#endif
 
 					if (xSemaphoreTake(mHandlersSemaphore, portMAX_DELAY) == pdTRUE) {
+						bool dispatched = false;
 						for (int i = 0 ; i < MAX_HANDLERS ; ++i) {
 							if (mHandlers[i] != NULL
 									&& message->rid() >= mHandlers[i]->mRangeStart
 									&& message->rid() <= mHandlers[i]->mRangeEnd) {
-								debug::log("MessageCheckTask: dispatched!");
+								#ifdef RADIO_DEBUG_MODE
+									debug::log("MessageCheckTask: dispatched!");
+								#endif
 								mHandlers[i]->mHandler->handleMessage(*message);
+								dispatched = true;
 							}
 						}
-
 						xSemaphoreGive(mHandlersSemaphore);
+						if (!dispatched) {
+							debug::log("MessageCheckTask: Unhandled valid message for RID: " + String(message->rid()));
+						}
 					}
 			    }
 			}
