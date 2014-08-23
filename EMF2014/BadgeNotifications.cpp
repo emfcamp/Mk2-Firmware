@@ -30,6 +30,7 @@
 #include "BadgeNotifications.h"
 #include "IncomingRadioMessage.h"
 #include "AppManager.h" 
+#include "Utils.h"
 
 BadgeNotification BadgeNotifications::mBadgeNotification(String(""), {255, 128, 0}, {0, 128, 255}, true);
 SemaphoreHandle_t BadgeNotifications::mNotificationMutex = xSemaphoreCreateMutex();
@@ -50,11 +51,26 @@ BadgeNotifications::BadgeNotifications(SettingsStore& aSettingsStore, MessageChe
 
 BadgeNotifications::~BadgeNotifications() {}
 
-void BadgeNotifications::handleMessage(const IncomingRadioMessage& radioMessage) {
+RGBColor BadgeNotifications::getRGBColor(PackReader& aReader) {
+    uint8_t red = static_cast<uint8_t>(Utils::getInteger(aReader));
+    uint8_t green = static_cast<uint8_t>(Utils::getInteger(aReader));
+    uint8_t blue = static_cast<uint8_t>(Utils::getInteger(aReader));
+    return RGBColor(red, blue, green);
+}
+
+void BadgeNotifications::handleMessage(const IncomingRadioMessage& aIncomingRadioMessage) {
     // parse the radio message content into mBadgeNotification
-    radioMessage.content();
+    // <3 bytes rgb1> <3 bytes rgb2> <1 byte sound> <text>
+
     if (xSemaphoreTake(mNotificationMutex, portMAX_DELAY) == pdTRUE) {
-        mBadgeNotification = BadgeNotification(String(""), {255, 128, 0}, {0, 128, 255}, true);
+        mReader.setBuffer((unsigned char*)aIncomingRadioMessage.content(), aIncomingRadioMessage.length());
+
+        RGBColor rgb1 = getRGBColor(mReader);
+        RGBColor rgb2 = getRGBColor(mReader);
+        boolean sound = Utils::getBoolean(mReader);
+        String text = Utils::getString(mReader);
+
+        mBadgeNotification = BadgeNotification(text, rgb1, rgb2, sound);
         xSemaphoreGive(mNotificationMutex);
     }
 

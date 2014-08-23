@@ -31,6 +31,8 @@
 
 #include <Arduino.h>
 #include <FreeRTOS_ARM.h>
+#include <TinyPacks.h>
+
 #include "EMF2014Config.h"
 #include "RGBTask.h"
 #include "SettingsStore.h"
@@ -66,9 +68,14 @@ private: // from SettingsStoreObserver
     void badgeIdChanged(uint16_t badgeId);
 
 private:
+    static RGBColor getRGBColor(PackReader& aReader);
+
+private:
     MessageCheckTask& mMessageCheckTask;
     SettingsStore& mSettingsStore;
     AppManager& mAppManager;
     static BadgeNotification mBadgeNotification;
     static SemaphoreHandle_t mNotificationMutex;
+
+    PackReader mReader;
 };
