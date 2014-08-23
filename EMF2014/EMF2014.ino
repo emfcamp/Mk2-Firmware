@@ -38,6 +38,8 @@
 // Reference all libraries that are used here, otherwise Arduino won't include them :(
 #include <FreeRTOS_ARM.h>
 #include <debug.h>
+#include <Wire.h>
+#include <MPU6050.h>
 #include <Sha1.h>
 #include <DueFlashStorage.h>
 #include <TinyPacks.h>

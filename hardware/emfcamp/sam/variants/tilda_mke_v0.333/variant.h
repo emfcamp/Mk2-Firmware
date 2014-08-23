@@ -256,6 +256,8 @@ static const uint8_t CAN1TX = 107;
 #define LCD_CS                BOARD_SPI_SS2
 #define LCD_POWER             (40u)
 #define LCD_BACKLIGHT         (35u)
+#define LCD_BACKLIGHT_ON      HIGH
+#define LCD_BACKLIGHT_OFF     LOW
 #define LCD_A0                (38u)
 #define LCD_RESET             (34u)
 

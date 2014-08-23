@@ -31,13 +31,17 @@
 #include "EMF2014Config.h"
 #include "HomeScreenApp.h"
 #include "FlashLightApp.h"
+#include "SponsorsApp.h"
 #include "AppManager.h"
 
 #define MAX_APPS 10
 
 // Add your app here to appear in the app list
-static const AppDefinition APPS[] = {AppDefinition("HomeScreen", HomeScreenApp::New),
-                                        AppDefinition("FlashLight", FlashLightApp::New)};
+static const AppDefinition APPS[] = {
+        AppDefinition("HomeScreen",    HomeScreenApp::New),
+        AppDefinition("FlashLight",    FlashLightApp::New),
+        AppDefinition("SponsorsApp",   SponsorsApp::New)
+};
 
 AppManager::AppItem::AppItem(app_ctor aNew)
     :mNew(aNew)
@@ -61,7 +65,7 @@ AppManager::AppManager()
 AppManager::~AppManager() {
     // no need to delete the active ap as
     // it'll be in the list of all apps
-    delete[] mAppItems; 
+    delete[] mAppItems;
 }
 
 
@@ -85,7 +89,7 @@ AppManager::AppItem* AppManager::createAndAddApp(app_ctor aNew) {
         if (mAppItems[i] == NULL) {
             mAppItems[i] = new AppItem(aNew);
             return mAppItems[i];
-        } 
+        }
     }
 
     return NULL;
@@ -95,7 +99,7 @@ AppManager::AppItem* AppManager::getExistingApp(app_ctor aNew) {
     for (int i = 0 ; i < MAX_APPS ; ++i) {
         if (mAppItems[i]->mNew == aNew) {
             return mAppItems[i];
-        } 
+        }
     }
 
     return NULL;
@@ -137,4 +141,10 @@ void AppManager::open(app_ctor aNew) {
     mActiveAppItem->mApp->start();
 
     debug::log("New active app: " + mActiveAppItem->mApp->getName());
+}
+
+void AppManager::orientationCallback(uint8_t orientation) {
+    if(mActiveAppItem) {
+        mActiveAppItem->mApp->newOrientation(orientation);
+    }
 }

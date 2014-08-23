@@ -42,6 +42,11 @@ struct AppDefinition {
     app_ctor mNew;
 };
 
+
+// Orientation change callback
+void AppManagerOrientationCallback(uint8_t newOrientation);
+
+
 class AppManager {
 private:
     class AppItem {
@@ -66,12 +71,13 @@ public:
     // which can be passed in here like `MyApp::New`
 	void open(app_ctor aNew);
 	String getActiveAppName() const;
+    
+    void orientationCallback(uint8_t orientation);
 
 private:
     AppItem* createAndAddApp(app_ctor aNew);
     AppItem* getExistingApp(app_ctor aNew);
 
-private:
     AppItem* mActiveAppItem;
     AppItem** mAppItems;
 };

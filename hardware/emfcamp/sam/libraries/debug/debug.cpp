@@ -28,7 +28,7 @@
 
 #include "debug.h"
 #include <FreeRTOS_ARM.h>
- 
+
 
 namespace debug {
     // I tried to write this with a queue, but the C++ pointer gods
@@ -96,7 +96,7 @@ namespace debug {
     }
 
     /**
-     * Lights the debug led and waits for a key to be pressed in 
+     * Lights the debug led and waits for a key to be pressed in
      * the serial console before sending the text
      */
     void stopWithMessage(String text) {
@@ -107,7 +107,14 @@ namespace debug {
     }
 
      void waitForKey() {
-        while (!DEBUG_SERIAL.available());
+        uint8_t counter = 0;
+        while (!DEBUG_SERIAL.available() && (digitalRead(48u) == HIGH)) { // Button A on Tilda MKe
+            if (counter == 0) {
+                debug::log("Waiting for key...");
+            }
+            delay(1);
+            counter++;
+        }
     }
 
     void setup() {
@@ -116,7 +123,7 @@ namespace debug {
 
         serialPortMutex = 0;
 
-        pinMode(DEBUG_LED, OUTPUT);       
+        pinMode(DEBUG_LED, OUTPUT);
         digitalWrite(DEBUG_LED, LOW);
     }
 }

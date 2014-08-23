@@ -57,7 +57,7 @@
 // Sleep time for the receiver task when no serial data is available
 #define RADIO_NO_DATA_SLEEP_DURATION 5
 
-#define RADIO_DEBUG_MODE
+//#define RADIO_DEBUG_MODE
 //#define RADIO_DEBUG_MODE_EXTENDED
 
 
