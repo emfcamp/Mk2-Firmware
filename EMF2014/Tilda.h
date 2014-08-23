@@ -54,7 +54,7 @@ public:
     static DataStore& getDataStore();
     static LCDTask& getLCDTask();
     static GUITask& getGUITask();
-
+    static AppManager& getAppManager();
     // helpers
     static ButtonSubscription* createButtonSubscription(uint16_t buttons);
     static void log(String text);

@@ -33,7 +33,7 @@
 #include "FlashLightApp.h"
 #include "AppManager.h"
 
-#define MAX_APPS 10
+
 
 // Add your app here to appear in the app list
 static const AppDefinition APPS[] = {AppDefinition("HomeScreen", HomeScreenApp::New),
