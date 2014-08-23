@@ -35,6 +35,9 @@
 #include "AppManager.h"
 #include "Tilda.h"
 
+
+
+
 App* FlashLightApp::New() {
     return new FlashLightApp();
 }
@@ -63,7 +66,11 @@ void FlashLightApp::updateLeds() {
     Tilda::setLedColor({actualLightLevel, actualLightLevel, actualLightLevel});
 }
 
+M2_LABEL(flashLightApp_m2_labelNotYetFound, "f0", "Light Level:\nIntolerable");
+
 void FlashLightApp::task() {
+    Tilda::getGUITask().setM2Root(&flashLightApp_m2_labelNotYetFound);
+
     if (!mButtonSubscription)
         mButtonSubscription = Tilda::createButtonSubscription(UP | DOWN);
 
