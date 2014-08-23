@@ -96,6 +96,13 @@ void HomeScreenApp::newOrientation(uint8_t orientation) {
     }
 }
 
+const char *launch_app(uint8_t idx, uint8_t msg) {
+  if ( msg == M2_STRLIST_MSG_SELECT  ) {
+      Tilda::openApp(Tilda::getAppManager().getById(idx).mNew);
+  }
+  return "";
+}
+
 void HomeScreenApp::task() {
     eventGroup = xEventGroupCreate();
     GLCD.DrawBitmap(logo,0,8);
@@ -109,7 +116,7 @@ void HomeScreenApp::task() {
         Tilda::getAppManager().getById(i).mName.toCharArray(entry_label,name_length);
         app_list_menu[i].label = entry_label;
         app_list_menu[i].element=0;
-        app_list_menu[i].cb=0;
+        app_list_menu[i].cb=launch_app;
     }
     app_list_menu[app_count].label=0;
     app_list_menu[app_count].element=0;
