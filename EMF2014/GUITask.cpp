@@ -113,3 +113,7 @@ void GUITask::setM2Root(m2_rom_void_p newRoot) {
     _m2->setRoot(newRoot);
     _m2->setHome(newRoot);
 }
+
+void GUITask::clearRoot() {
+    _m2->setRoot(&m2_null_element);
+}
