@@ -49,6 +49,7 @@ public:
 class SettingsStore: public RadioMessageHandler {
 public:
     SettingsStore();
+    ~SettingsStore();
 
     bool getUniqueId(uint32_t* unique_id) const;
 
@@ -56,17 +57,20 @@ public:
     void setBadgeId(uint16_t aBadgeId);
     bool hasBadgeId() const;
 
-    void setObserver(SettingsStoreObserver* aObserver);
+    void addObserver(SettingsStoreObserver* aObserver);
+    void removeObserver(SettingsStoreObserver* aObserver);
 
 private:
     SettingsStore(const SettingsStore&);
 
     void handleMessage(const IncomingRadioMessage&);
+    void notifyObservers(uint16_t aBadgeId);
 
 private:
     uint16_t mBadgeId;
 
-    SettingsStoreObserver* mObserver;
+    SettingsStoreObserver** mObservers;
+    SemaphoreHandle_t mObserversMutex;
 };
 
 #endif // _SETTINGS_STORE_H_

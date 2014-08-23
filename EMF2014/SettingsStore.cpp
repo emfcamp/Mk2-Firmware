@@ -32,15 +32,58 @@
 #include "Utils.h"
 #include "IncomingRadioMessage.h"
 
-#define BADGE_ID_UNKOWN 0;
+#define BADGE_ID_UNKOWN 0
+#define MAX_OBSERVERS 10
 
-SettingsStore::SettingsStore()
-    :mObserver(NULL) {
+SettingsStore::SettingsStore() {
     mBadgeId = BADGE_ID_UNKOWN;
+    mObservers = new SettingsStoreObserver*[MAX_OBSERVERS];
+    for (int i = 0 ; i < MAX_OBSERVERS ; ++i) {
+        mObservers[i] = NULL;
+    }
+
+    mObserversMutex = xSemaphoreCreateMutex();
 }
 
-void SettingsStore::setObserver(SettingsStoreObserver* aObserver) {
-    mObserver = aObserver;
+SettingsStore::~SettingsStore() {
+    delete[] mObservers;
+}
+
+void SettingsStore::addObserver(SettingsStoreObserver* aObserver) {
+    if (xSemaphoreTake(mObserversMutex, portMAX_DELAY) == pdTRUE) {
+        for (int i = 0 ; i < MAX_OBSERVERS ; ++i) {
+            if (mObservers[i] == NULL) {
+                mObservers[i] = aObserver;
+                break;
+            }
+        }
+
+        xSemaphoreGive(mObserversMutex);
+    }
+}
+
+void SettingsStore::removeObserver(SettingsStoreObserver* aObserver) {
+    if (xSemaphoreTake(mObserversMutex, portMAX_DELAY) == pdTRUE) {
+        for (int i = 0 ; i < MAX_OBSERVERS ; ++i) {
+            if (mObservers[i] = aObserver) {
+                mObservers[i] = NULL;
+            }
+        }
+
+        xSemaphoreGive(mObserversMutex);
+    }
+}
+
+void SettingsStore::notifyObservers(uint16_t aBadgeId) {
+    if (xSemaphoreTake(mObserversMutex, portMAX_DELAY) == pdTRUE) {
+        for (int i = 0 ; i < MAX_OBSERVERS ; ++i) {
+            if (mObservers[i] != NULL) {
+                mObservers[i]->badgeIdChanged(aBadgeId);
+            }
+        }
+        
+        xSemaphoreGive(mObserversMutex);
+    }
 }
 
 void SettingsStore::handleMessage(const IncomingRadioMessage& radioMessage) {
@@ -80,10 +123,7 @@ uint16_t SettingsStore::getBadgeId() const {
 
 void SettingsStore::setBadgeId(uint16_t aBadgeId) {
     mBadgeId = aBadgeId;
-
-    if (mObserver) {
-        mObserver->badgeIdChanged(mBadgeId);
-    }
+    notifyObservers(mBadgeId);
 }
 
 bool SettingsStore::hasBadgeId() const {

@@ -49,13 +49,13 @@ BadgeNotifications::BadgeNotifications(SettingsStore& aSettingsStore, MessageChe
         mMessageCheckTask.subscribe(this, badgeId, badgeId);
     }
 
-    mSettingsStore.setObserver(this);
+    mSettingsStore.addObserver(this);
 
-    mNotificationMutex = xSemaphoreMutexCreate();
+    mNotificationMutex = xSemaphoreCreateMutex();
 }
 
 BadgeNotifications::~BadgeNotifications() {
-    mSettingsStore.setObserver(NULL);
+    mSettingsStore.removeObserver(this);
     mMessageCheckTask.unsubscribe(this);
     delete mBadgeNotification;
 }
