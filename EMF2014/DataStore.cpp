@@ -31,6 +31,7 @@
 #include "MessageCheckTask.h"
 #include "Weather.h"
 #include "Schedule.h"
+#include "Utils.h"
 
 #include <debug.h>
 
@@ -38,8 +39,6 @@
 #define CONTENT_RID_SCHEDULE_FRIDAY   40963
 #define CONTENT_RID_SCHEDULE_SATURDAY 40964
 #define CONTENT_RID_SCHEDULE_SUNDAY   40965
-
-#define MAX_TEXT_LENGTH 160
 
 DataStore::DataStore(MessageCheckTask& aMessageCheckTask)
 	:mMessageCheckTask(aMessageCheckTask)
@@ -100,25 +99,13 @@ Schedule* DataStore::getSchedule(ScheduleDay day) const {
 	return schedule;
 }
 
-tp_integer_t DataStore::_getInteger(PackReader& reader) {
-	reader.next();
-	return reader.getInteger();
-}
-
-String DataStore::_getString(PackReader& reader) {
-	reader.next();
-	char string[MAX_TEXT_LENGTH];
-	tp_length_t legnth = reader.getString(string, MAX_TEXT_LENGTH);
-	return String(string);
-}
-
 void DataStore::_unpackWeatherForecastPeriod(WeatherForecastPeriod& period, PackReader& reader) {
-	period.timestamp = (uint32_t)_getInteger(reader);
-	period.weatherType = (WeatherType)_getInteger(reader);
-	period.temperature = (int8_t)_getInteger(reader);
-	period.windSpeed = (uint8_t)_getInteger(reader);
-	period.screenRelativeHumidity = (uint8_t)_getInteger(reader);
-	period.precipitationProbability = (uint8_t)_getInteger(reader);
+	period.timestamp = (uint32_t)Utils::getInteger(reader);
+	period.weatherType = (WeatherType)Utils::getInteger(reader);
+	period.temperature = (int8_t)Utils::getInteger(reader);
+	period.windSpeed = (uint8_t)Utils::getInteger(reader);
+	period.screenRelativeHumidity = (uint8_t)Utils::getInteger(reader);
+	period.precipitationProbability = (uint8_t)Utils::getInteger(reader);
 }
 
 void DataStore::_addWeatherForecastRaw(const IncomingRadioMessage& aIncomingRadioMessage) {
@@ -144,16 +131,16 @@ void DataStore::_addScheduleRaw(const IncomingRadioMessage& aIncomingRadioMessag
 		mReader.setBuffer((unsigned char*)aIncomingRadioMessage.content(), aIncomingRadioMessage.length());
 
 		// get the length and create a new array of events
-		tp_integer_t eventCount = _getInteger(mReader);
+		tp_integer_t eventCount = Utils::getInteger(mReader);
 		Event* events = new Event[eventCount];
 
 		for (int i = 0 ; i < eventCount ; ++i) {
-			events[i].stageId = (uint8_t)_getInteger(mReader);
-			events[i].typeId = (uint8_t)_getInteger(mReader);
-			events[i].startTimestamp = (uint32_t)_getInteger(mReader);
-			events[i].endTimestamp = (uint32_t)_getInteger(mReader);
-			events[i].speaker = _getString(mReader);
-			events[i].title = _getString(mReader);
+			events[i].stageId = (uint8_t)Utils::getInteger(mReader);
+			events[i].typeId = (uint8_t)Utils::getInteger(mReader);
+			events[i].startTimestamp = (uint32_t)Utils::getInteger(mReader);
+			events[i].endTimestamp = (uint32_t)Utils::getInteger(mReader);
+			events[i].speaker = Utils::getString(mReader);
+			events[i].title = Utils::getString(mReader);
 		}
 
 		delete mSchedule[day];

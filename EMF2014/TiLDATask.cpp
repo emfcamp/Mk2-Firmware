@@ -47,6 +47,7 @@
 #include "LCDTask.h"
 #include "DataStore.h"
 #include "PMICTask.h"
+#include "BadgeNotifications.h"
 #include "GUITask.h"
 
 TiLDATask::TiLDATask() {
@@ -58,31 +59,31 @@ String TiLDATask::getName() const {
 }
 
 void TiLDATask::task() {
-    RTC_clock* realTimeClock = new RTC_clock(RC);
+    Tilda::_realTimeClock = new RTC_clock(RC);
     SettingsStore* settingsStore = new SettingsStore;
-    AppManager* appManager = new AppManager;
+    Tilda::_appManager = new AppManager;
 
     MessageCheckTask* messageCheckTask = new MessageCheckTask;
-    DataStore* dataStore = new DataStore(*messageCheckTask);
-    RGBTask* rgbTask = new RGBTask;
+    Tilda::_dataStore = new DataStore(*messageCheckTask);
+    Tilda::_rgbTask = new RGBTask;
     ButtonTask* buttonTask = new ButtonTask;
-    RadioReceiveTask* radioReceiveTask = new RadioReceiveTask(*messageCheckTask, *realTimeClock);
+    RadioReceiveTask* radioReceiveTask = new RadioReceiveTask(*messageCheckTask, *Tilda::_realTimeClock);
     RadioTransmitTask* radioTransmitTask = new RadioTransmitTask(*radioReceiveTask, *settingsStore, *messageCheckTask);
-    LCDTask* lcdTask = new LCDTask;
-    GUITask* guiTask = new GUITask;
-    AppOpenerTask* appOpenerTask = new AppOpenerTask(*appManager);
-
-    Tilda::setupTasks(appManager, rgbTask, realTimeClock, lcdTask, guiTask);
-    realTimeClock->init();
+    AppOpenerTask* appOpenerTask = new AppOpenerTask(*Tilda::_appManager);
+    Tilda::_lcdTask = new LCDTask;
+    Tilda::_badgeNotifications = new BadgeNotifications(*settingsStore, *messageCheckTask, *Tilda::_appManager);
+    Tilda::_guiTask = new GUITask;
+    
+    Tilda::_realTimeClock->init();
 
     // Background tasks
-    rgbTask->start();
+    Tilda::_rgbTask->start();
     buttonTask->start();
     messageCheckTask->start();
     radioReceiveTask->start();
     radioTransmitTask->start();
-    lcdTask->start();
-    guiTask->start();
+    Tilda::_lcdTask->start();
+    Tilda::_guiTask->start();
     appOpenerTask->start();
     PMIC.start();
 

@@ -32,10 +32,58 @@
 #include "Utils.h"
 #include "IncomingRadioMessage.h"
 
-#define BADGE_ID_UNKOWN 0;
+#define BADGE_ID_UNKOWN 0
+#define MAX_OBSERVERS 10
 
 SettingsStore::SettingsStore() {
-    _badgeId = BADGE_ID_UNKOWN;
+    mBadgeId = BADGE_ID_UNKOWN;
+    mObservers = new SettingsStoreObserver*[MAX_OBSERVERS];
+    for (int i = 0 ; i < MAX_OBSERVERS ; ++i) {
+        mObservers[i] = NULL;
+    }
+
+    mObserversMutex = xSemaphoreCreateMutex();
+}
+
+SettingsStore::~SettingsStore() {
+    delete[] mObservers;
+}
+
+void SettingsStore::addObserver(SettingsStoreObserver* aObserver) {
+    if (xSemaphoreTake(mObserversMutex, portMAX_DELAY) == pdTRUE) {
+        for (int i = 0 ; i < MAX_OBSERVERS ; ++i) {
+            if (mObservers[i] == NULL) {
+                mObservers[i] = aObserver;
+                break;
+            }
+        }
+
+        xSemaphoreGive(mObserversMutex);
+    }
+}
+
+void SettingsStore::removeObserver(SettingsStoreObserver* aObserver) {
+    if (xSemaphoreTake(mObserversMutex, portMAX_DELAY) == pdTRUE) {
+        for (int i = 0 ; i < MAX_OBSERVERS ; ++i) {
+            if (mObservers[i] = aObserver) {
+                mObservers[i] = NULL;
+            }
+        }
+
+        xSemaphoreGive(mObserversMutex);
+    }
+}
+
+void SettingsStore::notifyObservers(uint16_t aBadgeId) {
+    if (xSemaphoreTake(mObserversMutex, portMAX_DELAY) == pdTRUE) {
+        for (int i = 0 ; i < MAX_OBSERVERS ; ++i) {
+            if (mObservers[i] != NULL) {
+                mObservers[i]->badgeIdChanged(aBadgeId);
+            }
+        }
+        
+        xSemaphoreGive(mObserversMutex);
+    }
 }
 
 void SettingsStore::handleMessage(const IncomingRadioMessage& radioMessage) {
@@ -56,8 +104,8 @@ void SettingsStore::handleMessage(const IncomingRadioMessage& radioMessage) {
         }
 
         if (ourUniqueId) {
-            _badgeId = Utils::bytesToInt(radioMessage.content()[16], radioMessage.content()[17]);
-            debug::log("got badge id: " + String(_badgeId));
+            mBadgeId = Utils::bytesToInt(radioMessage.content()[16], radioMessage.content()[17]);
+            debug::log("got badge id: " + String(mBadgeId));
         } else {
             debug::log("not our unique id");
         }
@@ -70,13 +118,14 @@ bool SettingsStore::getUniqueId(uint32_t* unique_id) const {
 }
 
 uint16_t SettingsStore::getBadgeId() const {
-    return _badgeId;
+    return mBadgeId;
 }
 
-void SettingsStore::setBadgeId(uint16_t badgeId) {
-    _badgeId = badgeId;
+void SettingsStore::setBadgeId(uint16_t aBadgeId) {
+    mBadgeId = aBadgeId;
+    notifyObservers(mBadgeId);
 }
 
 bool SettingsStore::hasBadgeId() const {
-    return _badgeId != BADGE_ID_UNKOWN;
+    return mBadgeId != BADGE_ID_UNKOWN;
 }

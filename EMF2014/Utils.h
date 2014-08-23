@@ -29,6 +29,7 @@
 #pragma once
 
 #include <Arduino.h>
+#include <TinyPacks.h>
 
 class Utils {
 private:
@@ -38,4 +39,9 @@ public:
     static uint16_t bytesToInt(byte b1, byte b2);
     static uint32_t bytesToInt(byte b1, byte b2, byte b3, byte b4);
     static String intToHex(uint8_t input);
+
+    // TinyPacks helpers
+    static bool getBoolean(PackReader& reader);
+    static tp_integer_t getInteger(PackReader& reader);
+    static String getString(PackReader& reader);
 };

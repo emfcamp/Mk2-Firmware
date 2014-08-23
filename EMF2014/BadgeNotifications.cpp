@@ -26,14 +26,80 @@
  SOFTWARE.
  */
 
+#include "MessageCheckTask.h"
 #include "BadgeNotifications.h"
+#include "IncomingRadioMessage.h"
+#include "AppManager.h" 
+#include "Utils.h"
 
 String BadgeNotification::text() const { return _text; }
 RGBColor BadgeNotification::led1() const { return _led1; }
 RGBColor BadgeNotification::led2() const { return _led2; }
 boolean BadgeNotification::sound() const { return _sound; }
 
+BadgeNotifications::BadgeNotifications(SettingsStore& aSettingsStore, MessageCheckTask& aMessageCheckTask, AppManager& aAppManager)
+    :mSettingsStore(aSettingsStore),
+    mMessageCheckTask(aMessageCheckTask),
+    mAppManager(aAppManager),
+    mBadgeNotification(NULL)
+
+{
+    if (mSettingsStore.hasBadgeId()) {
+        uint16_t badgeId = mSettingsStore.getBadgeId();
+        mMessageCheckTask.subscribe(this, badgeId, badgeId);
+    }
+
+    mSettingsStore.addObserver(this);
+
+    mNotificationMutex = xSemaphoreCreateMutex();
+}
+
+BadgeNotifications::~BadgeNotifications() {
+    mSettingsStore.removeObserver(this);
+    mMessageCheckTask.unsubscribe(this);
+    delete mBadgeNotification;
+}
+
+RGBColor BadgeNotifications::getRGBColor(PackReader& aReader) {
+    uint8_t red = static_cast<uint8_t>(Utils::getInteger(aReader));
+    uint8_t green = static_cast<uint8_t>(Utils::getInteger(aReader));
+    uint8_t blue = static_cast<uint8_t>(Utils::getInteger(aReader));
+    return RGBColor(red, blue, green);
+}
+
+void BadgeNotifications::handleMessage(const IncomingRadioMessage& aIncomingRadioMessage) {
+    // parse the radio message content into mBadgeNotification
+    // <3 bytes rgb1> <3 bytes rgb2> <1 byte sound> <text>
+
+    if (xSemaphoreTake(mNotificationMutex, portMAX_DELAY) == pdTRUE) {
+        mReader.setBuffer((unsigned char*)aIncomingRadioMessage.content(), aIncomingRadioMessage.length());
+
+        RGBColor rgb1 = getRGBColor(mReader);
+        RGBColor rgb2 = getRGBColor(mReader);
+        boolean sound = Utils::getBoolean(mReader);
+        String text = Utils::getString(mReader);
+
+        delete mBadgeNotification;
+        mBadgeNotification = new BadgeNotification(text, rgb1, rgb2, sound);
+        xSemaphoreGive(mNotificationMutex);
+    }
+
+    // start the notification app to start it
+    //mAppManager->open(NotificationApp::New);
+}
+
+void BadgeNotifications::badgeIdChanged(uint16_t badgeId) {
+    mMessageCheckTask.unsubscribe(this);
+    mMessageCheckTask.subscribe(this, badgeId, badgeId);
+}
+
 BadgeNotification* BadgeNotifications::popNotification() {
-    // ToDo: Actually implement this mock
-    return new BadgeNotification(String("Hello World!"), {255, 128, 0}, {0, 128, 255}, true);
+    BadgeNotification* notification = NULL;
+
+    if (xSemaphoreTake(mNotificationMutex, portMAX_DELAY) == pdTRUE) {
+        notification = new BadgeNotification(*mBadgeNotification);
+        xSemaphoreGive(mNotificationMutex);
+    }
+
+    return notification;
 }

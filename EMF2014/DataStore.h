@@ -60,8 +60,6 @@ private:
 	void _addScheduleRaw(const IncomingRadioMessage& aIncomingRadioMessage, ScheduleDay day);
 
 	static void _unpackWeatherForecastPeriod(WeatherForecastPeriod& period, PackReader& reader);
-	static tp_integer_t _getInteger(PackReader& reader);
-	static String _getString(PackReader& reader);
 
 private:
 	MessageCheckTask& mMessageCheckTask;

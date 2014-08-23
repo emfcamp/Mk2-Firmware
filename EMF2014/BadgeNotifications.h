@@ -31,12 +31,18 @@
 
 #include <Arduino.h>
 #include <FreeRTOS_ARM.h>
+#include <TinyPacks.h>
+
 #include "EMF2014Config.h"
 #include "RGBTask.h"
+#include "SettingsStore.h"
+
+class MessageCheckTask;
+class AppManager;
 
 class BadgeNotification {
 public:
-    BadgeNotification(String text, RGBColor led1, RGBColor led2, boolean sound) :_text(text), _led1(led1), _led2(led2), _sound(sound) {};
+    BadgeNotification(String text, RGBColor led1, RGBColor led2, boolean sound) :_text(text), _led1(led1), _led2(led2), _sound(sound) {}
     String text() const;
     RGBColor led1() const;
     RGBColor led2() const;
@@ -48,9 +54,28 @@ private:
     boolean _sound;
 };
 
-class BadgeNotifications {
+class BadgeNotifications : public SettingsStoreObserver, public RadioMessageHandler {
 public:
-    static BadgeNotification* popNotification();
-private:
+    BadgeNotifications(SettingsStore& aSettingsStore, MessageCheckTask& aMessageCheckTask, AppManager& aAppManager);
+    ~BadgeNotifications();
 
+    BadgeNotification* popNotification();
+
+private: // from RadioMessageHandler
+    void handleMessage(const IncomingRadioMessage&);
+
+private: // from SettingsStoreObserver
+    void badgeIdChanged(uint16_t badgeId);
+
+private:
+    static RGBColor getRGBColor(PackReader& aReader);
+
+private:
+    MessageCheckTask& mMessageCheckTask;
+    SettingsStore& mSettingsStore;
+    AppManager& mAppManager;
+    BadgeNotification* mBadgeNotification;
+    SemaphoreHandle_t mNotificationMutex;
+
+    PackReader mReader;
 };
