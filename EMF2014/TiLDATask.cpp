@@ -90,7 +90,7 @@ void TiLDATask::task() {
     appOpenerTask->start();
     PMIC.start();
 
-    Tilda::openApp(BadgeIdApp::New);
+    Tilda::openApp(HomeScreenApp::New);
 
     suspend();
 }

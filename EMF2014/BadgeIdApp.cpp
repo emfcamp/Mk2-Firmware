@@ -70,19 +70,37 @@ bool BadgeIdApp::keepAlive() const {
         return false;
 }
 
+// Screen for when the ID is not yet known
+M2_LABEL(badgeIdApp_m2_labelNotYetFound, "f0", "Your Badge hasn't\nreceived its badge\nID yet.\n\nPlease wait...");
+
+// The BadgeId
+char badgeIdApp_m2_label1_text[] = " EMFxxxx";
+
+// Screen for when the ID is known
+M2_LABEL(badgeIdApp_m2_label0, "f0", "Your Badge ID is:");
+M2_LABEL(badgeIdApp_m2_label1, "f15w123b1", badgeIdApp_m2_label1_text);
+M2_LABEL(badgeIdApp_m2_label2, "f0", "\nRegister it via\nschedule.emfcamp.org");
+M2_LIST(badgeIdApp_m2_list_dt) = {&badgeIdApp_m2_label0, &badgeIdApp_m2_label1, &badgeIdApp_m2_label2};
+M2_VLIST(badgeIdApp_m2_label_list_found, NULL, badgeIdApp_m2_list_dt);
+
 void BadgeIdApp::task() {
-        if (Tilda::getSettingsStore().hasBadgeId()) {
-            M2_LABEL(label0, "f0", "Your Badge ID is:");
-            const char* idString =  String(" EMF" + String(Tilda::getSettingsStore().getBadgeId())).c_str();
-            M2_LABEL(label1, "f15w123b1", idString);
-            M2_LABEL(label2, "f0", "Register it via\nschedule.emfcamp.org");
-            M2_LIST(list_dt) = {&label0, &label1, &label2};
-            M2_VLIST(label_list, NULL, list_dt);
-            Tilda::getGUITask().setM2Root(&label_list);
-        } else {
-            M2_LABEL(label, "f0", "Your Badge hasn't received\nit's badge its ID yet.\nPlease wait a while and\ncome back later.");
-            Tilda::getGUITask().setM2Root(&label);
+        if (!Tilda::getSettingsStore().hasBadgeId()) {
+            Tilda::getGUITask().setM2Root(&badgeIdApp_m2_labelNotYetFound);
+
+            while(!Tilda::getSettingsStore().hasBadgeId()) {
+                Tilda::delay(500);
+            }
         }
+
+        uint16_t badgeId = Tilda::getSettingsStore().getBadgeId();
+        uint8_t badgeIdBytes[] = {static_cast<byte>(badgeId >> 8), static_cast<byte>(badgeId)};
+        badgeIdApp_m2_label1_text[4] = "0123456789abcdef"[badgeIdBytes[0]>>4];
+        badgeIdApp_m2_label1_text[5] = "0123456789abcdef"[badgeIdBytes[0]&0xf];
+        badgeIdApp_m2_label1_text[6] = "0123456789abcdef"[badgeIdBytes[1]>>4];
+        badgeIdApp_m2_label1_text[7] = "0123456789abcdef"[badgeIdBytes[1]&0xf];
+
+        Tilda::getGUITask().setM2Root(&badgeIdApp_m2_label_list_found);
+
         while(true) {
                 Tilda::delay(300);
         }
