@@ -35,6 +35,8 @@
 #include <M2tk.h>
 #include "GUITask.h"
 
+#define HOMESCREEN_ORIENATION_CHANGE_BIT (1 << 0)
+
 
 //=================================================
 // Forward declaration of the toplevel element
@@ -87,7 +89,15 @@ bool HomeScreenApp::keepAlive() const {
     return true;
 }
 
+void HomeScreenApp::newOrientation(uint8_t orientation) {
+    if (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING && eventGroup != NULL) {
+        xEventGroupSetBits(eventGroup,
+                           HOMESCREEN_ORIENATION_CHANGE_BIT);
+    }
+}
+
 void HomeScreenApp::task() {
+    eventGroup = xEventGroupCreate();
     GLCD.DrawBitmap(logo,0,8);
     //Tilda::delay(5000);
 
@@ -116,7 +126,33 @@ void HomeScreenApp::task() {
     M2_ALIGN(top_el_expandable_menu, "-1|2W64H64", &el_vlist);
 
     Tilda::getGUITask().setM2Root(&top_el_expandable_menu);
+    
+    EventBits_t uxBits;
     while(true) {
+        uxBits = xEventGroupWaitBits(eventGroup,
+                                     HOMESCREEN_ORIENATION_CHANGE_BIT,
+                                     pdFALSE,
+                                     pdFALSE,
+                                     portMAX_DELAY );
+        
+        if ((uxBits & HOMESCREEN_ORIENATION_CHANGE_BIT) != 0 ) {
+            // new orientation, update the screen
+            Orientation_t orientation = Tilda::getOrientation();
+            if (orientation == ORIENTATION_HUNG) {
+                // change rotation
+                
+            } else if (orientation == ORIENTATION_HELD) {
+                // change rotation
+                
+            }
+            
+            xEventGroupClearBits(eventGroup,
+                                 HOMESCREEN_ORIENATION_CHANGE_BIT);
+            
+        } else {
+            // wait timed out, nothing to do here
+            
+        }
     }
 }
 

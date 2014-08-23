@@ -40,7 +40,8 @@ class HomeScreenApp: public App {
 public:
     static App* New();
 
-	String getName() const;
+    String getName() const;
+    void newOrientation(uint8_t);
 protected:
 private:
     HomeScreenApp();
@@ -51,5 +52,6 @@ private:
     void task();
     void afterSuspension();
     void beforeResume();
+    EventGroupHandle_t eventGroup;
 private:
 };
