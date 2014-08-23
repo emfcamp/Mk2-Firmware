@@ -1,8 +1,8 @@
 /*
  TiLDA Mk2
 
- FlashLightApp
- Torch Mode - Press the light button and both RGB LEDs light up.
+ BadgeNotifications
+ This class collects, organises and exposes Notifications.
 
  The MIT License (MIT)
 
@@ -31,28 +31,51 @@
 
 #include <Arduino.h>
 #include <FreeRTOS_ARM.h>
+#include <TinyPacks.h>
+
 #include "EMF2014Config.h"
-#include "App.h"
 #include "RGBTask.h"
-#include "ButtonSubscription.h"
+#include "SettingsStore.h"
 
-class FlashLightApp: public App {
+class MessageCheckTask;
+class AppManager;
+
+class BadgeNotification {
 public:
-    static App* New();
-    ~FlashLightApp();
-
-	String getName() const;
-    
+    BadgeNotification(String text, RGBColor led1, RGBColor led2, boolean sound) :_text(text), _led1(led1), _led2(led2), _sound(sound) {}
+    String text() const;
+    RGBColor led1() const;
+    RGBColor led2() const;
+    boolean sound() const;
 private:
-    FlashLightApp();
-    FlashLightApp(FlashLightApp&);
+    String _text;
+    RGBColor _led1;
+    RGBColor _led2;
+    boolean _sound;
+};
 
-    void updateLeds();
-    void task();
-    void afterSuspension();
-    void beforeResume();
+class BadgeNotifications : public SettingsStoreObserver, public RadioMessageHandler {
+public:
+    BadgeNotifications(SettingsStore& aSettingsStore, MessageCheckTask& aMessageCheckTask, AppManager& aAppManager);
+    ~BadgeNotifications();
+
+    BadgeNotification* popNotification();
+
+private: // from RadioMessageHandler
+    void handleMessage(const IncomingRadioMessage&);
+
+private: // from SettingsStoreObserver
+    void badgeIdChanged(uint16_t badgeId);
 
 private:
-	unsigned char mLightLevel;
-	ButtonSubscription* mButtonSubscription;
+    static RGBColor getRGBColor(PackReader& aReader);
+
+private:
+    MessageCheckTask& mMessageCheckTask;
+    SettingsStore& mSettingsStore;
+    AppManager& mAppManager;
+    BadgeNotification* mBadgeNotification;
+    SemaphoreHandle_t mNotificationMutex;
+
+    PackReader mReader;
 };

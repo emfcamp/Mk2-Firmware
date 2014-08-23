@@ -36,7 +36,8 @@
 #include <rtc_clock.h>
 #include "EMF2014Config.h"
 #include "Task.h"
-#include "MessageCheckTask.h"
+
+class MessageCheckTask;
 
 class RadioReceiveTask: public Task {
 private:
@@ -52,12 +53,15 @@ public:
 	String getName() const;
 protected:
 	void task();
+	void beforeResume();
 
 private:
 	RadioReceiveTask(const RadioReceiveTask& that);
 
 	inline void _enterAtMode();
 	inline void _leaveAtMode();
+	inline void _sleep();
+	inline void _wakeUp();
 
 	inline uint8_t _parsePacketBuffer(byte packetBuffer[], uint8_t packetBufferLength);
 

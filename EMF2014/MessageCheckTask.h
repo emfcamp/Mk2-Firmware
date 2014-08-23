@@ -33,7 +33,6 @@
 #include <Arduino.h>
 #include <FreeRTOS_ARM.h>
 
-#include "IncomingRadioMessage.h"
 #include "EMF2014Config.h"
 #include "Task.h"
 
@@ -56,8 +55,10 @@
 #define RID_RANGE_RESERVED_RESERVED_END 0xFFFF
 
 #define RID_START_TRANSMIT_WINDOW 0xB001
+#define RID_BADGE_ID 0xB002
 
 class RadioMessageHandler;
+class IncomingRadioMessage;
 
 class MessageCheckTask: public Task {
 private:
@@ -73,7 +74,8 @@ public:
 
 	String getName() const;
 
-    void subscribe(RadioMessageHandler& aHandler, uint16_t aRangeStart, uint16_t aRangeEnd); 
+    void subscribe(RadioMessageHandler* aHandler, uint16_t aRangeStart, uint16_t aRangeEnd); 
+    void unsubscribe(RadioMessageHandler* aHandler); 
 
 	void addIncomingMessage(IncomingRadioMessage *message);
 
@@ -87,4 +89,5 @@ private:
 	QueueHandle_t mIncomingMessages;
 
     HandlerItem** mHandlers;
+    SemaphoreHandle_t mHandlersSemaphore;
 };

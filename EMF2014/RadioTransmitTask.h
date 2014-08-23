@@ -40,10 +40,12 @@
 #include "RadioMessageHandler.h"
 
 class SettingsStore;
+class MessageCheckTask;
 
 class RadioTransmitTask: public Task, public RadioMessageHandler {
 public:
-	RadioTransmitTask(RadioReceiveTask& aRadioReceiveTask, const SettingsStore& aSettingsStore);
+	RadioTransmitTask(RadioReceiveTask& aRadioReceiveTask, const SettingsStore& aSettingsStore, MessageCheckTask& aMessageCheckTask);
+    ~RadioTransmitTask();
 
 	String getName() const;
 
@@ -61,6 +63,7 @@ protected:
 private:
 	RadioReceiveTask& mRadioReceiveTask;
     const SettingsStore& mSettingsStore;
+    MessageCheckTask& mMessageCheckTask;
 
 	QueueHandle_t mQueue;
 };

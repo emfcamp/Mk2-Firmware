@@ -27,63 +27,114 @@
  */
 #include <FreeRTOS_ARM.h>
 #include <debug.h>
- 
+
 #include "EMF2014Config.h"
+#include "HomeScreenApp.h"
+#include "FlashLightApp.h"
 #include "AppManager.h"
 
-AppManager::AppManager() {
-    for (uint8_t i=0; i<MAX_APPS; i++) {
-        _apps[i] = NULL;
+#define MAX_APPS 10
+
+// Add your app here to appear in the app list
+static const AppDefinition APPS[] = {AppDefinition("HomeScreen", HomeScreenApp::New),
+                                        AppDefinition("FlashLight", FlashLightApp::New)};
+
+AppManager::AppItem::AppItem(app_ctor aNew)
+    :mNew(aNew)
+{
+    mApp = mNew();
+}
+
+AppManager::AppItem::~AppItem() {
+    delete mApp;
+}
+
+AppManager::AppManager()
+    :mActiveAppItem(NULL)
+{
+    mAppItems = new AppItem*[MAX_APPS];
+    for (int i = 0 ; i < MAX_APPS ; ++i) {
+        mAppItems[i] = NULL;
     }
 }
 
 AppManager::~AppManager() {
-
+    // no need to delete the active ap as
+    // it'll be in the list of all apps
+    delete[] mAppItems; 
 }
 
-void AppManager::add(App& app) {
-    for (uint8_t i=0; i<MAX_APPS; i++) {
-        if (_apps[i] == NULL) {
-            _apps[i] =& app;
-            break;
-        }
-    }
-}   
 
-App& AppManager::getByName(const String& name) const {
-    for (uint8_t i=0; i<MAX_APPS; i++) {
-        if (_apps[i] != NULL) {
-            if (_apps[i]->getName() == name) {
-                return *_apps[i];
-            }
-        } 
-    }
-    debug::log("Error: Trying to start App that doesn't exist: " + name);
-    return *_apps[0];
-}  
+uint8_t AppManager::getAppCount() {
+    return sizeof(APPS) / sizeof(AppDefinition);
+}
 
-void AppManager::open(App& app) {
-    debug::log("Opening " + app.getName());
-    if (activeApp) {
-        debug::log("Current Active App " + activeApp->getName());
-    } 
-    if (activeApp == &app) {
-        return; // App is already active
-    }
-    if (activeApp != NULL) {
-        activeApp->suspend();
-    }
-    app.start();
-    activeApp = &app;
-} 
+AppDefinition AppManager::getById(uint8_t id) {
+    return APPS[id];
+}
 
 String AppManager::getActiveAppName() const {
-    if (activeApp) {
-        return activeApp->getName();
+    if (mActiveAppItem) {
+        return mActiveAppItem->mApp->getName();
     }
     return "";
 }
 
-void AppManager::open(const String& name) {
-    open(getByName(name));
+AppManager::AppItem* AppManager::createAndAddApp(app_ctor aNew) {
+    for (int i = 0 ; i < MAX_APPS ; ++i) {
+        if (mAppItems[i] == NULL) {
+            mAppItems[i] = new AppItem(aNew);
+            return mAppItems[i];
+        } 
+    }
+
+    return NULL;
+}
+
+AppManager::AppItem* AppManager::getExistingApp(app_ctor aNew) {
+    for (int i = 0 ; i < MAX_APPS ; ++i) {
+        if (mAppItems[i]->mNew == aNew) {
+            return mAppItems[i];
+        } 
+    }
+
+    return NULL;
+}
+
+void AppManager::open(app_ctor aNew) {
+    if (mActiveAppItem) {
+        debug::log("Current active app: " + mActiveAppItem->mApp->getName());
+
+        if (mActiveAppItem->mNew == aNew) {
+            debug::log("Same app so we do nothing");
+            return;
+        }
+    }
+
+    // stop the active app
+    if (mActiveAppItem) {
+        mActiveAppItem->mApp->suspend();
+
+        if (!mActiveAppItem->mApp->keepAlive()) {
+            debug::log("Deleting task: " + mActiveAppItem->mApp->getName());
+
+            // This app is getting destroyed and removed from the list
+            for (int i = 0 ; i < MAX_APPS ; ++i) {
+                if (mAppItems[i]->mNew == mActiveAppItem->mNew) {
+                    delete mAppItems[i];
+                    mAppItems[i] = NULL;
+                    break;
+                }
+            }
+
+            mActiveAppItem = NULL;
+        }
+    }
+
+    // is the app already in our list?
+    AppItem* existingApp = getExistingApp(aNew);
+    mActiveAppItem = existingApp ? existingApp : createAndAddApp(aNew);
+    mActiveAppItem->mApp->start();
+
+    debug::log("New active app: " + mActiveAppItem->mApp->getName());
 }
