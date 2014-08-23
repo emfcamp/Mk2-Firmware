@@ -47,7 +47,7 @@ FlashLightApp::~FlashLightApp() {
     delete mButtonSubscription;
 }
 
-// ToDo: Add all the fancy features from https://github.com/emfcamp/Mk2-Firmware/blob/master/frRGBTask/frRGBTask.ino
+// TODO: Add all the fancy features from https://github.com/emfcamp/Mk2-Firmware/blob/master/frRGBTask/frRGBTask.ino
 String FlashLightApp::getName() const {
     return "FlashLight";
 }
@@ -56,6 +56,9 @@ void FlashLightApp::updateLeds() {
     uint8_t actualLightLevel = 1 << mLightLevel;
     if (mLightLevel == 8) {
         actualLightLevel = 255;
+    }
+    if (Tilda::getOrientation() != ORIENTATION_HUNG) {
+        actualLightLevel = 2;
     }
     Tilda::setLedColor({actualLightLevel, actualLightLevel, actualLightLevel});
 }
