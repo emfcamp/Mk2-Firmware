@@ -123,7 +123,7 @@ void glcd_Device::Init(void) {
     pinMode(LCD_POWER, OUTPUT);
     digitalWrite(LCD_POWER, LOW);
     pinMode(LCD_BACKLIGHT, OUTPUT);
-    digitalWrite(LCD_BACKLIGHT, HIGH);
+    digitalWrite(LCD_BACKLIGHT, LCD_BACKLIGHT_ON);
     // set pin directions
     pinMode(LCD_A0, OUTPUT);
     pinMode(LCD_RESET, OUTPUT);
