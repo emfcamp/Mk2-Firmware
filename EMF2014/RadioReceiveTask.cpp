@@ -68,6 +68,8 @@ void RadioReceiveTask::task() {
 		uint8_t serialRingBufferHWM = 0;
 	#endif
 
+	_wakeUp();
+
 	_currentMessageReceiver = NO_CURRENT_MESSAGE;
 	while (true) {
 		uint8_t availableBytes = RADIO_SERIAL.available();
@@ -113,6 +115,14 @@ inline void RadioReceiveTask::_enterAtMode() {
 inline void RadioReceiveTask::_leaveAtMode() {
 	vTaskDelay(10);
 	digitalWrite(SRF_AT_COMMAND, HIGH);
+}
+
+inline void RadioReceiveTask::_sleep() {
+	digitalWrite(SRF_SLEEP, HIGH);
+}
+
+inline void RadioReceiveTask::_wakeUp() {
+	digitalWrite(SRF_SLEEP, LOW);
 }
 
 inline uint8_t RadioReceiveTask::_parsePacketBuffer(byte packetBuffer[], uint8_t packetBufferLength) {

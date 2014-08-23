@@ -38,7 +38,7 @@
 #define RANDOM_SEED_PIN 5
 
 // Radio serial port
-#define RADIO_SERIAL Serial3
+#define RADIO_SERIAL Serial
 #define RADIO_SERIAL_BAUD 115200
 // Packet length
 #define RADIO_PACKET_LENGTH 58
@@ -58,7 +58,7 @@
 #define RADIO_NO_DATA_SLEEP_DURATION 5
 
 #define RADIO_DEBUG_MODE
-//#define RADIO_DEBUG_MODE_EXTENDED
+#define RADIO_DEBUG_MODE_EXTENDED
 
 
 // EMF2014 Public Key

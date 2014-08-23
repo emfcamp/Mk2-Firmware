@@ -59,8 +59,9 @@ void setup() {
 
     // Setup radio communitcation
     RADIO_SERIAL.begin(RADIO_SERIAL_BAUD);
-    // Setup AT Mode pin
+    // Setup radio pins
     pinMode(SRF_AT_COMMAND, OUTPUT);
+    pinMode(SRF_SLEEP, OUTPUT);
 
     tildaButtonSetup();
     tildaButtonAttachInterrupts();

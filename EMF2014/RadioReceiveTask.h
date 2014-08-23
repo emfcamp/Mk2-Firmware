@@ -60,6 +60,8 @@ private:
 
 	inline void _enterAtMode();
 	inline void _leaveAtMode();
+	inline void _sleep();
+	inline void _wakeUp();
 
 	inline uint8_t _parsePacketBuffer(byte packetBuffer[], uint8_t packetBufferLength);
 
