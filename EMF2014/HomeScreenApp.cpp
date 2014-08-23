@@ -105,7 +105,7 @@ void HomeScreenApp::task() {
     app_list_menu[app_count].element=0;
     app_list_menu[app_count].cb=0;
 
-    M2_X2LMENU(el_2lmenu,"l10e5w45",&m2_2lmenu_first,&m2_2lmenu_cnt, &app_list_menu,'+','-','\0');
+    M2_X2LMENU(el_2lmenu,"l10e1w51",&m2_2lmenu_first,&m2_2lmenu_cnt, &app_list_menu,'+','-','\0');
     M2_SPACE(el_space, "w2h1");
     M2_VSB(el_vsb, "l10w4r1", &m2_2lmenu_first, &m2_2lmenu_cnt);
     M2_LIST(list_2lmenu) = { &el_2lmenu, &el_space, &el_vsb };
