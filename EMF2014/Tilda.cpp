@@ -32,12 +32,16 @@
 #include "RGBTask.h"
 #include "AppManager.h"
 #include "PMICTask.h"
+#include "LCDTask.h"
+#include "GUITask.h"
 
 RGBTask* Tilda::_rgbTask = NULL;
 AppManager* Tilda::_appManager = NULL;
 RTC_clock* Tilda::_realTimeClock = NULL;
 BadgeNotifications* Tilda::_badgeNotifications = NULL;
 DataStore* Tilda::_dataStore = NULL;
+LCDTask* Tilda::_lcdTask = NULL;
+GUITask* Tilda::_guiTask = NULL;
 
 Tilda::Tilda() {}
 
@@ -89,6 +93,14 @@ DataStore& Tilda::getDataStore() {
     return *_dataStore;
 }
 
+LCDTask& Tilda::getLCDTask() {
+    return *_lcdTask;
+}
+
+GUITask& Tilda::getGUITask() {
+    return *_guiTask;
+}
+
 float Tilda::getBatteryVoltage() {
     return PMIC.getBatteryVoltage();
 }
@@ -96,6 +108,8 @@ float Tilda::getBatteryVoltage() {
 uint8_t Tilda::getBatteryPercent() {
     return PMIC.getBatteryPercent();
 }
+
 uint8_t Tilda::getChargeState() {
     return PMIC.getChargeState();
 }
+

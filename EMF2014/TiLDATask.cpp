@@ -48,6 +48,7 @@
 #include "DataStore.h"
 #include "PMICTask.h"
 #include "BadgeNotifications.h"
+#include "GUITask.h"
 
 TiLDATask::TiLDATask() {
 
@@ -68,10 +69,10 @@ void TiLDATask::task() {
     ButtonTask* buttonTask = new ButtonTask;
     RadioReceiveTask* radioReceiveTask = new RadioReceiveTask(*messageCheckTask, *Tilda::_realTimeClock);
     RadioTransmitTask* radioTransmitTask = new RadioTransmitTask(*radioReceiveTask, *settingsStore, *messageCheckTask);
-    LCDTask* lcdTask = new LCDTask;
-    AppOpenerTask* appOpenerTask = new AppOpenerTask(*Tilda::_appManager);
+    Tilda::_lcdTask = new LCDTask;
     Tilda::_badgeNotifications = new BadgeNotifications(*settingsStore, *messageCheckTask, *Tilda::_appManager);
-
+    Tilda::_guiTask = new GUITask;
+    
     Tilda::_realTimeClock->init();
 
     // Background tasks
@@ -80,7 +81,8 @@ void TiLDATask::task() {
     messageCheckTask->start();
     radioReceiveTask->start();
     radioTransmitTask->start();
-    lcdTask->start();
+    Tilda::_lcdTask->start();
+    Tilda::_guiTask->start();
     appOpenerTask->start();
     PMIC.start();
 

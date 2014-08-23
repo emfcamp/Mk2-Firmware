@@ -3,7 +3,7 @@
   M2tk.h
 
   m2tklib = Mini Interative Interface Toolkit Library
-  
+
   Copyright (C) 2011  olikraus@gmail.com
 
   This program is free software: you can redistribute it and/or modify
@@ -20,6 +20,7 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 */
+#pragma once
 
 #include "utility/m2.h"
 #include "utility/m2ghglcd.h"
@@ -41,6 +42,5 @@ class M2tk
     void setRootChangeCallback(m2_root_change_fnptr cb) { m2_SetRootChangeCallback(cb); }
 
     void clear(void) { m2_Clear(); }
-    m2_rom_void_p getRoot() { return m2_GetRoot(); }    
+    m2_rom_void_p getRoot() { return m2_GetRoot(); }
 };
-

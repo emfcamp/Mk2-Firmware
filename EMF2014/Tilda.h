@@ -38,6 +38,8 @@
 #include "ButtonSubscription.h"
 #include "RGBTask.h"
 #include "AppManager.h"
+#include "LCDTask.h"
+#include "GUITask.h"
 
 class BadgeNotifications;
 class DataStore;
@@ -50,6 +52,8 @@ public:
     static RTC_clock& getClock();
     static BadgeNotifications& getBadgeNotifications();
     static DataStore& getDataStore();
+    static LCDTask& getLCDTask();
+    static GUITask& getGUITask();
 
     // helpers
     static ButtonSubscription* createButtonSubscription(uint16_t buttons);
@@ -70,4 +74,7 @@ private:
     static RTC_clock* _realTimeClock;
     static BadgeNotifications* _badgeNotifications;
     static DataStore* _dataStore;
+    static LCDTask* _lcdTask;
+    static GUITask* _guiTask;
 };
+
