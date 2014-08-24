@@ -61,8 +61,13 @@
 #define RADIO_NO_DATA_SLEEP_DURATION 5
 // This is how long we'll wait before sending after waking up the radio
 #define RADIO_WAKEUP_TIME 400
+// This is a sanity check. Make sure no transmit window is longer than this
+#define RADIO_MAX_TRANSMIT_WINDOW_LENGTH 3 * 60 * 1000
+// Another sanity check. Minimum/Maximum current time
+#define RADIO_MINIMUM_CURRENT_TIME 1408879302
+#define RADIO_MAXIMUM_CURRENT_TIME 1440415302
 
-//#define RADIO_DEBUG_MODE
+#define RADIO_DEBUG_MODE
 //#define RADIO_DEBUG_MODE_EXTENDED
 
 

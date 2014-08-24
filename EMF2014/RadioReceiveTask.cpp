@@ -172,6 +172,12 @@ inline uint8_t RadioReceiveTask::_parsePacketBuffer(byte packetBuffer[], uint8_t
 inline void RadioReceiveTask::_handleDiscoveryPacket(byte packetBuffer[], uint8_t packetBufferLength, uint8_t rssi) {
 	uint8_t channel = packetBuffer[0];
 	uint32_t timestamp = Utils::bytesToInt(packetBuffer[1], packetBuffer[2], packetBuffer[3], packetBuffer[4]);
+	if (timestamp < RADIO_MINIMUM_CURRENT_TIME || timestamp > RADIO_MAXIMUM_CURRENT_TIME) {
+		#ifdef RADIO_DEBUG_MODE
+			debug::log("RadioReceiveTask: timestamp sanity check failed");
+		#endif
+		return;
+	}
 	if (!mRealTimeClock.has_been_set()) {
 		debug::log("Setting time to " + String(timestamp));
 		mRealTimeClock.set_unixtime(timestamp);
@@ -188,7 +194,15 @@ inline void RadioReceiveTask::_handleDiscoveryPacket(byte packetBuffer[], uint8_
 	}
 
 	if (_bestRssi == rssi) {
-		_bestChannelRemainingTransmitWindow = Utils::bytesToInt(packetBuffer[8], packetBuffer[9], packetBuffer[10], packetBuffer[11])
+		_bestChannelRemainingTransmitWindow = Utils::bytesToInt(packetBuffer[8], packetBuffer[9], packetBuffer[10], packetBuffer[11]);
+
+		// Sanity check. We don't want to have rouge packets send the task to sleep forever
+		if (_bestChannelRemainingTransmitWindow > RADIO_MAX_TRANSMIT_WINDOW_LENGTH) {
+			_bestChannelRemainingTransmitWindow = 0;
+			#ifdef RADIO_DEBUG_MODE
+				debug::log("RadioReceiveTask: RADIO_MAX_TRANSMIT_WINDOW_LENGTH sanity check failed");
+			#endif
+		}
 	}
 }
 
@@ -301,7 +315,7 @@ inline void RadioReceiveTask::_initialiseReceiveState() {
 
 	// This channel might be in transmit phase. Sleep it out.
 	if (_bestChannelRemainingTransmitWindow > 0) {
-		Tilda::delay(_bestChannelRemainingTransmitWindow);
+		vTaskDelay(_bestChannelRemainingTransmitWindow);
 		_lastMessageReceived = xTaskGetTickCount();
 	}
 
