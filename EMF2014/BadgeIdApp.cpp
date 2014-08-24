@@ -84,6 +84,8 @@ M2_LIST(badgeIdApp_m2_list_dt) = {&badgeIdApp_m2_label0, &badgeIdApp_m2_label1, 
 M2_VLIST(badgeIdApp_m2_label_list_found, NULL, badgeIdApp_m2_list_dt);
 
 void BadgeIdApp::task() {
+        GLCD.SetRotation(ROTATION_0);
+
         if (!Tilda::getSettingsStore().hasBadgeId()) {
             Tilda::getGUITask().setM2Root(&badgeIdApp_m2_labelNotYetFound);
 
