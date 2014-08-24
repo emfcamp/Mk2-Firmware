@@ -169,5 +169,6 @@ void HomeScreenApp::task() {
 
 void HomeScreenApp::afterSuspension() {}
 void HomeScreenApp::beforeResume() {
+    GLCD.SetRotation(ROTATION_90);
     Tilda::getGUITask().setM2Root(&top_el_expandable_menu);
 }
