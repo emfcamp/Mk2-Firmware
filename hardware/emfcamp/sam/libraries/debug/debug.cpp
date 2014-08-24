@@ -108,7 +108,7 @@ namespace debug {
 
      void waitForKey() {
         uint8_t counter = 0;
-        while (!DEBUG_SERIAL.available() && (digitalRead(48u) == HIGH)) { // Button A on Tilda MKe
+        while (!DEBUG_SERIAL.available() && (digitalRead(BUTTON_CENTER) == HIGH)) { // Button center on Tilda MKe
             if (counter == 0) {
                 debug::log("Waiting for key...");
             }

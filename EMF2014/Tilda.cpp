@@ -43,6 +43,7 @@ BadgeNotifications* Tilda::_badgeNotifications = NULL;
 DataStore* Tilda::_dataStore = NULL;
 LCDTask* Tilda::_lcdTask = NULL;
 GUITask* Tilda::_guiTask = NULL;
+SettingsStore* Tilda::_settingsStore = NULL;
 
 Tilda::Tilda() {}
 
@@ -100,6 +101,10 @@ LCDTask& Tilda::getLCDTask() {
 
 GUITask& Tilda::getGUITask() {
     return *_guiTask;
+}
+
+SettingsStore& Tilda::getSettingsStore() {
+    return *_settingsStore;
 }
 
 AppManager& Tilda::getAppManager() {

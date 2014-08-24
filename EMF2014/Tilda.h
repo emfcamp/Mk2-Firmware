@@ -41,6 +41,7 @@
 #include "AppManager.h"
 #include "LCDTask.h"
 #include "GUITask.h"
+#include "SettingsStore.h"
 
 class BadgeNotifications;
 class DataStore;
@@ -63,7 +64,9 @@ public:
     static DataStore& getDataStore();
     static LCDTask& getLCDTask();
     static GUITask& getGUITask();
+    static SettingsStore& getSettingsStore();
     static AppManager& getAppManager();
+
     // helpers
     static ButtonSubscription* createButtonSubscription(uint16_t buttons);
     static void log(String text);
@@ -86,5 +89,6 @@ private:
     static DataStore* _dataStore;
     static LCDTask* _lcdTask;
     static GUITask* _guiTask;
+    static SettingsStore* _settingsStore;
 };
 
