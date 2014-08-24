@@ -86,6 +86,7 @@ private:
 
 	uint8_t _bestRssi;
 	uint8_t _bestChannel;
+	uint32_t _bestChannelRemainingTransmitWindow;
 	TickType_t _discoveryFinishingTime;
 	TickType_t _lastMessageReceived;
 

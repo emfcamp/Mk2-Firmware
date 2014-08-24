@@ -33,6 +33,7 @@
 #include "FlashLightApp.h"
 #include "SponsorsApp.h"
 #include "AppManager.h"
+#include "BadgeIdApp.h"
 
 
 
@@ -40,7 +41,8 @@
 static const AppDefinition APPS[] = {
         AppDefinition("HomeScreen",    HomeScreenApp::New),
         AppDefinition("FlashLight",    FlashLightApp::New),
-        AppDefinition("SponsorsApp",   SponsorsApp::New)
+        AppDefinition("SponsorsApp",   SponsorsApp::New),
+        AppDefinition("BadgeIdApp", BadgeIdApp::New)
 };
 
 AppManager::AppItem::AppItem(app_ctor aNew)
