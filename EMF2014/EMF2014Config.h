@@ -59,6 +59,8 @@
 #define RADIO_RECEIVE_TIMEOUT 5000
 // Sleep time for the receiver task when no serial data is available
 #define RADIO_NO_DATA_SLEEP_DURATION 5
+// This is how long we'll wait before sending after waking up the radio
+#define RADIO_WAKEUP_TIME 400
 
 //#define RADIO_DEBUG_MODE
 //#define RADIO_DEBUG_MODE_EXTENDED
