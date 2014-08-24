@@ -34,15 +34,16 @@
 #include "SponsorsApp.h"
 #include "AppManager.h"
 #include "BadgeIdApp.h"
+#include "SnakeApp.h"
 
 
 
 // Add your app here to appear in the app list
 static const AppDefinition APPS[] = {
-        AppDefinition("HomeScreen",    HomeScreenApp::New),
         AppDefinition("FlashLight",    FlashLightApp::New),
         AppDefinition("SponsorsApp",   SponsorsApp::New),
-        AppDefinition("BadgeIdApp", BadgeIdApp::New)
+        AppDefinition("BadgeIdApp",    BadgeIdApp::New),
+        AppDefinition("Snake",         SnakeApp::New)
 };
 
 AppManager::AppItem::AppItem(app_ctor aNew)

@@ -126,3 +126,7 @@ uint8_t Tilda::getChargeState() {
 Orientation_t Tilda::getOrientation() {
     return (Orientation_t)imuTask.getOrientation();
 }
+
+uint16_t Tilda::millisecondsSinceBoot() {
+    return xTaskGetTickCount();
+}
