@@ -103,6 +103,8 @@ const char *launch_app(uint8_t idx, uint8_t msg) {
   return "";
 }
 
+m2_el_align_t top_el_expandable_menu;
+
 void HomeScreenApp::task() {
     eventGroup = xEventGroupCreate();
     GLCD.DrawBitmap(logo,0,8);
@@ -130,10 +132,12 @@ void HomeScreenApp::task() {
     M2_SPACE(el_vspace, "w1h2");
     M2_LIST(list_vspace) = {&el_vspace, &el_hlist};
     M2_VLIST(el_vlist, NULL, list_vspace);
-    M2_ALIGN(top_el_expandable_menu, "-1|2W64H64", &el_vlist);
+
+    // Break apart the M2_ALIGN macro so we can have it as a global
+    top_el_expandable_menu = {{ m2_el_align_fn, ("-1|2W64H64") }, (&el_vlist) };
 
     Tilda::getGUITask().setM2Root(&top_el_expandable_menu);
-    
+
     EventBits_t uxBits;
     while(true) {
         uxBits = xEventGroupWaitBits(eventGroup,
