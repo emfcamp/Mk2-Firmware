@@ -181,9 +181,14 @@ inline void RadioReceiveTask::_handleDiscoveryPacket(byte packetBuffer[], uint8_
 	identifier[0] = packetBuffer[5];
 	identifier[1] = packetBuffer[6];
 	identifier[2] = packetBuffer[7];
+
 	if (rssi < _bestRssi) {
 		_bestRssi = rssi;
 		_bestChannel = channel;
+	}
+
+	if (_bestRssi == rssi) {
+		_bestChannelRemainingTransmitWindow = Utils::bytesToInt(packetBuffer[8], packetBuffer[9], packetBuffer[10], packetBuffer[11])
 	}
 }
 
@@ -223,9 +228,6 @@ inline void RadioReceiveTask::_handleReceivePacket(byte packetBuffer[], uint8_t 
 
 	if (_remainingMessageLength == 0 && _currentMessageReceiver != NO_CURRENT_MESSAGE) {
 		_verifyMessage();
-
-		// Temporary: Just send a message back.
-		//_sendOutgoingBuffer();
 
 		// Reset for next message
 		_messageBufferPosition = 0;
@@ -272,11 +274,12 @@ inline void RadioReceiveTask::_initialiseDiscoveryState() {
 	_bestRssi = 255;
 	_bestChannel = NO_CHANNEL_DISCOVERED;
 	_radioState = RADIO_STATE_DISCOVERY;
+	_bestChannelRemainingTransmitWindow = 0;
 	_discoveryFinishingTime = xTaskGetTickCount() + RADIO_DISCOVERY_TIME;
 
 	_enterAtMode();
 	RADIO_SERIAL.println("ATZD3");  // output format <payload>|<rssi>
-	RADIO_SERIAL.println("ATPK08"); // 8byte packet length
+	RADIO_SERIAL.println("ATPK0C"); // 12byte packet length
 	RADIO_SERIAL.println(String("ATCN") + String(RADIO_DISCOVERY_CHANNEL)); // Discovery Channel
 	RADIO_SERIAL.println("ATAC");   // apply
 	RADIO_SERIAL.flush();
@@ -295,6 +298,12 @@ inline void RadioReceiveTask::_initialiseReceiveState() {
 	RADIO_SERIAL.println("ATAC");   // apply
 	RADIO_SERIAL.flush();
 	_leaveAtMode();
+
+	// This channel might be in transmit phase. Sleep it out.
+	if (_bestChannelRemainingTransmitWindow > 0) {
+		Tilda::delay(_bestChannelRemainingTransmitWindow);
+		_lastMessageReceived = xTaskGetTickCount();
+	}
 
 	_radioState = RADIO_STATE_RECEIVE;
 
