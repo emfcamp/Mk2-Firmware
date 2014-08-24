@@ -61,11 +61,11 @@ tp_integer_t Utils::getInteger(PackReader& reader) {
     return reader.getInteger();
 }
 
-String Utils::getString(PackReader& reader) {
+char* Utils::getString(PackReader& reader) {
     reader.next();
-    char string[MAX_TEXT_LENGTH];
-    tp_length_t legnth = reader.getString(string, MAX_TEXT_LENGTH);
-    return String(string);
+    char* string = new char[reader.contentLength()];
+    tp_length_t legnth = reader.getString(string, reader.contentLength());
+    return string;
 }
 
 void Utils::wordWrap (char buffer[], const char in[], const uint8_t line_width, const uint8_t max_lines) {

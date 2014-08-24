@@ -37,38 +37,49 @@
 #include "Utils.h"
 
 enum LocationId : uint8_t {
-    LOCATION_STAGE_A = 0,
-    LOCATION_STAGE_B = 1,
-    LOCATION_STAGE_C = 2,
-    LOCATION_WORKSHOPS = 3,
-    LOCATION_KIDS = 4,
-    LOCATION_VILLAGES = 5,
-    LOCATION_LOUNGE = 6,
-    LOCATION_BAR = 7,
-    LOCATION_MODEL_FLYING = 8,
-    LOCATION_CATERING = 9,
-    LOCATION_EMFFM = 10,
-    LOCATION_COUNT = 11
+    LOCATION_STAGE_A,
+    LOCATION_STAGE_B,
+    LOCATION_STAGE_C,
+    LOCATION_WORKSHOPS,
+    LOCATION_KIDS,
+    LOCATION_VILLAGES,
+    LOCATION_LOUNGE,
+    LOCATION_BAR,
+    LOCATION_MODEL_FLYING,
+    LOCATION_CATERING,
+    LOCATION_EMFFM,
+    LOCATION_COUNT
 };
 
-struct Event {
+class Event {
+public:
+    Event();
+    ~Event();
+    Event& operator=(const Event& that);
+
+private:
+    Event(Event&);    
+
+public:
     LocationId locationId;
     uint8_t typeId;
     uint32_t startTimestamp;
     uint32_t endTimestamp;
-    String speaker;
-    String title;
+    char* speaker;
+    char* title;
 };
 
 class Schedule {
 public:
     Schedule(Event* aEvents, int32_t aEventCount);
-    ~Schedule();
+    Schedule(const Schedule&);
 
-    Schedule(const Schedule& that);
+    ~Schedule();
 
     int32_t getEventCount() const;
     Event* getEvents() const;
+
+    static char* getStageName(uint8_t aLocationId);
 
 private:
     Schedule();

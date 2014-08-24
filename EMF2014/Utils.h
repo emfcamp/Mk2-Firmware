@@ -45,5 +45,5 @@ public:
     // TinyPacks helpers
     static bool getBoolean(PackReader& reader);
     static tp_integer_t getInteger(PackReader& reader);
-    static String getString(PackReader& reader);
+    static char* getString(PackReader& reader);
 };

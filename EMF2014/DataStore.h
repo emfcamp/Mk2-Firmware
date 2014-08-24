@@ -50,14 +50,14 @@ public:
 	~DataStore();
 
 	WeatherForecast* getWeatherForecast() const;
-	Schedule* getSchedule(ScheduleDay day) const;
+	Schedule* getSchedule(uint8_t aDay, uint8_t aLocationId) const;
 
 private: // from RadioMessageHandler
 	void handleMessage(const IncomingRadioMessage& aIncomingRadioMessage);
 
 private:
 	void _addWeatherForecastRaw(const IncomingRadioMessage& aIncomingRadioMessage);
-	void _addScheduleRaw(const IncomingRadioMessage& aIncomingRadioMessage, ScheduleDay day);
+	void _addScheduleRaw(const IncomingRadioMessage& aIncomingRadioMessage, uint8_t day, uint8_t aLocationId);
 
 	static void _unpackWeatherForecastPeriod(WeatherForecastPeriod& period, PackReader& reader);
 
@@ -68,7 +68,7 @@ private:
 
 	// data
 	WeatherForecast* mWeatherForecast;
-	Schedule** mSchedule;
+	Schedule*** mSchedule;
 
 	SemaphoreHandle_t mWeatherSemaphore;
 	SemaphoreHandle_t mScheduleSemaphore;

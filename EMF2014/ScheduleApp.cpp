@@ -28,6 +28,7 @@
 
 #include <FreeRTOS_ARM.h>
 #include <debug.h>
+#include <rtc_clock.h>
 #include "ScheduleApp.h"
 #include "Tilda.h"
 #include <glcd.h>
@@ -37,161 +38,144 @@
 #include "Schedule.h"
 #include "DataStore.h"
 
+uint8_t first;
+uint8_t cnt;
+
+const char* talks_callback(uint8_t talk, uint8_t msg);
+const char* locations_callback(uint8_t talk, uint8_t msg);
+
+#define SETUP_MENU(data,el,space,vsb,list,hlist,align) \
+M2_X2LMENU(el,"l10e1w51",&first,&cnt,data,'+','-','\0');\
+M2_SPACE(space,"W1h1");\
+M2_VSB(vsb,"l10w4r1", &first, &cnt);\
+M2_LIST(list)={&el,&space,&vsb};\
+M2_HLIST(hlist,NULL, list);\
+M2_ALIGN(align,"-1|1W64H64",&hlist);
+
+char schedule_label_talk_empty_str[] = "Empty.";
+M2_LABEL(schedule_label_talk_empty, NULL, schedule_label_talk_empty_str);
+M2_ALIGN(schedule_label_talk_empty_align, "-1|1W64H64", &schedule_label_talk_empty);
+
+const char* schedule_label_talk_str = NULL;
+M2_LABELPTR(schedule_label_talk, NULL, &schedule_label_talk_str);
+M2_ALIGN(schedule_label_talk_align, "-1|1W64H64", &schedule_label_talk);
+
+#define MAX_EVENTS_FOR_LOCATION 50
+m2_xmenu_entry schedule_talks_data[MAX_EVENTS_FOR_LOCATION];
+Event* schedule_talks_events[MAX_EVENTS_FOR_LOCATION];
+
+SETUP_MENU(schedule_talks_data,
+            schedule_talks_el,
+            schedule_talks_space,
+            schedule_talks_vsb,
+            schedule_talks_list,
+            schedule_talks_hlist,
+            schedule_talks_align);
+
+m2_xmenu_entry schedule_location_data[] = {
+    {Schedule::getStageName(LOCATION_STAGE_A),      &schedule_talks_align, locations_callback},
+    {Schedule::getStageName(LOCATION_STAGE_B),      &schedule_talks_align, locations_callback},
+    {Schedule::getStageName(LOCATION_STAGE_C),      &schedule_talks_align, locations_callback},
+    {Schedule::getStageName(LOCATION_WORKSHOPS),    &schedule_talks_align, locations_callback},
+    {Schedule::getStageName(LOCATION_KIDS),         &schedule_talks_align, locations_callback},
+    {Schedule::getStageName(LOCATION_VILLAGES),     &schedule_talks_align, locations_callback},
+    {Schedule::getStageName(LOCATION_LOUNGE),       &schedule_talks_align, locations_callback},
+    {Schedule::getStageName(LOCATION_BAR),          &schedule_talks_align, locations_callback},
+    {Schedule::getStageName(LOCATION_MODEL_FLYING), &schedule_talks_align, locations_callback},
+    {Schedule::getStageName(LOCATION_CATERING),     &schedule_talks_align, locations_callback},
+    {Schedule::getStageName(LOCATION_EMFFM),        &schedule_talks_align, locations_callback},
+    {Schedule::getStageName(LOCATION_COUNT),        &schedule_talks_align, locations_callback},
+    {NULL, NULL},
+};
+
+SETUP_MENU(schedule_location_data,
+            schedule_location_el,
+            schedule_location_space,
+            schedule_location_vsb,
+            schedule_location_list,
+            schedule_location_hlist,
+            schedule_location_align);
+
+ScheduleDay LAST_SELECTED_DAY = SCHEDULE_FRIDAY;
+LocationId LAST_SELECTED_LOCATION = LOCATION_STAGE_A;
+
+const char* talks_callback(uint8_t talk, uint8_t msg) {
+    debug::log("Talks: " + String(talk) + " " + String(msg));
+    schedule_label_talk_str = schedule_talks_data[talk].label;
+
+    Event* event = schedule_talks_events[talk];
+    RTC_date_time start = RTC_clock::from_unixtime(event->startTimestamp + TIMEZONE_OFFSET);
+    RTC_date_time end = RTC_clock::from_unixtime(event->endTimestamp + TIMEZONE_OFFSET);
+
+    debug::log("start: " + String(start.hour) + ":" + String(start.minute));
+
+    return "";
+}
+
+Schedule* schedule = NULL;
+
+const char* locations_callback(uint8_t location, uint8_t msg) {
+    debug::log("Location: " + String(location) + " " + String(msg));
+    LAST_SELECTED_LOCATION = (LocationId)location;
+
+    delete schedule;
+    Schedule* schedule = Tilda::getDataStore().getSchedule(LAST_SELECTED_DAY, location);
+
+    Event* events = schedule->getEvents();
+    for (int i ; i < schedule->getEventCount() ; ++i) {
+        m2_xmenu_entry entry;
+        entry.label = events[i].title;
+        entry.element = &schedule_label_talk_align;
+        entry.cb = talks_callback;
+        schedule_talks_data[i] = entry;
+        schedule_talks_events[i] = &events[i];
+    }
+
+    // null terminate the event list
+    schedule_talks_data[schedule->getEventCount()] = {NULL, NULL, NULL};
+
+    return "";
+}
+
+const char* days_callback(uint8_t day, uint8_t msg) {
+    debug::log("Days: " + String(day) + " " + String(msg));
+    // Just remember what day was seleted
+    LAST_SELECTED_DAY = (ScheduleDay)day;
+    return "";
+}
+
+m2_xmenu_entry schedule_days_data[] = {
+    {"Friday",      &schedule_location_align, days_callback},
+    {"Saturday",    &schedule_location_align, days_callback},
+    {"Sunday",      &schedule_location_align, days_callback},
+    {NULL, NULL},
+};
+
+SETUP_MENU(schedule_days_data,
+            schedule_days_el,
+            schedule_days_space,
+            schedule_days_vsb,
+            schedule_days_list,
+            schedule_days_hlist,
+            schedule_days_align);
+
 App* ScheduleApp::New() {
     return new ScheduleApp;
 }
 
-ScheduleApp::ScheduleApp()
-    :mSchedule(NULL)
-{}
+ScheduleApp::ScheduleApp() {}
 
 ScheduleApp::~ScheduleApp() {
-    if (mSchedule) {
-        for (int i ; i < SCHEDULE_NUM_DAYS ; ++i) {
-            delete mSchedule[i];
-        }
-    }
-
-    delete[] mSchedule;
-
-    delete mFriMenu;
-    delete mSatMenu;
-    delete mSunMenu;
+    delete schedule;
+    schedule = NULL;
 }
 
 String ScheduleApp::getName() const {
     return "Schedule";
 }
 
-struct Menu {
-    Menu() :mLabel(NULL) {}
-    ~Menu() { delete mLabel; }
-
-    char* mLabel;
-
-    m2_el_2lmenu_t el;
-    m2_el_space_t space;
-    m2_el_slbase_t vsb;
-    m2_el_list_t hlist;
-    m2_el_align_t align;
-};
-
-void createMenu(m2_menu_entry* menu_data, Menu& menu) {
-    uint8_t first;
-    uint8_t cnt;
-    M2_2LMENU(el, "l10e1w51", &first, &cnt, menu_data, '+', '-', '\0');
-    menu.el = el;
-    M2_SPACE(space, "W1h1");
-    menu.space = space;
-    M2_VSB(vsb, "l10w4r1", &first, &cnt);
-    menu.vsb = vsb;
-    M2_LIST(list) = {&menu.el, &menu.space, &menu.vsb};
-    M2_HLIST(hlist, NULL, list);
-    menu.hlist = hlist;
-    M2_ALIGN(align, "-1|1W64H64", &menu.hlist);
-    menu.align = align;
-}
-
-// The maximum number of events per location
-#define MAX_EVENTS 20
-
-class DayMenu {
-public:
-    static void setEntry(m2_menu_entry& entry, const char* label, m2_rom_void_p element) {
-        entry.label = label;
-        entry.element = element;
-    }
-
-    static bool setLocationsEvents(const Schedule& schedule, m2_menu_entry* entries, Menu& aMenu, int locationId) {
-        int eventsForLocation = 0;
-
-        debug::log("Event count: " + String(schedule.getEventCount()));
-
-        for (int i = 0 ; i < schedule.getEventCount() && i < MAX_EVENTS ; ++i) {
-            if (schedule.getEvents()[i].locationId == locationId) {
-                // the event is for this loaction so add it to the menu
-
-                String eventTitle = schedule.getEvents()[i].speaker + " + " + schedule.getEvents()[i].title;
-                aMenu.mLabel = new char[eventTitle.length()];
-                eventTitle.toCharArray(aMenu.mLabel, eventTitle.length());
-                setEntry(entries[eventsForLocation], aMenu.mLabel, NULL);
-
-                eventsForLocation++;
-            }
-        }
-
-        // make sure the last element is null
-        setEntry(entries[eventsForLocation], NULL, NULL);
-
-        return eventsForLocation != 0;
-    }
-
-    char* stageName(int locationId) {
-        switch (locationId) {
-            case LOCATION_STAGE_A:      return "Stage A";
-            case LOCATION_STAGE_B:      return "Stage B";
-            case LOCATION_STAGE_C:      return "Stage C";
-            case LOCATION_WORKSHOPS:    return "Workshops";
-            case LOCATION_KIDS:         return "Kids";
-            case LOCATION_VILLAGES:     return "Villages";
-            case LOCATION_LOUNGE:       return "Lounge";
-            case LOCATION_BAR:          return "Bar";
-            case LOCATION_MODEL_FLYING: return "Model Flying";
-            case LOCATION_CATERING:     return "Catering";
-            case LOCATION_EMFFM:        return "EMF.FM";
-        }
-
-        return "Unknown";
-    }
-
-
-    DayMenu(const Schedule& schedule) {
-        debug::log("DayMenu event count: " + String(schedule.getEventCount()));
-
-        for (int i = 0 ; i < LOCATION_COUNT ; ++i) {
-            if (setLocationsEvents(schedule, mEventMenuEntries[i], mEventMenus[i], i)) {
-                createMenu(mEventMenuEntries[i], mEventMenus[i]);
-                setEntry(mLocationEntries[i], stageName(i), &mEventMenus[i].el);
-            } else {
-                setEntry(mLocationEntries[i], stageName(i), NULL);
-            }
-            
-        }
-
-        // set the last item to null
-        setEntry(mLocationEntries[LOCATION_COUNT], NULL, NULL);
-        createMenu(mLocationEntries, mLocationsMenu);
-    }
-
-    Menu mLocationsMenu;
-    m2_menu_entry mLocationEntries[LOCATION_COUNT + 1];
-
-    Menu mEventMenus[LOCATION_COUNT];
-    m2_menu_entry mEventMenuEntries[LOCATION_COUNT][MAX_EVENTS + 1];
-};
-
 void ScheduleApp::task() {
-    mSchedule = new Schedule*[SCHEDULE_NUM_DAYS];
-    mSchedule[SCHEDULE_FRIDAY] = Tilda::getDataStore().getSchedule(SCHEDULE_FRIDAY);
-    mSchedule[SCHEDULE_SATURDAY] = Tilda::getDataStore().getSchedule(SCHEDULE_SATURDAY);
-    mSchedule[SCHEDULE_SUNDAY] = Tilda::getDataStore().getSchedule(SCHEDULE_SUNDAY);
-
-    mFriMenu = new DayMenu(*mSchedule[SCHEDULE_FRIDAY]);
-    mSatMenu = new DayMenu(*mSchedule[SCHEDULE_SATURDAY]);
-    mSunMenu = new DayMenu(*mSchedule[SCHEDULE_SUNDAY]);
-
-    m2_menu_entry menu_data[] =
-    {
-        {"Friday", &mFriMenu->mLocationsMenu.el},
-        {"Saturday", &mSatMenu->mLocationsMenu.el},
-        {"Sunday", &mSunMenu->mLocationsMenu.el},
-        {NULL, NULL},
-    };
-
-    Menu menu;
-    createMenu(menu_data, menu);
-
-    Tilda::getGUITask().setM2Root(&menu.el);
+    Tilda::getGUITask().setM2Root(&schedule_days_align);
 
     while(true) {
         Tilda::setLedColor({2, 0, 0});

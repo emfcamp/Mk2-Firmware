@@ -49,8 +49,4 @@ private:
 
     void task();
 private:
-    Schedule** mSchedule;
-    class DayMenu* mFriMenu;
-    class DayMenu* mSatMenu;
-    class DayMenu* mSunMenu;
 };
