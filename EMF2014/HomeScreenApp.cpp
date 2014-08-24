@@ -124,9 +124,9 @@ void HomeScreenApp::task() {
     app_list_menu[app_count].element=0;
     app_list_menu[app_count].cb=0;
 
-    M2_X2LMENU(el_2lmenu,"l10e1w51",&m2_2lmenu_first,&m2_2lmenu_cnt, &app_list_menu,'+','-','\0');
+    M2_X2LMENU(el_2lmenu,"l4e1w51f1",&m2_2lmenu_first,&m2_2lmenu_cnt, &app_list_menu,'+','-','\0');
     M2_SPACE(el_space, "w2h1");
-    M2_VSB(el_vsb, "l10w4r1", &m2_2lmenu_first, &m2_2lmenu_cnt);
+    M2_VSB(el_vsb, "l4w4r1f1", &m2_2lmenu_first, &m2_2lmenu_cnt);
     M2_LIST(list_2lmenu) = { &el_2lmenu, &el_space, &el_vsb };
     M2_HLIST(el_hlist, NULL, list_2lmenu);
     M2_SPACE(el_vspace, "w1h2");
@@ -134,7 +134,7 @@ void HomeScreenApp::task() {
     M2_VLIST(el_vlist, NULL, list_vspace);
 
     // Break apart the M2_ALIGN macro so we can have it as a global
-    top_el_expandable_menu = {{ m2_el_align_fn, ("-1|2W64H64") }, (&el_vlist) };
+    top_el_expandable_menu = {{ m2_el_align_fn, ("-1|2W64H64f1") }, (&el_vlist) };
 
     Tilda::getGUITask().setM2Root(&top_el_expandable_menu);
 

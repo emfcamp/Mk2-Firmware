@@ -30,6 +30,7 @@
 #include "ButtonSubscription.h"
 #include "debug.h"
 #include "Tilda.h"
+#include <fonts/allFonts.h>
 #include <M2tk.h>
 
 static ButtonSubscription* _buttons_p;
@@ -102,7 +103,8 @@ String GUITask::getName() const
 
 void GUITask::task() {
     // Main M2tkloop
-    _m2 = new M2tk(&m2_null_element, m2_es_button_subscription, m2_eh_4bs, m2_gh_glcd_ffs);  // Create M2 with no root element, it can be added when required.
+    _m2 = new M2tk(&m2_null_element, m2_es_button_subscription, m2_eh_4bs, m2_gh_glcd_uffs);  // Create M2 with no root element, it can be added when required.
+    _m2->setFont(1,Wendy3x5);
     while(true) {
         _m2->checkKey(); // This will block until there is a key press.
         if ( _m2->handleKey() ) {
