@@ -182,7 +182,7 @@ void FlashClass::read(unsigned long addr, uint8_t* buf, unsigned long length) {
 // Read data from the flash chip using Fast read command. There is no limit "length". The entire memory can be read with one command.
 void FlashClass::fast_read(unsigned long addr, uint8_t* buf, unsigned long length) {
     
-    SPI.transfer(this->flash_cs, READ, SPI_CONTINUE);               //control byte follow by address bytes
+    SPI.transfer(this->flash_cs, FAST_READ, SPI_CONTINUE);               //control byte follow by address bytes
     SPI.transfer(this->flash_cs, addr >> 16, SPI_CONTINUE);          // convert the address integer to 3 bytes
     SPI.transfer(this->flash_cs, addr >> 8, SPI_CONTINUE);
     SPI.transfer(this->flash_cs, addr & 0xff, SPI_CONTINUE);
