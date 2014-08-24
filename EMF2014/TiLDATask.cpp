@@ -44,6 +44,7 @@
 #include "HomeScreenApp.h"
 #include "SponsorsApp.h"
 #include "BadgeIdApp.h"
+#include "NotificationApp.h"
 #include "Tilda.h"
 #include "SettingsStore.h"
 #include "LCDTask.h"
@@ -94,7 +95,7 @@ void TiLDATask::task() {
     PMIC.start();
     imuTask.start();
 
-    Tilda::openApp(HomeScreenApp::New);
+    Tilda::openApp(NotificationApp::New);
 
     suspend();
 }

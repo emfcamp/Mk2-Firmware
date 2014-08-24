@@ -67,3 +67,29 @@ String Utils::getString(PackReader& reader) {
     tp_length_t legnth = reader.getString(string, MAX_TEXT_LENGTH);
     return String(string);
 }
+
+void Utils::wordWrap (char buffer[], const char in[], const uint8_t line_width, const uint8_t max_lines) {
+    uint8_t inI, outI, lines = 0;
+
+    int line = 0;
+    int charsInLine = 0;
+    int bufferIndex = 0;
+    int inIndex = 0;
+
+    while (in[charsInLine] != '\0' && line < max_lines) {
+        char inChar = in[inIndex++];
+        if (inChar != ' ' || charsInLine != 0) {
+            buffer[bufferIndex++] = inChar;
+        }
+
+
+        if (++charsInLine == line_width) {
+            buffer[bufferIndex++] = '\n';
+            ++line;
+            charsInLine = 0;
+        }
+    }
+
+    buffer[bufferIndex] = '\0';
+}
+

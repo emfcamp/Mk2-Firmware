@@ -29,8 +29,9 @@
 #include "MessageCheckTask.h"
 #include "BadgeNotifications.h"
 #include "IncomingRadioMessage.h"
-#include "AppManager.h" 
+#include "AppManager.h"
 #include "Utils.h"
+#include "Tilda.h"
 
 String BadgeNotification::text() const { return _text; }
 RGBColor BadgeNotification::led1() const { return _led1; }
@@ -95,6 +96,10 @@ void BadgeNotifications::badgeIdChanged(uint16_t badgeId) {
 
 BadgeNotification* BadgeNotifications::popNotification() {
     BadgeNotification* notification = NULL;
+
+    if (mBadgeNotification == NULL) {
+        return NULL;
+    }
 
     if (xSemaphoreTake(mNotificationMutex, portMAX_DELAY) == pdTRUE) {
         notification = new BadgeNotification(*mBadgeNotification);
