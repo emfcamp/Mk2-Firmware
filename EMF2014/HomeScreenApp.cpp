@@ -35,6 +35,8 @@
 #include <M2tk.h>
 #include "GUITask.h"
 
+#define HOMESCREEN_ORIENATION_CHANGE_BIT (1 << 0)
+
 
 //=================================================
 // Forward declaration of the toplevel element
@@ -69,13 +71,9 @@ uint8_t m2_2lmenu_cnt;
 // Option e15 = first column has a width of 15 pixel
 // Option W43 = second column has a width of 43/64 of the display width
 
-M2_2LMENU(el_2lmenu,"l4e15W43",&m2_2lmenu_first,&m2_2lmenu_cnt, m2_2lmenu_data,'+','-','\0');
-M2_SPACE(el_space, "W1h1");
-M2_VSB(el_vsb, "l4W2r1", &m2_2lmenu_first, &m2_2lmenu_cnt);
-M2_LIST(list_2lmenu) = { &el_2lmenu, &el_space, &el_vsb };
-M2_HLIST(el_hlist, NULL, list_2lmenu);
-M2_ALIGN(top_el_expandable_menu, "-1|1W64H64", &el_hlist);
 
+
+m2_xmenu_entry app_list_menu[MAX_APPS+1]; //Leave space for NULL terminatior
 
 App* HomeScreenApp::New() {
     return new HomeScreenApp;
@@ -91,25 +89,86 @@ bool HomeScreenApp::keepAlive() const {
     return true;
 }
 
+void HomeScreenApp::newOrientation(uint8_t orientation) {
+    if (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING && eventGroup != NULL) {
+        xEventGroupSetBits(eventGroup,
+                           HOMESCREEN_ORIENATION_CHANGE_BIT);
+    }
+}
+
+const char *launch_app(uint8_t idx, uint8_t msg) {
+  if ( msg == M2_STRLIST_MSG_SELECT  ) {
+      Tilda::openApp(Tilda::getAppManager().getById(idx).mNew);
+  }
+  return "";
+}
+
+m2_el_align_t top_el_expandable_menu;
+
 void HomeScreenApp::task() {
+    eventGroup = xEventGroupCreate();
     GLCD.DrawBitmap(logo,0,8);
-    Tilda::delay(5000);
+    //Tilda::delay(5000);
+
+    const uint8_t app_count = Tilda::getAppManager().getAppCount();
+
+    for (uint8_t i = 0; i < app_count; ++i) {
+        uint8_t name_length = Tilda::getAppManager().getById(i).mName.length() + 1;
+        char* entry_label = new char(name_length);
+        Tilda::getAppManager().getById(i).mName.toCharArray(entry_label,name_length);
+        app_list_menu[i].label = entry_label;
+        app_list_menu[i].element=0;
+        app_list_menu[i].cb=launch_app;
+    }
+    app_list_menu[app_count].label=0;
+    app_list_menu[app_count].element=0;
+    app_list_menu[app_count].cb=0;
+
+    M2_X2LMENU(el_2lmenu,"l10e1w51",&m2_2lmenu_first,&m2_2lmenu_cnt, &app_list_menu,'+','-','\0');
+    M2_SPACE(el_space, "w2h1");
+    M2_VSB(el_vsb, "l10w4r1", &m2_2lmenu_first, &m2_2lmenu_cnt);
+    M2_LIST(list_2lmenu) = { &el_2lmenu, &el_space, &el_vsb };
+    M2_HLIST(el_hlist, NULL, list_2lmenu);
+    M2_SPACE(el_vspace, "w1h2");
+    M2_LIST(list_vspace) = {&el_vspace, &el_hlist};
+    M2_VLIST(el_vlist, NULL, list_vspace);
+
+    // Break apart the M2_ALIGN macro so we can have it as a global
+    top_el_expandable_menu = {{ m2_el_align_fn, ("-1|2W64H64") }, (&el_vlist) };
+
     Tilda::getGUITask().setM2Root(&top_el_expandable_menu);
+
+    EventBits_t uxBits;
     while(true) {
-        Tilda::setLedColor({2, 0, 0});
-        Tilda::delay(300);
-        Tilda::setLedColor({0, 2, 0});
-        Tilda::delay(300);
-        Tilda::setLedColor({0, 0, 2});
-        Tilda::delay(300);
-        Tilda::setLedColor({2, 2, 0});
-        Tilda::delay(300);
-        Tilda::setLedColor({0, 2, 2});
-        Tilda::delay(300);
-        Tilda::setLedColor({2, 0, 2});
-        Tilda::delay(300);
+        uxBits = xEventGroupWaitBits(eventGroup,
+                                     HOMESCREEN_ORIENATION_CHANGE_BIT,
+                                     pdFALSE,
+                                     pdFALSE,
+                                     portMAX_DELAY );
+        
+        if ((uxBits & HOMESCREEN_ORIENATION_CHANGE_BIT) != 0 ) {
+            // new orientation, update the screen
+            Orientation_t orientation = Tilda::getOrientation();
+            if (orientation == ORIENTATION_HUNG) {
+                // change rotation
+                
+            } else if (orientation == ORIENTATION_HELD) {
+                // change rotation
+                
+            }
+            
+            xEventGroupClearBits(eventGroup,
+                                 HOMESCREEN_ORIENATION_CHANGE_BIT);
+            
+        } else {
+            // wait timed out, nothing to do here
+            
+        }
     }
 }
 
 void HomeScreenApp::afterSuspension() {}
-void HomeScreenApp::beforeResume() {}
+void HomeScreenApp::beforeResume() {
+    GLCD.SetRotation(ROTATION_90);
+    Tilda::getGUITask().setM2Root(&top_el_expandable_menu);
+}

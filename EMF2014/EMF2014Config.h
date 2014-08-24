@@ -37,6 +37,9 @@
 // pin used for seeding the random number generator
 #define RANDOM_SEED_PIN 5
 
+// duration that center has to be pressed to go back to the homescreen
+#define CENTER_BUTTON_PRESS_DURATION_FOR_HOME_SCREEN 500
+
 // Radio serial port
 #define RADIO_SERIAL Serial
 #define RADIO_SERIAL_BAUD 115200
@@ -56,8 +59,15 @@
 #define RADIO_RECEIVE_TIMEOUT 5000
 // Sleep time for the receiver task when no serial data is available
 #define RADIO_NO_DATA_SLEEP_DURATION 5
+// This is how long we'll wait before sending after waking up the radio
+#define RADIO_WAKEUP_TIME 400
+// This is a sanity check. Make sure no transmit window is longer than this
+#define RADIO_MAX_TRANSMIT_WINDOW_LENGTH 3 * 60 * 1000
+// Another sanity check. Minimum/Maximum current time
+#define RADIO_MINIMUM_CURRENT_TIME 1408879302
+#define RADIO_MAXIMUM_CURRENT_TIME 1440415302
 
-//#define RADIO_DEBUG_MODE
+#define RADIO_DEBUG_MODE
 //#define RADIO_DEBUG_MODE_EXTENDED
 
 

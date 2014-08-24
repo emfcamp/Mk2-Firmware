@@ -172,6 +172,12 @@ inline uint8_t RadioReceiveTask::_parsePacketBuffer(byte packetBuffer[], uint8_t
 inline void RadioReceiveTask::_handleDiscoveryPacket(byte packetBuffer[], uint8_t packetBufferLength, uint8_t rssi) {
 	uint8_t channel = packetBuffer[0];
 	uint32_t timestamp = Utils::bytesToInt(packetBuffer[1], packetBuffer[2], packetBuffer[3], packetBuffer[4]);
+	if (timestamp < RADIO_MINIMUM_CURRENT_TIME || timestamp > RADIO_MAXIMUM_CURRENT_TIME) {
+		#ifdef RADIO_DEBUG_MODE
+			debug::log("RadioReceiveTask: timestamp sanity check failed");
+		#endif
+		return;
+	}
 	if (!mRealTimeClock.has_been_set()) {
 		debug::log("Setting time to " + String(timestamp));
 		mRealTimeClock.set_unixtime(timestamp);
@@ -181,9 +187,22 @@ inline void RadioReceiveTask::_handleDiscoveryPacket(byte packetBuffer[], uint8_
 	identifier[0] = packetBuffer[5];
 	identifier[1] = packetBuffer[6];
 	identifier[2] = packetBuffer[7];
+
 	if (rssi < _bestRssi) {
 		_bestRssi = rssi;
 		_bestChannel = channel;
+	}
+
+	if (_bestRssi == rssi) {
+		_bestChannelRemainingTransmitWindow = Utils::bytesToInt(packetBuffer[8], packetBuffer[9], packetBuffer[10], packetBuffer[11]);
+
+		// Sanity check. We don't want to have rouge packets send the task to sleep forever
+		if (_bestChannelRemainingTransmitWindow > RADIO_MAX_TRANSMIT_WINDOW_LENGTH) {
+			_bestChannelRemainingTransmitWindow = 0;
+			#ifdef RADIO_DEBUG_MODE
+				debug::log("RadioReceiveTask: RADIO_MAX_TRANSMIT_WINDOW_LENGTH sanity check failed");
+			#endif
+		}
 	}
 }
 
@@ -223,9 +242,6 @@ inline void RadioReceiveTask::_handleReceivePacket(byte packetBuffer[], uint8_t 
 
 	if (_remainingMessageLength == 0 && _currentMessageReceiver != NO_CURRENT_MESSAGE) {
 		_verifyMessage();
-
-		// Temporary: Just send a message back.
-		//_sendOutgoingBuffer();
 
 		// Reset for next message
 		_messageBufferPosition = 0;
@@ -272,11 +288,12 @@ inline void RadioReceiveTask::_initialiseDiscoveryState() {
 	_bestRssi = 255;
 	_bestChannel = NO_CHANNEL_DISCOVERED;
 	_radioState = RADIO_STATE_DISCOVERY;
+	_bestChannelRemainingTransmitWindow = 0;
 	_discoveryFinishingTime = xTaskGetTickCount() + RADIO_DISCOVERY_TIME;
 
 	_enterAtMode();
 	RADIO_SERIAL.println("ATZD3");  // output format <payload>|<rssi>
-	RADIO_SERIAL.println("ATPK08"); // 8byte packet length
+	RADIO_SERIAL.println("ATPK0C"); // 12byte packet length
 	RADIO_SERIAL.println(String("ATCN") + String(RADIO_DISCOVERY_CHANNEL)); // Discovery Channel
 	RADIO_SERIAL.println("ATAC");   // apply
 	RADIO_SERIAL.flush();
@@ -295,6 +312,12 @@ inline void RadioReceiveTask::_initialiseReceiveState() {
 	RADIO_SERIAL.println("ATAC");   // apply
 	RADIO_SERIAL.flush();
 	_leaveAtMode();
+
+	// This channel might be in transmit phase. Sleep it out.
+	if (_bestChannelRemainingTransmitWindow > 0) {
+		vTaskDelay(_bestChannelRemainingTransmitWindow);
+		_lastMessageReceived = xTaskGetTickCount();
+	}
 
 	_radioState = RADIO_STATE_RECEIVE;
 

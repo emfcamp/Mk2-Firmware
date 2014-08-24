@@ -35,6 +35,9 @@
 #include "AppManager.h"
 #include "Tilda.h"
 
+
+
+
 App* FlashLightApp::New() {
     return new FlashLightApp();
 }
@@ -47,7 +50,7 @@ FlashLightApp::~FlashLightApp() {
     delete mButtonSubscription;
 }
 
-// ToDo: Add all the fancy features from https://github.com/emfcamp/Mk2-Firmware/blob/master/frRGBTask/frRGBTask.ino
+// TODO: Add all the fancy features from https://github.com/emfcamp/Mk2-Firmware/blob/master/frRGBTask/frRGBTask.ino
 String FlashLightApp::getName() const {
     return "FlashLight";
 }
@@ -57,10 +60,17 @@ void FlashLightApp::updateLeds() {
     if (mLightLevel == 8) {
         actualLightLevel = 255;
     }
+    if (Tilda::getOrientation() != ORIENTATION_HUNG) {
+        actualLightLevel = 2;
+    }
     Tilda::setLedColor({actualLightLevel, actualLightLevel, actualLightLevel});
 }
 
+M2_LABEL(flashLightApp_m2_labelNotYetFound, "f0", "Light Level:\nIntolerable");
+
 void FlashLightApp::task() {
+    Tilda::getGUITask().setM2Root(&flashLightApp_m2_labelNotYetFound);
+
     if (!mButtonSubscription)
         mButtonSubscription = Tilda::createButtonSubscription(UP | DOWN);
 

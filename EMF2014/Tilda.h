@@ -34,6 +34,7 @@
 #include <Arduino.h>
 #include <FreeRTOS_ARM.h>
 #include <rtc_clock.h>
+#include "Task.h"
 #include "EMF2014Config.h"
 #include "ButtonSubscription.h"
 #include "RGBTask.h"
@@ -45,8 +46,16 @@
 class BadgeNotifications;
 class DataStore;
 
+enum Orientation_t{
+    ORIENTATION_HELD,
+    ORIENTATION_RIGHT,  // joystick to the right of the screen
+    ORIENTATION_HUNG,
+    ORIENTATION_LEFT   // joystick to the left of the screen,
+};
+
 class Tilda {
     friend class TiLDATask;
+    friend class IMUTask;
 
 public:
     // access to things
@@ -56,6 +65,7 @@ public:
     static LCDTask& getLCDTask();
     static GUITask& getGUITask();
     static SettingsStore& getSettingsStore();
+    static AppManager& getAppManager();
 
     // helpers
     static ButtonSubscription* createButtonSubscription(uint16_t buttons);
@@ -67,6 +77,7 @@ public:
     static float getBatteryVoltage();
     static uint8_t getBatteryPercent();
     static uint8_t getChargeState();
+    static Orientation_t getOrientation();
 
 private:
     Tilda();

@@ -35,7 +35,7 @@
 #include "AppManager.h"
 #include "BadgeIdApp.h"
 
-#define MAX_APPS 10
+
 
 // Add your app here to appear in the app list
 static const AppDefinition APPS[] = {
@@ -143,4 +143,10 @@ void AppManager::open(app_ctor aNew) {
     mActiveAppItem->mApp->start();
 
     debug::log("New active app: " + mActiveAppItem->mApp->getName());
+}
+
+void AppManager::orientationCallback(uint8_t orientation) {
+    if(mActiveAppItem) {
+        mActiveAppItem->mApp->newOrientation(orientation);
+    }
 }

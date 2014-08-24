@@ -29,11 +29,14 @@
 #include "GUITask.h"
 #include "ButtonSubscription.h"
 #include "debug.h"
+#include "Tilda.h"
 #include <M2tk.h>
+
+static ButtonSubscription* _buttons_p;
 
 uint8_t m2_es_button_subscription(m2_p ep, uint8_t msg)
 {
-  static ButtonSubscription* _buttons_p;
+  //static ButtonSubscription* _buttons_p;
   if (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING) {
     if (_buttons_p == 0) {
       _buttons_p = new ButtonSubscription();
@@ -47,7 +50,7 @@ uint8_t m2_es_button_subscription(m2_p ep, uint8_t msg)
     {
       Button button;
       if (_buttons_p) {
-       button = _buttons_p->waitForPress(( TickType_t ) 1000);
+       button = _buttons_p->waitForPress(portMAX_DELAY);
       } else {
         // read button state manually
 
@@ -112,4 +115,13 @@ void GUITask::setM2Root(m2_rom_void_p newRoot) {
     debug::log("GUITask::setM2Root");
     _m2->setRoot(newRoot);
     _m2->setHome(newRoot);
+    if (_buttons_p != 0)
+        _buttons_p->wake();
+}
+
+void GUITask::clearRoot() {
+    _m2->setRoot(&m2_null_element);
+    if (_buttons_p != 0)
+        _buttons_p->wake();
+    Tilda::delay(250); //Give the screen chance to update.
 }

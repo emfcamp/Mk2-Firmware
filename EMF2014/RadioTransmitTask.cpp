@@ -69,6 +69,14 @@ void RadioTransmitTask::handleMessage(const IncomingRadioMessage& aIncomingRadio
 	}
 }
 
+inline void RadioTransmitTask::_sleep() {
+	digitalWrite(SRF_SLEEP, HIGH);
+}
+
+inline void RadioTransmitTask::_wakeUp() {
+	digitalWrite(SRF_SLEEP, LOW);
+}
+
 void RadioTransmitTask::task() {
 	mQueue = xQueueCreate(10, sizeof(uint32_t));
 
@@ -76,14 +84,31 @@ void RadioTransmitTask::task() {
 		uint32_t transmitDuration;
 		if(xQueueReceive(mQueue, &transmitDuration, portMAX_DELAY) == pdTRUE) {
 			mRadioReceiveTask.suspend();
-			debug::log("RadioTransmitTask: transmit duration (ms): " + String(transmitDuration));
-
+			#ifdef RADIO_DEBUG_MODE
+				debug::log("RadioTransmitTask: transmit duration (ms): " + String(transmitDuration));
+			#endif
 			uint32_t preDelay = random(0, transmitDuration);
 			uint32_t postDelay = transmitDuration - preDelay;
 
-			Tilda::delay(preDelay);
+			if (preDelay > RADIO_WAKEUP_TIME) {
+				_sleep();
+				Tilda::delay(preDelay - RADIO_WAKEUP_TIME);
+				_wakeUp();
+				Tilda::delay(RADIO_WAKEUP_TIME);
+			} else {
+				Tilda::delay(preDelay);
+			}
+
 			respond();
-			Tilda::delay(postDelay);
+
+			if (postDelay > RADIO_WAKEUP_TIME) {
+				_sleep();
+				Tilda::delay(postDelay - RADIO_WAKEUP_TIME);
+				_wakeUp();
+				Tilda::delay(RADIO_WAKEUP_TIME);
+			} else {
+				Tilda::delay(postDelay);
+			}
 
 			mRadioReceiveTask.start();
         }
@@ -92,11 +117,11 @@ void RadioTransmitTask::task() {
 
 void RadioTransmitTask::respond() {
 	if (!mSettingsStore.hasBadgeId()) {
-		debug::log("RadioTransmitTask: hasn't got a badge id");
-
 		uint32_t uniqueId[4];
 		if (mSettingsStore.getUniqueId(uniqueId)) {
-			debug::log("RadioTransmitTask: send our uniqueId: " + String(uniqueId[0]) + ":" + String(uniqueId[1]) + ":" + String(uniqueId[2]) + ":" + String(uniqueId[3]));
+			#ifdef RADIO_DEBUG_MODE
+				debug::log("RadioTransmitTask: send our uniqueId: " + String(uniqueId[0]) + ":" + String(uniqueId[1]) + ":" + String(uniqueId[2]) + ":" + String(uniqueId[3]));
+			#endif
 			byte outgoingPacketBuffer[RADIO_PACKET_LENGTH];
 
 			uint8_t index = 0;
@@ -124,7 +149,9 @@ void RadioTransmitTask::respond() {
 			// Oh noes! We should really never get here!
 		}
 	} else {
-		debug::log("RadioTransmitTask: send hello/battery status");
+		#ifdef RADIO_DEBUG_MODE
+			debug::log("RadioTransmitTask: send hello/battery status");
+		#endif
 		byte outgoingPacketBuffer[RADIO_PACKET_LENGTH];
 
 		uint8_t index = 0;

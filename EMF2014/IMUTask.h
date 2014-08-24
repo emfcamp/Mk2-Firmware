@@ -33,6 +33,42 @@
 #pragma once
 
 #include <Arduino.h>
+
 #include <FreeRTOS_ARM.h>
 #include "EMF2014Config.h"
+#include "Task.h"
+#include "AppManager.h"
+
+
+
+// callbacks
+static void IMU_interrupt(void);
+static void IMU_tap_cb(unsigned char direction, unsigned char count);
+static void IMU_android_orient_cb(unsigned char orientation);
+
+class IMUTask: public Task {
+public:
+    String getName() const;
+    EventGroupHandle_t eventGroup;
+    void setOrientation(uint8_t);
+    uint8_t getOrientation();
+    
+protected:
+    void task();
+private:
+    // variables
+    uint8_t dmp_state;
+    uint8_t _orientation;
+
+    // functions
+    void setup();
+    int8_t MPUSetup();
+    static inline unsigned short inv_orientation_matrix_to_scalar(const signed char *mtx);
+    static unsigned short inv_row_2_scale(const signed char *row);
+    int8_t enable_dmp();
+    int8_t disable_dmp();
+    
+};
+
+extern IMUTask imuTask;
 

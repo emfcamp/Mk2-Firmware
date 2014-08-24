@@ -34,6 +34,7 @@
 #include "PMICTask.h"
 #include "LCDTask.h"
 #include "GUITask.h"
+#include "IMUTask.h"
 
 RGBTask* Tilda::_rgbTask = NULL;
 AppManager* Tilda::_appManager = NULL;
@@ -106,6 +107,10 @@ SettingsStore& Tilda::getSettingsStore() {
     return *_settingsStore;
 }
 
+AppManager& Tilda::getAppManager() {
+    return *_appManager;
+}
+
 float Tilda::getBatteryVoltage() {
     return PMIC.getBatteryVoltage();
 }
@@ -118,3 +123,6 @@ uint8_t Tilda::getChargeState() {
     return PMIC.getChargeState();
 }
 
+Orientation_t Tilda::getOrientation() {
+    return (Orientation_t)imuTask.getOrientation();
+}

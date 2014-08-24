@@ -43,7 +43,7 @@ public:
     Button waitForPress(TickType_t ticksToWait);
     Button waitForPress();
     void clear();
-
+    void wake();
 private:
     ButtonSubscription(const ButtonSubscription&) {}
 
