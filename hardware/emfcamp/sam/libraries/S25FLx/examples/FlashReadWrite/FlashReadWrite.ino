@@ -1,103 +1,106 @@
 #include <S25FLx.h>
 #include <SPI.h>
-#define array_length 16 //length of array to write, read, and print
-Flash flash(FLASH_CS, FLASH_HOLD);  //starts flash class and initilzes SPI
 
+#define FLASH_TEST_LENGTH 256 //length of array to write, read, and print
 unsigned long t = 0;
 unsigned long d = 0;
-byte read_array[16];
-byte write_array[16];
+byte read_array[FLASH_TEST_LENGTH];
+byte write_array[FLASH_TEST_LENGTH];
+
+void dumpBuffer(uint8_t* buf, uint32_t size) {
+    for (int i = 0; i < size; i += 0x10) {
+        if (i < 0x10) SerialUSB.print(0);
+        SerialUSB.print(i, HEX);
+        SerialUSB.print(":");
+        for (int j = 0; j < 0x10; j++) {
+            SerialUSB.print(" ");
+            if (buf[i + j] < 0x10) SerialUSB.print("0");
+            SerialUSB.print(buf[i + j], HEX);
+        }
+        SerialUSB.println();
+    }
+}
 
 void setup() {
     //PMIC
     pinMode(PMIC_ENOTG, OUTPUT);
     digitalWrite(PMIC_ENOTG, LOW);
-  Serial.begin(115200);
-  while (!Serial) {
-  } // wait until serial monitor is open to begin.
-  delay(500);
-  Serial.println("Flash Read Write test");
 
-  // call new pin setup routine
-  flash.begin();
+    SerialUSB.begin(115200);
+    while (!SerialUSB); // wait until serial monitor is open to begin.
+    delay(500);
+    SerialUSB.println("Flash Read Write test");
 
-  flash.waitforit(); // use between each communication to make sure S25FLxx is ready to go.
-  if (!flash.read_info()){  //will return an error if the chip isn't wired up correctly.
-      while (1) {
-          // die here
-      }
-  }
-  
-  Serial.println("Erasing");
-  Serial.println();
-  t=micros(); 
-  //flash.erase_all();
-  flash.erase_4k(0);
-  d=micros()-t;  
+    // call new pin setup routine
+    Flash.begin();
 
-  Serial.println();
-  Serial.print("Erased in ");
-  Serial.print(d);
-  Serial.println(" microseconds");
-  
-  Serial.println("Reading");
-  flash.waitforit();
-  t=micros();
-  flash.read(0, read_array, 16);
-  d=micros()-t;
-  Serial.println();
-  Serial.print("Read in ");
-  Serial.print(d);
-  Serial.println(" microseconds");
-  Serial.println();
-  
-  for(int i=0; i < 16; i++) {
-    Serial.print("Loc: 0x");
-    Serial.print(i, HEX);
-    Serial.print("  Val: 0x");
-    Serial.println(read_array[i], HEX);
-    Serial.flush();
+    if (!Flash.read_info()){  //will return an error if the chip isn't wired up correctly.
+        SerialUSB.println("Unable to communicate with Flash");
+        while (1); // die here
+    }
+
+}
+
+void test_erase() {
+
+    SerialUSB.println("Erasing");
+    SerialUSB.println();
+    t = micros();
+    Flash.erase_4k(0);
+    Flash.wait_write();
+    d = micros() - t;
+
+    SerialUSB.print("Erased in ");
+    SerialUSB.print(d);
+    SerialUSB.println(" microseconds");
+    SerialUSB.println();
+
+}
+
+void test_read() {
+    SerialUSB.println("Reading");
+    SerialUSB.println();
+    t = micros();
+    Flash.read(0, read_array, FLASH_TEST_LENGTH);
+    d = micros() - t;
+    SerialUSB.print("Read in ");
+    SerialUSB.print(d);
+    SerialUSB.println(" microseconds");
+    SerialUSB.println();
+
+    dumpBuffer(read_array, FLASH_TEST_LENGTH);
+    SerialUSB.flush();
     delay(100);
-  }
-  
-    Serial.println("fill Write array");
-  for(int i=0; i < 16; i++) {
-    write_array[i] = i;
-  }
-  Serial.println("Writing");
-  flash.waitforit();
-  t=micros();
-  flash.write(0, write_array, 16);
-  d=micros()-t;
-  Serial.println();
-  Serial.print("write in ");
-  Serial.print(d);
-  Serial.println(" microseconds");
-  Serial.println();
-  
-  Serial.println("Reading");
-  flash.waitforit();
-  t=micros();
-  flash.read(0, read_array, 16);
-  d=micros()-t;
-  Serial.println();
-  Serial.print("Read in ");
-  Serial.print(d);
-  Serial.println(" microseconds");
-  Serial.println();
-  
-  for(int i=0; i < 16; i++) {
-    Serial.print("Loc: 0x");
-    Serial.print(i, HEX);
-    Serial.print("  Val: 0x");
-    Serial.println(read_array[i], HEX);
-    Serial.flush();
-    delay(100);
-  }
-  
+
+}
+
+void test_write() {
+    SerialUSB.println("fill Write array");
+    for(int i=0; i < FLASH_TEST_LENGTH; i++) {
+        write_array[i] = i;
+    }
+    SerialUSB.println("Writing");
+    SerialUSB.println();
+    t = micros();
+    Flash.page_program(0, write_array, FLASH_TEST_LENGTH);
+    Flash.wait_write();
+    d = micros() - t;
+    SerialUSB.print("write in ");
+    SerialUSB.print(d);
+    SerialUSB.println(" microseconds");
+    SerialUSB.println();
+
+}
+
+void run_tests() {
+    test_read();
+    test_erase();
+    test_read();
+    test_write();
+    test_read();
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-
+    run_tests();
+    while(true); // end
 }

@@ -6,8 +6,6 @@
 #include <SPI.h>
 #define array_length 16 //length of array to write, read, and print
 
-Flash flash(FLASH_CS, FLASH_HOLD);  //starts flash class and initilzes SPI
-
 unsigned long d, t, cycles, errors;
 unsigned long location = 0; //starting memory location to read and write too.
 
@@ -25,17 +23,16 @@ void setup() {
   digitalWrite(PMIC_ENOTG, LOW);
   
   randomSeed(A2);
-  Serial.begin(115200);
-  while (!Serial) {
+  SerialUSB.begin(115200);
+  while (!SerialUSB) {
   } // wait until serial monitor is open to begin.
   delay(500);
-  Serial.println("Flash Read Write test");
+  SerialUSB.println("Flash Read Write test");
 
   // call new pin setup routine
-  flash.begin();
+  Flash.begin();
 
-  flash.waitforit(); // use between each communication to make sure S25FLxx is ready to go.
-  if (!flash.read_info()) {  //will return an error if the chip isn't wired up correctly.
+  if (!Flash.read_info()) {  //will return an error if the chip isn't wired up correctly.
       while (1) {
           // die here
       }
@@ -47,8 +44,6 @@ void setup() {
 
 void loop() {
   
-  flash.waitforit(); 
-
   ///////////////////////////////////////////////////////random up a bank
   //Random is used to make sure it is errasing and programming.
   for (int i=0; i < array_length; i++) {
@@ -58,45 +53,43 @@ void loop() {
 
   ///////////////////////////////////////////////////////erase
 
-  Serial.println("Erasing");
-  Serial.println();
+  SerialUSB.println("Erasing");
+  SerialUSB.println();
   t = micros();
- // flash.erase_all();
-  flash.erase_4k(location);
+ // Flash.erase_all();
+  Flash.erase_4k(location);
+  Flash.wait_write();
   d = micros() - t;
 
-  Serial.println();
-  Serial.print("Erased in ");
-  Serial.print(d);
-  Serial.println(" microseconds");
+  SerialUSB.println();
+  SerialUSB.print("Erased in ");
+  SerialUSB.print(d);
+  SerialUSB.println(" microseconds");
 
   ////////////////////////////////////////////////////write
   t = micros();
-  flash.write(location, random_bank, array_length); //the middle variable is a pointer meaning you put an
+  Flash.page_program(location, random_bank, array_length); //the middle variable is a pointer meaning you put an
+  Flash.wait_write();
   d = micros() - t;
 
-  Serial.println();
-  Serial.print("Written in ");
-  Serial.print(d);
-  Serial.println(" microseconds");
-
-  flash.waitforit();
+  SerialUSB.println();
+  SerialUSB.print("Written in ");
+  SerialUSB.print(d);
+  SerialUSB.println(" microseconds");
 
   ////////////////////////////////////////////////////read
 
 
   t = micros();
-  flash.read(location, read_bank, array_length); //the middle variable is a pointer meaning you put an
+  Flash.read(location, read_bank, array_length); //the middle variable is a pointer meaning you put an
   //arrays name there but not it's location "[x]" 
   d = micros() - t;
 
-  Serial.println();
-  Serial.print("Read in ");
-  Serial.print(d);
-  Serial.println(" microseconds");
-  Serial.println();
-
-  flash.waitforit();
+  SerialUSB.println();
+  SerialUSB.print("Read in ");
+  SerialUSB.print(d);
+  SerialUSB.println(" microseconds");
+  SerialUSB.println();
 
   ////////////////////////////////////////////////////check
   for (int i=0; i < array_length; i++) {
@@ -108,13 +101,13 @@ void loop() {
   /*
   for (int i=0; i < array_length; i++) {
     
-    Serial.print(i + loation);
-    Serial.print(" ");
-    Serial.print(random_bank[i]);    
-    Serial.print(" ");
-    Serial.print(read_bank[i]);    
-    Serial.print(" ");
-    Serial.println( );
+    SerialUSB.print(i + loation);
+    SerialUSB.print(" ");
+    SerialUSB.print(random_bank[i]);    
+    SerialUSB.print(" ");
+    SerialUSB.print(read_bank[i]);    
+    SerialUSB.print(" ");
+    SerialUSB.println( );
 
 
   }
@@ -122,14 +115,14 @@ void loop() {
   
   cycles++;
 
-  Serial.print(errors);   
-  Serial.print(" errors in ");   
-  Serial.print(cycles);   
-  Serial.println(" cycles");
+  SerialUSB.print(errors);   
+  SerialUSB.print(" errors in ");   
+  SerialUSB.print(cycles);   
+  SerialUSB.println(" cycles");
 
-  Serial.println();
-  Serial.println("done");
-  Serial.println();
+  SerialUSB.println();
+  SerialUSB.println("done");
+  SerialUSB.println();
 
   delay(5000);
 
