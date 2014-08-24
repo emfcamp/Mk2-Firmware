@@ -23,6 +23,31 @@
 // uncomment for debug logging
 //#define FLASH_DEBUG
 
+#define WREN            0x06    /* Write Enable */
+#define WRDI            0x04    /* Write Disable */
+#define RDSR            0x05    /* Read Status Register */
+#define WRSR            0x01    /* Write Status Register */
+#define READ            0x03    /* Read Data Bytes  */
+#define FAST_READ       0x0B    /* Read Data Bytes at Higher Speed */
+#define FAST_READ_DO    0x3B    /* Fast read with dual output's (NOT IMPLEMENTED) */
+#define PP              0x02    /* Page Program  */
+#define BE              0xD8    /* Block Erase (64k)  */
+#define SE              0x20    /* Sector Erase (4k)  */
+#define CE              0xC7    /* Erase entire chip  */
+#define DP              0xB9    /* Deep Power-down  */
+#define RES             0xAB    /* Release Power-down, return Device ID */
+#define MID             0x90    /* Read Manufacture ID, Device ID */
+#define RDID            0x9F    /* Read JEDEC: Manufacture ID, memory type ID, capacity ID */
+
+#define WIP             0x1     /* Write In Progress */
+#define WEL             0x2     /* Write Enable Latch */
+#define BP0             0x4     /* Block Protect 0 */
+#define BP1             0x8     /* Block Protect 1 */
+#define BP2             0x10    /* Block Protect 2 */
+#define BP3             0x20    /* Block Protect 3 */
+#define REV             0x40    /* Reserved */
+#define SRP             0x80    /* Status Register Protect */
+
 FlashClass::FlashClass(int pin_flash_cs, int pin_flash_hold)
     : flash_cs(pin_flash_cs), flash_hold(pin_flash_hold) {
 
@@ -32,10 +57,31 @@ void FlashClass::begin() {
     pinMode(this->flash_hold, OUTPUT);
     digitalWrite(this->flash_hold, HIGH);
     SPI.begin(this->flash_cs);
-    SPI.setBitOrder(this->flash_cs, MSBFIRST);
     SPI.setClockDivider(this->flash_cs, 2);          // With 84MHz MCK this gives 42Mhz
-    SPI.setDataMode(this->flash_cs, SPI_MODE0);
     
+    SPI.configureDMA();
+}
+
+void FlashClass::setCallback(void (*_cb)(void)) {
+    SPI.registerDMACallback(_cb);
+}
+
+uint8_t* FlashClass::allocBuffer(unsigned long length) {
+    length += 5;
+    if (length > bufferLength) {
+        if (commandBuffer) delete commandBuffer;
+        commandBuffer = new uint8_t[length];
+        bufferLength = length;
+    }
+    return getBuffer();
+}
+
+uint8_t* FlashClass::getBuffer() {
+    return &commandBuffer[5];
+}
+
+void FlashClass::clearBuffer() {
+    memset(commandBuffer, 0, bufferLength);
 }
 
 //read and return the status register.
@@ -70,6 +116,10 @@ void FlashClass::wait_write() {
 // Must be done to allow erasing or writing
 void FlashClass::write_enable() {
     SPI.transfer(this->flash_cs, WREN, SPI_LAST);
+}
+
+void FlashClass::write_disable() {
+    SPI.transfer(this->flash_cs, WRDI, SPI_LAST);
 }
 
 
@@ -110,7 +160,7 @@ void FlashClass::erase_all() {
 //read_S25(starting address, buf, number of bytes);
 void FlashClass::read(unsigned long addr, uint8_t* buf, unsigned long length) {
 #ifdef SLOW_READ
-    SPI.setCaddrkDivider(this->flash_cs, 3);                         // slow down SPI to 28MHz
+    SPI.setClockDivider(this->flash_cs, 3);                         // slow down SPI to 28MHz
 #endif
     
     SPI.transfer(this->flash_cs, READ, SPI_CONTINUE);               //control byte follow by address bytes
@@ -125,7 +175,7 @@ void FlashClass::read(unsigned long addr, uint8_t* buf, unsigned long length) {
     buf[i] = SPI.transfer(this->flash_cs, 0, SPI_LAST);
     
 #ifdef SLOW_READ
-    SPI.setCaddrkDivider(this->flash_cs, 2);                         // set SPI to 42MHz
+    SPI.setClockDivider(this->flash_cs, 2);                         // set SPI to 42MHz
 #endif
 }
 
@@ -147,8 +197,30 @@ void FlashClass::fast_read(unsigned long addr, uint8_t* buf, unsigned long lengt
     
 }
 
-void FlashClass::fast_read_dma(unsigned long addr, uint8_t* buf, unsigned long length) {
+void FlashClass::fast_read_dma(unsigned long addr, unsigned long length) {
 
+    allocBuffer(length);
+
+    uint8_t* buf = commandBuffer;
+
+    buf[0] = FAST_READ;
+
+    addr &= 0x1fffff;
+    buf[1] = addr >> 16;
+    buf[2] = addr >> 8;
+    buf[3] = addr & 0xff;
+
+    buf[4] = 0;
+
+    SerialUSB.println(commandBuffer[0], HEX);
+    SerialUSB.println(commandBuffer[1], HEX);
+    SerialUSB.println(commandBuffer[2], HEX);
+    SerialUSB.println(commandBuffer[3], HEX);
+    SerialUSB.println(commandBuffer[4], HEX);
+    SerialUSB.println(commandBuffer[5], HEX);
+    SerialUSB.println(commandBuffer[6], HEX);
+
+    SPI.transferDMA(this->flash_cs, buf, buf, 5 + length, SPI_LAST);
 }
 
 // Programs up to 256 bytes of data to flash chip. Data must be erased first. You cannot overwrite.
@@ -170,6 +242,28 @@ void FlashClass::page_program(unsigned long addr, uint8_t* buf, unsigned long le
         SPI.transfer(this->flash_cs, buf[i], SPI_CONTINUE);
     }
     SPI.transfer(this->flash_cs, buf[i], SPI_LAST);
+}
+
+void FlashClass::page_program_dma(unsigned long addr, unsigned long length) {
+    write_enable();
+
+    uint8_t* buf = &commandBuffer[1];
+
+    buf[0] = PP;
+
+    addr &= 0x1fffff;
+    buf[1] = addr >> 16;
+    buf[2] = addr >> 8;
+    buf[3] = addr & 0xff;
+
+    SerialUSB.println(commandBuffer[0], HEX);
+    SerialUSB.println(commandBuffer[1], HEX);
+    SerialUSB.println(commandBuffer[2], HEX);
+    SerialUSB.println(commandBuffer[3], HEX);
+    SerialUSB.println(commandBuffer[4], HEX);
+    SerialUSB.println(commandBuffer[5], HEX);
+    SerialUSB.println(commandBuffer[6], HEX);
+    SPI.transferDMA(this->flash_cs, buf, buf, 4 + length, SPI_LAST);
 }
 
 //Used in conjuture with the write protect pin to protect blocks. 
@@ -204,7 +298,6 @@ bool FlashClass::read_info() {
 
 void FlashClass::sleep() {
     SPI.transfer(this->flash_cs, DP, SPI_LAST);
-    
 }
 
 void FlashClass::wake() {
