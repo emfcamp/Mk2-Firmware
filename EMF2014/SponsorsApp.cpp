@@ -50,14 +50,29 @@ bool SponsorsApp::keepAlive() const {
     return true;
 }
 
+void SponsorsApp::_draw() {
+  if (_page == 0) {
+    GLCD.DrawBitmap(SPONSORS_1_XBM, 0, 0);
+  } else {
+    GLCD.DrawBitmap(SPONSORS_2_XBM, 0, 0);
+  }
+}
+
 void SponsorsApp::task() {
+    Tilda::getGUITask().clearRoot();
+    GLCD.SetRotation(ROTATION_0);
+    _page = 0;
     while(true) {
-        GLCD.DrawBitmap(SPONSORS_1_XBM, 0, 0);
+        _draw();
         Tilda::delay(5000);
-        GLCD.DrawBitmap(SPONSORS_2_XBM, 0, 0);
-        Tilda::delay(5000);
+        _page = (_page + 1) % 2;
     }
 }
 
 void SponsorsApp::afterSuspension() {}
-void SponsorsApp::beforeResume() {}
+void SponsorsApp::beforeResume() {
+  Tilda::getGUITask().clearRoot();
+  GLCD.ClearScreen();
+  GLCD.SetRotation(ROTATION_0);
+  _draw();
+}

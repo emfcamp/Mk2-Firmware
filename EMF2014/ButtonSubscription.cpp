@@ -63,3 +63,8 @@ Button ButtonSubscription::waitForPress() {
 void ButtonSubscription::clear() {
     xQueueReset(mQueue);
 }
+
+void ButtonSubscription::wake() {
+  Button button = NONE;
+  xQueueOverwrite(mQueue,&button);
+}

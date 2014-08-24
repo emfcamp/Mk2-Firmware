@@ -48,6 +48,8 @@ private:
     void task();
     void afterSuspension();
     void beforeResume();
+    void _draw();
+    uint8_t _page;
 private:
 };
 
