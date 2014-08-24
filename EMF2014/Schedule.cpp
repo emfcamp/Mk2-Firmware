@@ -6,7 +6,7 @@ Schedule::Schedule(Event* aEvents, int32_t aEventCount)
 {}
 
 Schedule::~Schedule() {
-    delete mEvents;
+    delete[] mEvents;
 }
 
 Schedule::Schedule(const Schedule& that) {

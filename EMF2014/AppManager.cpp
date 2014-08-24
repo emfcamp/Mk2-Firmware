@@ -35,15 +35,15 @@
 #include "AppManager.h"
 #include "BadgeIdApp.h"
 #include "SnakeApp.h"
-
-
+#include "ScheduleApp.h"
 
 // Add your app here to appear in the app list
 static const AppDefinition APPS[] = {
         AppDefinition("FlashLight",    FlashLightApp::New),
         AppDefinition("SponsorsApp",   SponsorsApp::New),
         AppDefinition("BadgeIdApp",    BadgeIdApp::New),
-        AppDefinition("Snake",         SnakeApp::New)
+        AppDefinition("Snake",         SnakeApp::New),
+        AppDefinition("Schedule",      ScheduleApp::New)
 };
 
 AppManager::AppItem::AppItem(app_ctor aNew)

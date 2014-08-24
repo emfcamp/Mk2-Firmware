@@ -1,11 +1,8 @@
 /*
  TiLDA Mk2
 
- Schedule
-
- This handles the periodic wake of the radio for all our need communication with the gateway's.
- Incoming request are passed back to the TiLDATask
- Outgoing request from TiLDATask are sent at the next opportunity.
+ ScheduleApp
+ This is just a placeholder at the moment - Later this will be showing some sort of menu
 
  The MIT License (MIT)
 
@@ -34,53 +31,26 @@
 
 #include <Arduino.h>
 #include <FreeRTOS_ARM.h>
-#include "Utils.h"
+#include "EMF2014Config.h"
+#include "App.h"
+#include "RGBTask.h"
+#include "GUITask.h"
+#include "Schedule.h"
 
-enum LocationId : uint8_t {
-    LOCATION_STAGE_A = 0,
-    LOCATION_STAGE_B = 1,
-    LOCATION_STAGE_C = 2,
-    LOCATION_WORKSHOPS = 3,
-    LOCATION_KIDS = 4,
-    LOCATION_VILLAGES = 5,
-    LOCATION_LOUNGE = 6,
-    LOCATION_BAR = 7,
-    LOCATION_MODEL_FLYING = 8,
-    LOCATION_CATERING = 9,
-    LOCATION_EMFFM = 10,
-    LOCATION_COUNT = 11
-};
-
-struct Event {
-    LocationId locationId;
-    uint8_t typeId;
-    uint32_t startTimestamp;
-    uint32_t endTimestamp;
-    String speaker;
-    String title;
-};
-
-class Schedule {
+class ScheduleApp: public App {
 public:
-    Schedule(Event* aEvents, int32_t aEventCount);
-    ~Schedule();
+    static App* New();
+    ~ScheduleApp();
 
-    Schedule(const Schedule& that);
-
-    int32_t getEventCount() const;
-    Event* getEvents() const;
-
+	String getName() const;
 private:
-    Schedule();
+    ScheduleApp();
+    ScheduleApp(const ScheduleApp&);
 
+    void task();
 private:
-    Event* mEvents;
-    int32_t mEventCount;
-};
-
-enum ScheduleDay: uint8_t {
-    SCHEDULE_FRIDAY = 0,
-    SCHEDULE_SATURDAY = 1,
-    SCHEDULE_SUNDAY = 2,
-    SCHEDULE_NUM_DAYS
+    Schedule** mSchedule;
+    class DayMenu* mFriMenu;
+    class DayMenu* mSatMenu;
+    class DayMenu* mSunMenu;
 };

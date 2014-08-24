@@ -93,7 +93,7 @@ WeatherForecast* DataStore::getWeatherForecast() const {
 Schedule* DataStore::getSchedule(ScheduleDay day) const {
 	Schedule* schedule = NULL;
 	if (xSemaphoreTake(mScheduleSemaphore, portMAX_DELAY) == pdTRUE) {
-		Schedule* schedule = new Schedule(*mSchedule[day]);
+		schedule = new Schedule(*mSchedule[day]);
 		xSemaphoreGive(mScheduleSemaphore);
 	}
 	return schedule;
@@ -135,7 +135,7 @@ void DataStore::_addScheduleRaw(const IncomingRadioMessage& aIncomingRadioMessag
 		Event* events = new Event[eventCount];
 
 		for (int i = 0 ; i < eventCount ; ++i) {
-			events[i].stageId = (uint8_t)Utils::getInteger(mReader);
+			events[i].locationId = (LocationId)Utils::getInteger(mReader);
 			events[i].typeId = (uint8_t)Utils::getInteger(mReader);
 			events[i].startTimestamp = (uint32_t)Utils::getInteger(mReader);
 			events[i].endTimestamp = (uint32_t)Utils::getInteger(mReader);
