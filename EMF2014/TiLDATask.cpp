@@ -95,7 +95,7 @@ void TiLDATask::task() {
     PMIC.start();
     imuTask.start();
 
-    Tilda::openApp(NotificationApp::New);
+    Tilda::openApp(HomeScreenApp::New);
 
     suspend();
 }
