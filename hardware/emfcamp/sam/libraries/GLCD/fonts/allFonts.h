@@ -12,7 +12,8 @@
 #include "Arial14.h"             // proportional font
 #include "Arial_bold_14.h"       // Bold proportional font
 #include "Corsiva_12.h"
-#include "Verdana_digits_24.h"   // large proportional font - numerals only 
-#include "fixednums7x15.h"       // fixed width font - numerals only 
-#include "fixednums8x16.h"       // fixed width font - numerals only 
-#include "fixednums15x31.h"      // fixed width font - numerals only 
+#include "Verdana_digits_24.h"   // large proportional font - numerals only
+#include "fixednums7x15.h"       // fixed width font - numerals only
+#include "fixednums8x16.h"       // fixed width font - numerals only
+#include "fixednums15x31.h"      // fixed width font - numerals only
+#include "Wendy3x5.h"

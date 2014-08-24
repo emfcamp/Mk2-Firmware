@@ -44,6 +44,7 @@
 #include "HomeScreenApp.h"
 #include "SponsorsApp.h"
 #include "BadgeIdApp.h"
+#include "NotificationApp.h"
 #include "Tilda.h"
 #include "SettingsStore.h"
 #include "LCDTask.h"

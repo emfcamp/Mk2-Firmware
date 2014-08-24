@@ -1,7 +1,8 @@
 /*
  TiLDA Mk2
 
- Utils
+ NotificationApp
+ This is just a placeholder at the moment - Later this will be showing some sort of menu
 
  The MIT License (MIT)
 
@@ -29,21 +30,30 @@
 #pragma once
 
 #include <Arduino.h>
-#include <TinyPacks.h>
+#include <FreeRTOS_ARM.h>
+#include "EMF2014Config.h"
+#include "App.h"
+#include "RGBTask.h"
+#include "GUITask.h"
 
-class Utils {
-private:
-    Utils();
-
+class NotificationApp: public App {
 public:
-    static uint16_t bytesToInt(byte b1, byte b2);
-    static uint32_t bytesToInt(byte b1, byte b2, byte b3, byte b4);
-    static String intToHex(uint8_t input);
+    static App* New();
 
-    static void wordWrap (char buffer[], const char in[], const uint8_t line_width, const uint8_t max_lines);
+    String getName() const;
 
-    // TinyPacks helpers
-    static bool getBoolean(PackReader& reader);
-    static tp_integer_t getInteger(PackReader& reader);
-    static String getString(PackReader& reader);
+    static const char *notificationTextCallback(m2_rom_void_p element);
+protected:
+private:
+    NotificationApp();
+    NotificationApp(const NotificationApp&);
+
+    bool keepAlive() const;
+
+    void task();
+    void afterSuspension();
+    void beforeResume();
+
+    static String notificationText;
+    static char stringBuffer[];
 };
