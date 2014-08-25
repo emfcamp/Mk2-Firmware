@@ -78,7 +78,7 @@ char badgeIdApp_m2_label1_text[] = " EMFxxxx";
 
 // Screen for when the ID is known
 M2_LABEL(badgeIdApp_m2_label0, "f0", "Your Badge ID is:");
-M2_LABEL(badgeIdApp_m2_label1, "f15w123b1", badgeIdApp_m2_label1_text);
+M2_LABEL(badgeIdApp_m2_label1, "f25w123b1", badgeIdApp_m2_label1_text);
 M2_LABEL(badgeIdApp_m2_label2, "f0", "\nRegister it via\nschedule.emfcamp.org");
 M2_LIST(badgeIdApp_m2_list_dt) = {&badgeIdApp_m2_label0, &badgeIdApp_m2_label1, &badgeIdApp_m2_label2};
 M2_VLIST(badgeIdApp_m2_label_list_found, NULL, badgeIdApp_m2_list_dt);
