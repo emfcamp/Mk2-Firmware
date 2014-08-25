@@ -220,18 +220,7 @@ void ScheduleApp::task() {
     Tilda::getGUITask().setM2Root(&schedule_days_align);
 
     while(true) {
-        Tilda::setLedColor({2, 0, 0});
-        Tilda::delay(300);
-        Tilda::setLedColor({0, 2, 0});
-        Tilda::delay(300);
-        Tilda::setLedColor({0, 0, 2});
-        Tilda::delay(300);
-        Tilda::setLedColor({2, 2, 0});
-        Tilda::delay(300);
-        Tilda::setLedColor({0, 2, 2});
-        Tilda::delay(300);
-        Tilda::setLedColor({2, 0, 2});
-        Tilda::delay(300);
+        Tilda::delay(100000);
     }
 }
 
