@@ -111,8 +111,12 @@ const char* ScheduleApp::talksCallback(uint8_t talk, uint8_t msg) {
         RTC_date_time start = RTC_clock::from_unixtime(event->startTimestamp + TIMEZONE_OFFSET);
         RTC_date_time end = RTC_clock::from_unixtime(event->endTimestamp + TIMEZONE_OFFSET);
         debug::log("start: " + String(start.hour) + ":" + String(start.minute));
-
-        String topLineStr = String(start.hour) + ":" + String(start.minute) + "-" + event->speaker;
+        String topLineStr;
+        if (start.minute < 10) {
+            topLineStr = String(start.hour) + ":0" + String(start.minute) + "-" + event->speaker;
+        } else {
+            topLineStr = String(start.hour) + ":" + String(start.minute) + "-" + event->speaker;
+        }
         String formattedStr = topLineStr.substring(0, CHARS_PER_LINE) + "\n---\n" + event->title;
 
         Utils::wordWrap(schedule_label_talk_str, formattedStr.c_str(), CHARS_PER_LINE, 7);
@@ -137,7 +141,12 @@ const char* ScheduleApp::locationsCallback(uint8_t location, uint8_t msg) {
             // Create a string for the list
             // <start time> (title)
             RTC_date_time start = RTC_clock::from_unixtime(events[i].startTimestamp + TIMEZONE_OFFSET);
-            String formattedStr = String(start.hour) + ":" + String(start.minute) + " " + events[i].title;
+            String formattedStr;
+            if (start.minute < 10) {
+                formattedStr = String(start.hour) + ":0" + String(start.minute) + " " + events[i].title;
+            } else {
+                formattedStr = String(start.hour) + ":" + String(start.minute) + " " + events[i].title;
+            }
             strncpy(schedule_talks_strings[i], formattedStr.c_str(), MAX_EVENT_STRING_LENGTH - 1);
             if (strlen(events[i].title) > MAX_EVENT_STRING_LENGTH - 1) {
                 schedule_talks_strings[i][MAX_EVENT_STRING_LENGTH - 2] = '~';
