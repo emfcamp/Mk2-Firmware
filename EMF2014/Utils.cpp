@@ -28,9 +28,6 @@
 
 #include "Utils.h"
 
-// for all strings recieved through TinyPack
-#define MAX_TEXT_LENGTH 160
-
 uint16_t Utils::bytesToInt(byte b1, byte b2) {
     int result = 0;
     result = (result << 8) + b1;
@@ -63,8 +60,8 @@ tp_integer_t Utils::getInteger(PackReader& reader) {
 
 char* Utils::getString(PackReader& reader) {
     reader.next();
-    char* string = new char[MAX_TEXT_LENGTH];
-    tp_length_t legnth = reader.getString(string, MAX_TEXT_LENGTH);
+    char* string = new char[reader.contentLength() + 1];
+    reader.getString(string, reader.contentLength() + 1);
     return string;
 }
 
