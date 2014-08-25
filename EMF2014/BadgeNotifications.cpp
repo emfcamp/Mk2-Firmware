@@ -29,9 +29,11 @@
 #include "MessageCheckTask.h"
 #include "BadgeNotifications.h"
 #include "IncomingRadioMessage.h"
+#include "NotificationApp.h"
 #include "AppManager.h"
 #include "Utils.h"
 #include "Tilda.h"
+#include <debug.h>
 
 String BadgeNotification::text() const { return _text; }
 RGBColor BadgeNotification::led1() const { return _led1; }
@@ -53,6 +55,7 @@ BadgeNotifications::BadgeNotifications(SettingsStore& aSettingsStore, MessageChe
     mSettingsStore.addObserver(this);
 
     mNotificationMutex = xSemaphoreCreateMutex();
+    mMessageCheckTask.subscribe(this, 0xb003, 0xb003);
 }
 
 BadgeNotifications::~BadgeNotifications() {
@@ -79,10 +82,13 @@ void BadgeNotifications::handleMessage(const IncomingRadioMessage& aIncomingRadi
         RGBColor rgb2 = getRGBColor(mReader);
         boolean sound = Utils::getBoolean(mReader);
         String text = Utils::getString(mReader);
+        debug::log("BADGER NOTIFICATION");
+        debug::log(text);
 
         delete mBadgeNotification;
         mBadgeNotification = new BadgeNotification(text, rgb1, rgb2, sound);
         xSemaphoreGive(mNotificationMutex);
+        Tilda::openApp(NotificationApp::New);
     }
 
     // start the notification app to start it
@@ -92,6 +98,7 @@ void BadgeNotifications::handleMessage(const IncomingRadioMessage& aIncomingRadi
 void BadgeNotifications::badgeIdChanged(uint16_t badgeId) {
     mMessageCheckTask.unsubscribe(this);
     mMessageCheckTask.subscribe(this, badgeId, badgeId);
+    mMessageCheckTask.subscribe(this, 0xb003, 0xb003);
 }
 
 BadgeNotification* BadgeNotifications::popNotification() {
