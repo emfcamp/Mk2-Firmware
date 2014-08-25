@@ -1,10 +1,12 @@
 #include <S25FLx.h>
 #include <SPI.h>
 
-#define FLASH_TEST_ADDRESS 4096
-#define FLASH_TEST_LENGTH 256 //length of array to write, read, and print
-byte read_array[FLASH_TEST_LENGTH];
-byte write_array[FLASH_TEST_LENGTH];
+#define FLASH_TEST_ADDRESS 0x1000
+#define FLASH_TEST_READ_LENGTH 0x100
+#define FLASH_TEST_WRITE_LENGTH 0xf0
+
+// Uncomment to test non-DMA calls for comparison
+//#define NO_DMA
 
 void dumpBuffer(uint8_t* buf, uint32_t size) {
     for (int i = 0; i < size; i += 0x10) {
@@ -27,11 +29,9 @@ void setup() {
 
     SerialUSB.begin(115200);
     while (!SerialUSB); // wait until serial monitor is open to begin.
-    delay(500);
     SerialUSB.println("Flash Read Write test");
 
     Flash.begin();
-    SPI.setDLYBCT(FLASH_CS, 0);
     Flash.setCallback(dma_callback);
 
     if (!Flash.read_info()){  // will return false if the chip isn't wired up correctly.
@@ -50,8 +50,6 @@ void wait_dma() {
         delay(1);
     }
     dma_complete = false;
-    // Workaround for DMA bug - we seem not to release CS in time
-    Flash.write_disable();
 }
 
 void test_erase() {
@@ -59,7 +57,7 @@ void test_erase() {
     SerialUSB.println("Erasing");
     SerialUSB.println();
     int before = micros();
-    Flash.erase_4k(0);
+    Flash.erase_4k(FLASH_TEST_ADDRESS);
     Flash.wait_write();
     int after = micros();
 
@@ -83,15 +81,15 @@ void print_status_twice() {
 #define NO_DMA
 
 void test_read() {
-    uint8_t* buf = Flash.allocBuffer(FLASH_TEST_LENGTH);
+    uint8_t* buf = Flash.allocBuffer(FLASH_TEST_READ_LENGTH);
     Flash.clearBuffer();
     SerialUSB.println("Reading");
     SerialUSB.println();
     int before = micros();
     #ifdef NO_DMA
-        Flash.fast_read(FLASH_TEST_ADDRESS, buf, FLASH_TEST_LENGTH);
+        Flash.fast_read(FLASH_TEST_ADDRESS, buf, FLASH_TEST_READ_LENGTH);
     #else
-        Flash.fast_read_dma(FLASH_TEST_ADDRESS, FLASH_TEST_LENGTH);
+        Flash.fast_read_dma(FLASH_TEST_ADDRESS, FLASH_TEST_READ_LENGTH);
         wait_dma();
         //print_status_twice();
     #endif
@@ -101,27 +99,27 @@ void test_read() {
     SerialUSB.println("us");
     SerialUSB.println();
 
-    dumpBuffer(buf, FLASH_TEST_LENGTH);
+    dumpBuffer(buf, FLASH_TEST_READ_LENGTH);
     SerialUSB.println();
     SerialUSB.flush();
-    delay(200);
 
 }
 
 void test_write() {
-    uint8_t* buf = Flash.allocBuffer(FLASH_TEST_LENGTH);
+    uint8_t* buf = Flash.allocBuffer(FLASH_TEST_WRITE_LENGTH);
     SerialUSB.println("fill Write array");
-    for(int i = 0; i < FLASH_TEST_LENGTH; i++) {
-        buf[i] = 255 - i;
+    for(int i = 0; i < FLASH_TEST_WRITE_LENGTH; i++) {
+        //buf[i] = FLASH_TEST_WRITE_LENGTH - i - 1;
+        buf[i] = i;
     }
     SerialUSB.println("Writing");
     SerialUSB.println();
     int before = micros();
     #ifdef NO_DMA
-        Flash.page_program(FLASH_TEST_ADDRESS, buf, FLASH_TEST_LENGTH);
+        Flash.page_program(FLASH_TEST_ADDRESS, buf, FLASH_TEST_WRITE_LENGTH);
     #else
         Flash.wait_write();
-        Flash.page_program_dma(FLASH_TEST_ADDRESS, FLASH_TEST_LENGTH);
+        Flash.page_program_dma(FLASH_TEST_ADDRESS, FLASH_TEST_WRITE_LENGTH);
         wait_dma();
     #endif
     Flash.wait_write();
