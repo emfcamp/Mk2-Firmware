@@ -57,38 +57,38 @@ void RTC_clock::set_time (char* time)
 	RTC_SetTime (RTC, _hour, _minute, _second);
 }
 
-void RTC_clock::set_unixtime (uint32_t unixtime)
+RTC_date_time RTC_clock::from_unixtime (uint32_t unixtime)
 {
+    RTC_date_time date_time;
     // This function borrows heavily from http://www.pjrc.com/teensy/td_libs_Time.html
 
-    uint16_t year;
-    uint8_t month, monthLength, day, second, minute, hour;
+    uint8_t monthLength;
 
-    second = unixtime % 60;
+    date_time.second = unixtime % 60;
     unixtime /= 60;
-    minute = unixtime % 60;
+    date_time.minute = unixtime % 60;
     unixtime /= 60;
-    hour = unixtime % 24;
+    date_time.hour = unixtime % 24;
     unixtime /= 24;
 
-    year = 0;
+    date_time.year = 0;
     uint16_t days = 0;
-    while((unsigned)(days += (is_leap_year(year + 1970) ? 366 : 365)) <= unixtime) {
-        year++;
+    while((unsigned)(days += (is_leap_year(date_time.year + 1970) ? 366 : 365)) <= unixtime) {
+        date_time.year++;
     }
 
-    days -= is_leap_year(year + 1970) ? 366 : 365;
+    days -= is_leap_year(date_time.year + 1970) ? 366 : 365;
     unixtime -= days; // now it is days in this year, starting at 0
 
-    for (month=0; month<12; month++) {
-        if (month==1) {
-            if (is_leap_year(year + 1970)) {
+    for (date_time.month=0; date_time.month<12; date_time.month++) {
+        if (date_time.month==1) {
+            if (is_leap_year(date_time.year + 1970)) {
                 monthLength=29;
             } else {
                 monthLength=28;
             }
         } else {
-            monthLength = daysInMonth[month];
+            monthLength = daysInMonth[date_time.month];
         }
 
         if (unixtime >= monthLength) {
@@ -97,12 +97,18 @@ void RTC_clock::set_unixtime (uint32_t unixtime)
             break;
         }
     }
-    month = month + 1;
-    day = unixtime + 1;
-    year = year + 1970;
+    date_time.month = date_time.month + 1;
+    date_time.day = unixtime + 1;
+    date_time.year = date_time.year + 1970;
 
-    set_date(day, month, year);
-    set_time(hour, minute, second);
+    return date_time;
+}
+
+void RTC_clock::set_unixtime (uint32_t unixtime)
+{
+    RTC_date_time date_time = from_unixtime( unixtime );
+    set_date(date_time.day, date_time.month, date_time.year);
+    set_time(date_time.hour, date_time.minute, date_time.second);
 }
 
 uint32_t RTC_clock::current_time ()

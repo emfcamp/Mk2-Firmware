@@ -1,10 +1,8 @@
 /*
  TiLDA Mk2
 
- DataStore
-
- This is a helper class that knows how to de-serialise and store data send via
- radio. Other apps/tasks can look up data
+ ScheduleApp
+ This is just a placeholder at the moment - Later this will be showing some sort of menu
 
  The MIT License (MIT)
 
@@ -33,43 +31,29 @@
 
 #include <Arduino.h>
 #include <FreeRTOS_ARM.h>
-#include <TinyPacks.h>
-
 #include "EMF2014Config.h"
-#include "RadioMessageHandler.h"
+#include "App.h"
+#include "RGBTask.h"
+#include "GUITask.h"
 #include "Schedule.h"
 
-class IncomingRadioMessage;
-class MessageCheckTask;
-class WeatherForecast;
-class WeatherForecastPeriod;
-
-class DataStore: public RadioMessageHandler {
+class ScheduleApp: public App {
 public:
-	DataStore(MessageCheckTask& aMessageCheckTask);
-	~DataStore();
+    static App* New();
+    ~ScheduleApp();
 
-	WeatherForecast* getWeatherForecast() const;
-	Schedule* getSchedule(uint8_t aDay, uint8_t aLocationId) const;
+	String getName() const;
 
-private: // from RadioMessageHandler
-	void handleMessage(const IncomingRadioMessage& aIncomingRadioMessage);
-
-private:
-	void _addWeatherForecastRaw(const IncomingRadioMessage& aIncomingRadioMessage);
-	void _addScheduleRaw(const IncomingRadioMessage& aIncomingRadioMessage, uint8_t day, uint8_t aLocationId);
-
-	static void _unpackWeatherForecastPeriod(WeatherForecastPeriod& period, PackReader& reader);
+public:
+    static const char* daysCallback(uint8_t location, uint8_t msg);
+    static const char* locationsCallback(uint8_t location, uint8_t msg);
+    static const char* talksCallback(uint8_t location, uint8_t msg);
 
 private:
-	MessageCheckTask& mMessageCheckTask;
+    ScheduleApp();
+    ScheduleApp(const ScheduleApp&);
 
-	PackReader mReader;
-
-	// data
-	WeatherForecast* mWeatherForecast;
-	Schedule*** mSchedule;
-
-	SemaphoreHandle_t mWeatherSemaphore;
-	SemaphoreHandle_t mScheduleSemaphore;
+    void task();
+private:
+    static Schedule* mSchedule;
 };
