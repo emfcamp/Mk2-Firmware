@@ -56,6 +56,8 @@ BadgeNotifications::BadgeNotifications(SettingsStore& aSettingsStore, MessageChe
 
     mNotificationMutex = xSemaphoreCreateMutex();
     mMessageCheckTask.subscribe(this, 0xb003, 0xb003);
+
+    badgeIdSubscriptionSet = false;
 }
 
 BadgeNotifications::~BadgeNotifications() {
@@ -96,9 +98,10 @@ void BadgeNotifications::handleMessage(const IncomingRadioMessage& aIncomingRadi
 }
 
 void BadgeNotifications::badgeIdChanged(uint16_t badgeId) {
-    mMessageCheckTask.unsubscribe(this);
-    mMessageCheckTask.subscribe(this, badgeId, badgeId);
-    mMessageCheckTask.subscribe(this, 0xb003, 0xb003);
+    if (!badgeIdSubscriptionSet) {
+        badgeIdSubscriptionSet = true;
+        mMessageCheckTask.subscribe(this, badgeId, badgeId);
+    }
 }
 
 BadgeNotification* BadgeNotifications::popNotification() {

@@ -70,6 +70,8 @@ private: // from SettingsStoreObserver
 private:
     static RGBColor getRGBColor(PackReader& aReader);
 
+    bool badgeIdSubscriptionSet;
+
 private:
     MessageCheckTask& mMessageCheckTask;
     SettingsStore& mSettingsStore;

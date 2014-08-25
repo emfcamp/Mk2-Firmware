@@ -57,7 +57,7 @@ String MessageCheckTask::getName() const {
 }
 
 void MessageCheckTask::subscribe(RadioMessageHandler* aHandler, uint16_t aRangeStart, uint16_t aRangeEnd) {
-	if (xSemaphoreTake(mHandlersSemaphore, portMAX_DELAY ) == pdTRUE) {
+	if (xSemaphoreTake(mHandlersSemaphore, 100) == pdTRUE) {
 		for (int i = 0 ; i < MAX_HANDLERS ; ++i) {
 			if (mHandlers[i] == NULL) {
 				mHandlers[i] = new HandlerItem;
@@ -69,11 +69,13 @@ void MessageCheckTask::subscribe(RadioMessageHandler* aHandler, uint16_t aRangeS
 		}
 
         xSemaphoreGive(mHandlersSemaphore);
+    } else {
+    	debug::log("MessageCheckTask: Failed to get Semaphore for subscribe");
     }
 }
 
 void MessageCheckTask::unsubscribe(RadioMessageHandler* aHandler) {
-	if (xSemaphoreTake(mHandlersSemaphore, portMAX_DELAY ) == pdTRUE) {
+	if (xSemaphoreTake(mHandlersSemaphore, 100 ) == pdTRUE) {
 		for (int i = 0 ; i < MAX_HANDLERS ; ++i) {
 			if (mHandlers[i]->mHandler == aHandler) {
 				delete mHandlers[i];
@@ -82,7 +84,9 @@ void MessageCheckTask::unsubscribe(RadioMessageHandler* aHandler) {
 		}
 
 		xSemaphoreGive(mHandlersSemaphore);
-	}
+	} else {
+    	debug::log("MessageCheckTask: Failed to get Semaphore for unsubscribe");
+    }
 }
 
 void MessageCheckTask::addIncomingMessage(IncomingRadioMessage *message) {
@@ -118,23 +122,23 @@ void MessageCheckTask::task() {
 						debug::log("MessageCheckTask: valid message. RID: " + String(message->rid()));
 					#endif
 
-					if (xSemaphoreTake(mHandlersSemaphore, portMAX_DELAY) == pdTRUE) {
-						bool dispatched = false;
-						for (int i = 0 ; i < MAX_HANDLERS ; ++i) {
-							if (mHandlers[i] != NULL
-									&& message->rid() >= mHandlers[i]->mRangeStart
-									&& message->rid() <= mHandlers[i]->mRangeEnd) {
-								#ifdef RADIO_DEBUG_MODE
-									debug::log("MessageCheckTask: dispatched!");
-								#endif
-								mHandlers[i]->mHandler->handleMessage(*message);
-								dispatched = true;
-							}
+					bool dispatched = false;
+					for (int i = 0 ; i < MAX_HANDLERS ; ++i) {
+						if (mHandlers[i] != NULL)
+							debug::log("Check for range " + String(mHandlers[i]->mRangeStart) + " - " + String(mHandlers[i]->mRangeEnd));
+						if (mHandlers[i] != NULL
+								&& message->rid() >= mHandlers[i]->mRangeStart
+								&& message->rid() <= mHandlers[i]->mRangeEnd) {
+							#ifdef RADIO_DEBUG_MODE
+								debug::log("MessageCheckTask: dispatched!");
+							#endif
+							mHandlers[i]->mHandler->handleMessage(*message);
+							dispatched = true;
 						}
-						xSemaphoreGive(mHandlersSemaphore);
-						if (!dispatched) {
-							debug::log("MessageCheckTask: Unhandled valid message for RID: " + String(message->rid()));
-						}
+					}
+
+					if (!dispatched) {
+						debug::log("MessageCheckTask: Unhandled valid message for RID: " + String(message->rid()));
 					}
 			    }
 			}
