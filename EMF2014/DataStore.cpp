@@ -44,7 +44,7 @@ DataStore::DataStore(MessageCheckTask& aMessageCheckTask)
 	:mMessageCheckTask(aMessageCheckTask)
 {
 	mWeatherForecast = new WeatherForecast;
-	mWeatherForecast->valid = false;
+	mWeatherForecast->mValid = false;
 	mSchedule = new Schedule**[SCHEDULE_NUM_DAYS];
 	for (int day = 0 ; day < SCHEDULE_NUM_DAYS ; ++day)
 		mSchedule[day] = new Schedule*[LOCATION_COUNT];
@@ -120,17 +120,17 @@ void DataStore::_unpackWeatherForecastPeriod(WeatherForecastPeriod& period, Pack
 
 void DataStore::_addWeatherForecastRaw(const IncomingRadioMessage& aIncomingRadioMessage) {
 	if (xSemaphoreTake(mWeatherSemaphore, portMAX_DELAY) == pdTRUE) {
-		mWeatherForecast->valid = true;
+		mWeatherForecast->mValid = true;
 		mReader.setBuffer((unsigned char*)aIncomingRadioMessage.content(), aIncomingRadioMessage.length());
-		_unpackWeatherForecastPeriod(mWeatherForecast->current, mReader);
-		_unpackWeatherForecastPeriod(mWeatherForecast->in3Hours, mReader);
-		_unpackWeatherForecastPeriod(mWeatherForecast->in6Hours, mReader);
-		_unpackWeatherForecastPeriod(mWeatherForecast->in12Hours, mReader);
-		_unpackWeatherForecastPeriod(mWeatherForecast->in24Hours, mReader);
-		_unpackWeatherForecastPeriod(mWeatherForecast->in48Hours, mReader);
+		_unpackWeatherForecastPeriod(mWeatherForecast->mWeatherForecastPeriods[WEATHER_CURRENT], mReader);
+		_unpackWeatherForecastPeriod(mWeatherForecast->mWeatherForecastPeriods[WEATHER_3_HOURS], mReader);
+		_unpackWeatherForecastPeriod(mWeatherForecast->mWeatherForecastPeriods[WEATHER_6_HOURS], mReader);
+		_unpackWeatherForecastPeriod(mWeatherForecast->mWeatherForecastPeriods[WEATHER_12_HOURS], mReader);
+		_unpackWeatherForecastPeriod(mWeatherForecast->mWeatherForecastPeriods[WEATHER_24_HOURS], mReader);
+		_unpackWeatherForecastPeriod(mWeatherForecast->mWeatherForecastPeriods[WEATHER_48_HOURS], mReader);
 
 		debug::log("DataStore: Stored weather forecast: " +
-				String(mWeatherForecast->current.temperature) + "deg, Weather type: " + String((uint8_t) mWeatherForecast->current.weatherType));
+				String(mWeatherForecast->mWeatherForecastPeriods[WEATHER_CURRENT].temperature) + "deg, Weather type: " + String((uint8_t) mWeatherForecast->mWeatherForecastPeriods[WEATHER_CURRENT].weatherType));
 
 		xSemaphoreGive(mWeatherSemaphore);
 	}
