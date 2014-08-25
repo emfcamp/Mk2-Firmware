@@ -109,10 +109,11 @@ void GUITask::task() {
     }
 }
 
-void GUITask::setM2Root(m2_rom_void_p newRoot) {
+void GUITask::setM2Root(m2_rom_void_p newRoot, bool setHome) {
     debug::log("GUITask::setM2Root");
     _m2->setRoot(newRoot);
-    _m2->setHome(newRoot);
+    if (setHome)
+      _m2->setHome(newRoot);
     if (_buttons_p != 0)
         _buttons_p->wake();
 }

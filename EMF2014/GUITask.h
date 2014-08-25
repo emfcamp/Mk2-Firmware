@@ -47,6 +47,6 @@ public:
     String getName() const;
     void task();
 
-    void setM2Root(m2_rom_void_p newRoot);
+    void setM2Root(m2_rom_void_p newRoot, bool setHome = true);
     void clearRoot();
 };
