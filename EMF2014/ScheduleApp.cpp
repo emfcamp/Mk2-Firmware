@@ -44,24 +44,27 @@ uint8_t first;
 uint8_t cnt;
 
 #define SETUP_MENU(data,el,space,vsb,list,hlist,align) \
-M2_X2LMENU(el,"l6e1w110",&first,&cnt,data,'+','-','\0');\
-M2_SPACE(space,"W1h1");\
-M2_VSB(vsb,"l6w4r1", &first, &cnt);\
+M2_X2LMENU(el,"l6e1W57",&first,&cnt,data,'+','-','\0');\
+M2_SPACE(space,"w1h1");\
+M2_VSB(vsb,"l6W1", &first, &cnt);\
 M2_LIST(list)={&el,&space,&vsb};\
-M2_HLIST(hlist,NULL, list);\
+M2_HLIST(hlist, NULL, list);\
 M2_ALIGN(align,"-1|1W64H64",&hlist);
 
 char schedule_label_talk_empty_str[] = "Empty.";
-M2_LABEL(schedule_label_talk_empty, NULL, schedule_label_talk_empty_str);
-M2_ALIGN(schedule_label_talk_empty_align, "-1|1W64H64", &schedule_label_talk_empty);
 
-const char* schedule_label_talk_str = NULL;
-M2_LABELPTR(schedule_label_talk, NULL, &schedule_label_talk_str);
-M2_ALIGN(schedule_label_talk_align, "-1|1W64H64", &schedule_label_talk);
+#define CHARS_PER_LINE 21
 
-#define MAX_EVENTS_FOR_LOCATION 50
+#define MAX_EVENT_DESCRIPTION 160
+char schedule_label_talk_str[MAX_EVENT_DESCRIPTION];
+M2_LABEL(schedule_label_talk, "W64", schedule_label_talk_str);
+M2_ALIGN(schedule_label_talk_align, "-1|2W64H64", &schedule_label_talk);
+
+#define MAX_EVENTS_FOR_LOCATION 30
+#define MAX_EVENT_STRING_LENGTH 20
 m2_xmenu_entry schedule_talks_data[MAX_EVENTS_FOR_LOCATION];
 Event* schedule_talks_events[MAX_EVENTS_FOR_LOCATION];
+char schedule_talks_strings[MAX_EVENTS_FOR_LOCATION][MAX_EVENT_STRING_LENGTH];
 
 SETUP_MENU(schedule_talks_data,
             schedule_talks_el,
@@ -108,10 +111,13 @@ const char* ScheduleApp::talksCallback(uint8_t talk, uint8_t msg) {
         RTC_date_time end = RTC_clock::from_unixtime(event->endTimestamp + TIMEZONE_OFFSET);
         debug::log("start: " + String(start.hour) + ":" + String(start.minute));
 
-        schedule_label_talk_str = schedule_talks_data[talk].label;
+        String topLineStr = String(start.hour) + ":" + String(start.minute) + "-" + event->speaker;
+        String formattedStr = topLineStr.substring(0, CHARS_PER_LINE) + "\n---\n" + event->title;
+
+        Utils::wordWrap(schedule_label_talk_str, formattedStr.c_str(), CHARS_PER_LINE, 7);
     } else {
         debug::log("there is no event to display");
-        schedule_label_talk_str = schedule_label_talk_empty_str;
+        Utils::wordWrap(schedule_label_talk_str, schedule_label_talk_empty_str, CHARS_PER_LINE, 7);
     }
 
     return "";
@@ -127,8 +133,17 @@ const char* ScheduleApp::locationsCallback(uint8_t location, uint8_t msg) {
     if (mSchedule->getEventCount() > 0) {
         Event* events = mSchedule->getEvents();
         for (int i ; i < mSchedule->getEventCount() ; ++i) {
+            // Create a string for the list
+            // <start time> (title)
+            RTC_date_time start = RTC_clock::from_unixtime(events[i].startTimestamp + TIMEZONE_OFFSET);
+            String formattedStr = String(start.hour) + ":" + String(start.minute) + " " + events[i].title;
+            strncpy(schedule_talks_strings[i], formattedStr.c_str(), MAX_EVENT_STRING_LENGTH - 1);
+            if (strlen(events[i].title) > MAX_EVENT_STRING_LENGTH - 1) {
+                schedule_talks_strings[i][MAX_EVENT_STRING_LENGTH - 2] = '~';
+            }
+
             m2_xmenu_entry entry;
-            entry.label = events[i].title;
+            entry.label = schedule_talks_strings[i];
             entry.element = &schedule_label_talk_align;
             entry.cb = ScheduleApp::talksCallback;
             schedule_talks_data[i] = entry;
@@ -142,7 +157,7 @@ const char* ScheduleApp::locationsCallback(uint8_t location, uint8_t msg) {
         // put in an empty item
         m2_xmenu_entry entry;
         entry.label = schedule_label_talk_empty_str;
-        entry.element = &schedule_label_talk_empty_align;
+        entry.element = &schedule_label_talk_align;
         entry.cb = ScheduleApp::talksCallback;
         schedule_talks_data[0] = entry;
         schedule_talks_data[1] = {NULL, NULL, NULL};
@@ -179,8 +194,6 @@ App* ScheduleApp::New() {
 }
 
 ScheduleApp::ScheduleApp() {
-    Tilda::getGUITask().clearRoot();
-    GLCD.SetRotation(ROTATION_0);
 }
 
 ScheduleApp::~ScheduleApp() {

@@ -63,6 +63,10 @@ DataStore::~DataStore() {
     mMessageCheckTask.unsubscribe(this);
 
     delete mWeatherForecast;
+
+    for (int day ; day < SCHEDULE_NUM_DAYS ; ++day)
+		for (int location = 0 ; location < LOCATION_COUNT ; ++location)
+			delete mSchedule[day][location];
     delete[] mSchedule;
 
     vSemaphoreDelete(mWeatherSemaphore);
