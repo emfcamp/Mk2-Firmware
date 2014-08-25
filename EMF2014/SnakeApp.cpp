@@ -80,7 +80,7 @@ void SnakeApp::task() {
             uint8_t score = 0;
 
             while(!snake.game_over()) {
-                uint16_t nextFrame = Tilda::millisecondsSinceBoot() + FRAME_DURATION;
+                uint32_t nextFrame = Tilda::millisecondsSinceBoot() + FRAME_DURATION;
 
                 if (score != snake.length()) {
                     score = snake.length();

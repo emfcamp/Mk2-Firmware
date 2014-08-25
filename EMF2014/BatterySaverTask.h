@@ -1,8 +1,8 @@
 /*
  TiLDA Mk2
 
- ButtonTask
- Buttons are handled via interrupt callbacks
+ BatterySaverTask
+ Dims backlight and kills current app after periods of inactivity
 
  The MIT License (MIT)
 
@@ -35,12 +35,14 @@
 #include "EMF2014Config.h"
 #include "Task.h"
 
-class ButtonTask: public Task {
+class BatterySaverTask: public Task {
 friend class ButtonSubscription;
 public:
     String getName() const;
 protected:
     void task();
+private:
+    void setBacklightBrightnessLevel(uint16_t brightness);
 };
 
 #endif // _BUTTON_TASK_H_
