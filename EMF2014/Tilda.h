@@ -78,7 +78,7 @@ public:
     static uint8_t getBatteryPercent();
     static uint8_t getChargeState();
     static Orientation_t getOrientation();
-    static uint16_t millisecondsSinceBoot();
+    static uint32_t millisecondsSinceBoot();
 
 private:
     Tilda();

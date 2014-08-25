@@ -127,6 +127,6 @@ Orientation_t Tilda::getOrientation() {
     return (Orientation_t)imuTask.getOrientation();
 }
 
-uint16_t Tilda::millisecondsSinceBoot() {
+uint32_t Tilda::millisecondsSinceBoot() {
     return xTaskGetTickCount();
 }
