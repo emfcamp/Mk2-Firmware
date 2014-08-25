@@ -44,9 +44,9 @@ uint8_t first;
 uint8_t cnt;
 
 #define SETUP_MENU(data,el,space,vsb,list,hlist,align) \
-M2_X2LMENU(el,"l10e1w51",&first,&cnt,data,'+','-','\0');\
+M2_X2LMENU(el,"l6e1w110",&first,&cnt,data,'+','-','\0');\
 M2_SPACE(space,"W1h1");\
-M2_VSB(vsb,"l10w4r1", &first, &cnt);\
+M2_VSB(vsb,"l6w4r1", &first, &cnt);\
 M2_LIST(list)={&el,&space,&vsb};\
 M2_HLIST(hlist,NULL, list);\
 M2_ALIGN(align,"-1|1W64H64",&hlist);
@@ -178,7 +178,10 @@ App* ScheduleApp::New() {
     return new ScheduleApp;
 }
 
-ScheduleApp::ScheduleApp() {}
+ScheduleApp::ScheduleApp() {
+    Tilda::getGUITask().clearRoot();
+    GLCD.SetRotation(ROTATION_0);
+}
 
 ScheduleApp::~ScheduleApp() {
     delete mSchedule;
@@ -190,6 +193,7 @@ String ScheduleApp::getName() const {
 }
 
 void ScheduleApp::task() {
+    GLCD.SetRotation(ROTATION_0);
     Tilda::getGUITask().setM2Root(&schedule_days_align);
 
     while(true) {
