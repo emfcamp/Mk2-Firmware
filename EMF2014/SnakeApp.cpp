@@ -57,9 +57,6 @@ bool SnakeApp::keepAlive() const {
 }
 
 void SnakeApp::setPixel(byte x, byte y, byte color) {
-    if (color != 1) {
-        Tilda::log("setPixel " + String(x) + " " + String(y) + " " + String(color));
-}
     GLCD.SetPixels(x * 3, y * 3, x * 3 + 2, y * 3 + 2, color == 1 ? BLACK : WHITE);
 }
 
@@ -68,8 +65,6 @@ uint8_t SnakeApp::highscore = 0;
 #define FRAME_DURATION 150;
 
 void SnakeApp::task() {
-        GLCD.SelectFont(System5x7);
-
         while(true) {
             Snake snake(21, 33, SnakeApp::setPixel);
 
@@ -87,6 +82,7 @@ void SnakeApp::task() {
                     if (score > highscore) {
                         highscore = score;
                     }
+                    GLCD.SelectFont(System5x7);
                     GLCD.CursorToXY(0, 105);
                     GLCD.print("Score:  ");
                     GLCD.print(score);
