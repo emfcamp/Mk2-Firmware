@@ -33,6 +33,7 @@
 #include <glcd.h>
 #include <M2tk.h>
 #include "GUITask.h"
+#include <fonts/allFonts.h>
 
 
 App* SnakeApp::New() {
@@ -56,16 +57,35 @@ void SnakeApp::setPixel(byte x, byte y, byte color) {
     GLCD.SetPixels(x * 3, y * 3, x * 3 + 2, y * 3 + 2, color == 1 ? BLACK : WHITE);
 }
 
+uint8_t SnakeApp::highscore = 0;
+
 void SnakeApp::task() {
+        GLCD.SelectFont(System5x7);
+
         while(true) {
-            Snake snake(21, 21, SnakeApp::setPixel);
+            Snake snake(21, 33, SnakeApp::setPixel);
 
             Tilda::getGUITask().clearRoot();
 
             snake.render_start();
 
+            uint8_t score = 0;
+
             while(!snake.game_over()) {
                 uint16_t nextFrame = Tilda::millisecondsSinceBoot() + 150;
+
+                if (score != snake.length()) {
+                    score = snake.length();
+                    if (score > highscore) {
+                        highscore = score;
+                    }
+                    GLCD.CursorToXY(0, 105);
+                    GLCD.print("Score:  ");
+                    GLCD.print(score);
+                    GLCD.CursorToXY(0, 115);
+                    GLCD.print("HiScore:");
+                    GLCD.print(highscore);
+                }
 
                 snake.tick();
                 snake.render_start();
@@ -89,8 +109,9 @@ void SnakeApp::task() {
                     }
                 }
 
-
             }
+
+            Tilda::delay(1000);
         }
 }
 
@@ -308,4 +329,8 @@ void Snake::set_element(byte n, byte val)
   a |= val << (n%4)*2;  // set new val
 
   _ele[n/4] = a;
+}
+
+uint8_t Snake::length() {
+    return _snake_len - 1;
 }

@@ -53,6 +53,8 @@ private:
     void task();
     void afterSuspension();
     void beforeResume();
+
+    static uint8_t highscore;
 private:
 };
 
@@ -74,6 +76,7 @@ class Snake
     void render_start();
     void render_tick();
     byte game_over()  {return _game_over;}
+    uint8_t length();
 
   private:
     enum direction {NORTH=0, EAST=1, SOUTH=3, WEST=2}; // numbered such that the inverse is the opposite direction
