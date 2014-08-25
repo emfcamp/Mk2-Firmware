@@ -66,7 +66,7 @@ void FlashClass::setCallback(void (*_cb)(void)) {
     SPI.registerDMACallback(_cb);
 }
 
-uint8_t* FlashClass::allocBuffer(unsigned long length) {
+uint8_t* FlashClass::allocBuffer(uint32_t length) {
     length += 5;
     if (length > bufferLength) {
         if (commandBuffer) delete commandBuffer;
@@ -128,7 +128,7 @@ void FlashClass::write_disable() {
 //
 // All erase commands take time. No other actions can be preformed
 // while the chip is errasing except for reading the register
-void FlashClass::erase_4k(unsigned long addr) {
+void FlashClass::erase_4k(uint32_t addr) {
     write_enable();
 
     SPI.transfer(this->flash_cs, SE, SPI_CONTINUE);
@@ -140,7 +140,7 @@ void FlashClass::erase_4k(unsigned long addr) {
 // Errase an entire 64_k sector the address is in.
 // For example erase4k(530000) will erase everything from 524543 to 589823.
 
-void FlashClass::erase_64k(unsigned long addr) {
+void FlashClass::erase_64k(uint32_t addr) {
     write_enable();
     
     SPI.transfer(this->flash_cs, BE, SPI_CONTINUE);
@@ -158,7 +158,7 @@ void FlashClass::erase_all() {
 
 // Read data from the flash chip. There is no limit "length". The entire memory can be read with one command.
 //read_S25(starting address, buf, number of bytes);
-void FlashClass::read(unsigned long addr, uint8_t* buf, unsigned long length) {
+void FlashClass::read(uint32_t addr, uint8_t* buf, uint32_t length) {
 #ifdef SLOW_READ
     SPI.setClockDivider(this->flash_cs, 3);                         // slow down SPI to 28MHz
 #endif
@@ -180,7 +180,7 @@ void FlashClass::read(unsigned long addr, uint8_t* buf, unsigned long length) {
 }
 
 // Read data from the flash chip using Fast read command. There is no limit "length". The entire memory can be read with one command.
-void FlashClass::fast_read(unsigned long addr, uint8_t* buf, unsigned long length) {
+void FlashClass::fast_read(uint32_t addr, uint8_t* buf, uint32_t length) {
     
     SPI.transfer(this->flash_cs, FAST_READ, SPI_CONTINUE);               //control byte follow by address bytes
     SPI.transfer(this->flash_cs, addr >> 16, SPI_CONTINUE);          // convert the address integer to 3 bytes
@@ -197,7 +197,7 @@ void FlashClass::fast_read(unsigned long addr, uint8_t* buf, unsigned long lengt
     
 }
 
-void FlashClass::fast_read_dma(unsigned long addr, unsigned long length) {
+void FlashClass::fast_read_dma(uint32_t addr, uint16_t length) {
 
     allocBuffer(length);
 
@@ -212,14 +212,6 @@ void FlashClass::fast_read_dma(unsigned long addr, unsigned long length) {
 
     buf[4] = 0;
 
-    SerialUSB.println(commandBuffer[0], HEX);
-    SerialUSB.println(commandBuffer[1], HEX);
-    SerialUSB.println(commandBuffer[2], HEX);
-    SerialUSB.println(commandBuffer[3], HEX);
-    SerialUSB.println(commandBuffer[4], HEX);
-    SerialUSB.println(commandBuffer[5], HEX);
-    SerialUSB.println(commandBuffer[6], HEX);
-
     SPI.transferDMA(this->flash_cs, buf, buf, 5 + length, SPI_LAST);
 }
 
@@ -229,7 +221,7 @@ void FlashClass::fast_read_dma(unsigned long addr, unsigned long length) {
 // address %=0 (for example address=256, length=255.) or your length is less that the bytes remain
 // in the page (address =120 , length= 135)
 
-void FlashClass::page_program(unsigned long addr, uint8_t* buf, unsigned long length) {
+void FlashClass::page_program(uint32_t addr, uint8_t* buf, uint32_t length) {
     write_enable(); // Must be done before writing can commence. Erase clears it.
 
     SPI.transfer(this->flash_cs, PP, SPI_CONTINUE);
@@ -238,13 +230,13 @@ void FlashClass::page_program(unsigned long addr, uint8_t* buf, unsigned long le
     SPI.transfer(this->flash_cs, addr & 0xff, SPI_CONTINUE);
     
     int i;
-    for (i=0; i < length - 1; i++) {
+    for (i = 0; i < length - 1; i++) {
         SPI.transfer(this->flash_cs, buf[i], SPI_CONTINUE);
     }
     SPI.transfer(this->flash_cs, buf[i], SPI_LAST);
 }
 
-void FlashClass::page_program_dma(unsigned long addr, unsigned long length) {
+void FlashClass::page_program_dma(uint32_t addr, uint16_t length) {
     write_enable();
 
     uint8_t* buf = &commandBuffer[1];
@@ -256,13 +248,6 @@ void FlashClass::page_program_dma(unsigned long addr, unsigned long length) {
     buf[2] = addr >> 8;
     buf[3] = addr & 0xff;
 
-    SerialUSB.println(commandBuffer[0], HEX);
-    SerialUSB.println(commandBuffer[1], HEX);
-    SerialUSB.println(commandBuffer[2], HEX);
-    SerialUSB.println(commandBuffer[3], HEX);
-    SerialUSB.println(commandBuffer[4], HEX);
-    SerialUSB.println(commandBuffer[5], HEX);
-    SerialUSB.println(commandBuffer[6], HEX);
     SPI.transferDMA(this->flash_cs, buf, buf, 4 + length, SPI_LAST);
 }
 

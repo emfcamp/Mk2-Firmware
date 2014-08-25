@@ -61,7 +61,7 @@ class SPIClass {
 	// once a tranfser is commplete the DMA interrupt is called, during which we do some clean up and call the user function
 	void registerDMACallback(void (*_dmaCb)(void)) { dmaCb = _dmaCb;};
 	// tx and rx buffer can be the same or diffrent
-	byte transferDMA(uint32_t _pin, uint8_t *txBuffer, uint8_t *rxBuffer, uint32_t length, SPITransferMode _mode = SPI_LAST);
+	byte transferDMA(uint32_t _pin, uint8_t *txBuffer, uint8_t *rxBuffer, uint16_t length, SPITransferMode _mode = SPI_LAST);
     // called from the DMA_Handler
     void DMAFinished(uint32_t _status);
 

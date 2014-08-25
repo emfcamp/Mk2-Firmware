@@ -25,7 +25,7 @@ public:
     FlashClass(int pin_flash_cs, int pin_flash_hold);
     void begin();
     void setCallback(void (*_cb)(void));
-    uint8_t* allocBuffer(unsigned long length);
+    uint8_t* allocBuffer(uint32_t length);
     uint8_t* getBuffer();
     void clearBuffer();
     byte stat();
@@ -33,25 +33,25 @@ public:
     void wait_write();
     void write_enable();
     void write_disable();
-    void erase_4k(unsigned long loc);
-    void erase_64k(unsigned long loc);
+    void erase_4k(uint32_t loc);
+    void erase_64k(uint32_t loc);
     void erase_all();
-    void read(unsigned long loc, uint8_t* array, unsigned long length);
-    void fast_read(unsigned long loc, uint8_t* array, unsigned long length);
-    void fast_read_dma(unsigned long loc, unsigned long length);
-    void page_program(unsigned long loc, uint8_t* array, unsigned long length);
-    void page_program_dma(unsigned long addr, unsigned long length);
+    void read(uint32_t loc, uint8_t* array, uint32_t length);
+    void fast_read(uint32_t loc, uint8_t* array, uint32_t length);
+    void fast_read_dma(uint32_t loc, uint16_t length);
+    void page_program(uint32_t loc, uint8_t* array, uint32_t length);
+    void page_program_dma(uint32_t addr, uint16_t length);
     void write_reg(byte w);
     bool read_info();
     void sleep();
     void wake();
     
 private:
-    unsigned long prev;
+    uint32_t prev;
     int flash_cs;
     int flash_hold;
     uint8_t* commandBuffer;
-    unsigned long bufferLength;
+    uint32_t bufferLength;
 };
 
 extern FlashClass Flash;
