@@ -48,6 +48,7 @@ enum LocationId : uint8_t {
     LOCATION_MODEL_FLYING,
     LOCATION_CATERING,
     LOCATION_EMFFM,
+    LOCATION_OTHER,
     LOCATION_COUNT
 };
 

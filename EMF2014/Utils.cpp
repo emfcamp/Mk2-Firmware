@@ -63,8 +63,8 @@ tp_integer_t Utils::getInteger(PackReader& reader) {
 
 char* Utils::getString(PackReader& reader) {
     reader.next();
-    char* string = new char[reader.contentLength() + 1];
-    tp_length_t legnth = reader.getString(string, reader.contentLength());
+    char* string = new char[MAX_TEXT_LENGTH];
+    tp_length_t legnth = reader.getString(string, MAX_TEXT_LENGTH);
     return string;
 }
 

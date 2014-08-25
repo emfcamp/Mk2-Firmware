@@ -86,6 +86,7 @@ m2_xmenu_entry schedule_location_data[] = {
     {Schedule::getStageName(LOCATION_MODEL_FLYING), &schedule_talks_align, ScheduleApp::locationsCallback},
     {Schedule::getStageName(LOCATION_CATERING),     &schedule_talks_align, ScheduleApp::locationsCallback},
     {Schedule::getStageName(LOCATION_EMFFM),        &schedule_talks_align, ScheduleApp::locationsCallback},
+    {Schedule::getStageName(LOCATION_OTHER),        &schedule_talks_align, ScheduleApp::locationsCallback},
     {NULL, NULL},
 };
 

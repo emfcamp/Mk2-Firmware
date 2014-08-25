@@ -36,9 +36,9 @@
 #include <debug.h>
 
 #define CONTENT_RID_WEATHER_FORECAST  40962
-#define CONTENT_RID_SCHEDULE_FRIDAY   40963
-#define CONTENT_RID_SCHEDULE_SATURDAY 40964
-#define CONTENT_RID_SCHEDULE_SUNDAY   40965
+#define CONTENT_RID_SCHEDULE_FRIDAY_START 0xA010
+#define CONTENT_RID_SCHEDULE_SATURDAY_START 0xA020
+#define CONTENT_RID_SCHEDULE_SUNDAY_START 0xA030
 
 DataStore::DataStore(MessageCheckTask& aMessageCheckTask)
 	:mMessageCheckTask(aMessageCheckTask)
@@ -76,15 +76,15 @@ DataStore::~DataStore() {
 void DataStore::handleMessage(const IncomingRadioMessage& aIncomingRadioMessage) {
 	if (aIncomingRadioMessage.rid() == CONTENT_RID_WEATHER_FORECAST) {
 		_addWeatherForecastRaw(aIncomingRadioMessage);
-	} else if (aIncomingRadioMessage.rid() >= CONTENT_RID_SCHEDULE_FRIDAY
-				&& aIncomingRadioMessage.rid() < CONTENT_RID_SCHEDULE_FRIDAY + LOCATION_COUNT) {
-		_addScheduleRaw(aIncomingRadioMessage, SCHEDULE_FRIDAY, aIncomingRadioMessage.rid() - CONTENT_RID_SCHEDULE_FRIDAY);
-	} else if (aIncomingRadioMessage.rid() >= CONTENT_RID_SCHEDULE_SATURDAY
-				&& aIncomingRadioMessage.rid() < CONTENT_RID_SCHEDULE_SATURDAY + LOCATION_COUNT) {
-		_addScheduleRaw(aIncomingRadioMessage, SCHEDULE_FRIDAY, aIncomingRadioMessage.rid() - CONTENT_RID_SCHEDULE_SATURDAY);
-	} else if (aIncomingRadioMessage.rid() >= CONTENT_RID_SCHEDULE_SUNDAY
-				&& aIncomingRadioMessage.rid() < CONTENT_RID_SCHEDULE_SUNDAY + LOCATION_COUNT) {
-		_addScheduleRaw(aIncomingRadioMessage, SCHEDULE_FRIDAY, aIncomingRadioMessage.rid() - CONTENT_RID_SCHEDULE_SUNDAY);
+	} else if (aIncomingRadioMessage.rid() >= CONTENT_RID_SCHEDULE_FRIDAY_START
+				&& aIncomingRadioMessage.rid() < CONTENT_RID_SCHEDULE_FRIDAY_START + LOCATION_COUNT) {
+		_addScheduleRaw(aIncomingRadioMessage, SCHEDULE_FRIDAY, aIncomingRadioMessage.rid() - CONTENT_RID_SCHEDULE_FRIDAY_START);
+	} else if (aIncomingRadioMessage.rid() >= CONTENT_RID_SCHEDULE_SATURDAY_START
+				&& aIncomingRadioMessage.rid() < CONTENT_RID_SCHEDULE_SATURDAY_START + LOCATION_COUNT) {
+		_addScheduleRaw(aIncomingRadioMessage, SCHEDULE_SATURDAY, aIncomingRadioMessage.rid() - CONTENT_RID_SCHEDULE_SATURDAY_START);
+	} else if (aIncomingRadioMessage.rid() >= CONTENT_RID_SCHEDULE_SUNDAY_START
+				&& aIncomingRadioMessage.rid() < CONTENT_RID_SCHEDULE_SUNDAY_START + LOCATION_COUNT) {
+		_addScheduleRaw(aIncomingRadioMessage, SCHEDULE_SUNDAY, aIncomingRadioMessage.rid() - CONTENT_RID_SCHEDULE_SUNDAY_START);
 	} else {
 		debug::log("DataStore: Rid not supported: " + String(aIncomingRadioMessage.rid()) + " " + String(aIncomingRadioMessage.length()));
 	}
@@ -156,7 +156,7 @@ void DataStore::_addScheduleRaw(const IncomingRadioMessage& aIncomingRadioMessag
 		delete mSchedule[aDay][aLocation];
 		mSchedule[aDay][aLocation] = new Schedule(events, eventCount);
 
-		debug::log("DataStore: Got schedule: " + String(mSchedule[aDay][aLocation]->getEventCount()) + " events");
+		debug::log("DataStore: Got schedule: day: " +  String(aDay) + " location: " + String(aLocation) + " events: " + String(mSchedule[aDay][aLocation]->getEventCount()));
 
 		xSemaphoreGive(mScheduleSemaphore);
 	}

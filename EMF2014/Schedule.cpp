@@ -55,6 +55,7 @@ char* Schedule::getStageName(uint8_t aLocationId) {
         case LOCATION_MODEL_FLYING: return "Model Flying";
         case LOCATION_CATERING:     return "Catering";
         case LOCATION_EMFFM:        return "EMF.FM";
+        case LOCATION_OTHER:        return "Other";
     }
 
     return "Unknown";
