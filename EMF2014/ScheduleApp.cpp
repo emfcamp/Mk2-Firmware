@@ -38,11 +38,10 @@
 #include "Schedule.h"
 #include "DataStore.h"
 
+Schedule* ScheduleApp::mSchedule = NULL;
+
 uint8_t first;
 uint8_t cnt;
-
-const char* talks_callback(uint8_t talk, uint8_t msg);
-const char* locations_callback(uint8_t talk, uint8_t msg);
 
 #define SETUP_MENU(data,el,space,vsb,list,hlist,align) \
 M2_X2LMENU(el,"l10e1w51",&first,&cnt,data,'+','-','\0');\
@@ -73,18 +72,17 @@ SETUP_MENU(schedule_talks_data,
             schedule_talks_align);
 
 m2_xmenu_entry schedule_location_data[] = {
-    {Schedule::getStageName(LOCATION_STAGE_A),      &schedule_talks_align, locations_callback},
-    {Schedule::getStageName(LOCATION_STAGE_B),      &schedule_talks_align, locations_callback},
-    {Schedule::getStageName(LOCATION_STAGE_C),      &schedule_talks_align, locations_callback},
-    {Schedule::getStageName(LOCATION_WORKSHOPS),    &schedule_talks_align, locations_callback},
-    {Schedule::getStageName(LOCATION_KIDS),         &schedule_talks_align, locations_callback},
-    {Schedule::getStageName(LOCATION_VILLAGES),     &schedule_talks_align, locations_callback},
-    {Schedule::getStageName(LOCATION_LOUNGE),       &schedule_talks_align, locations_callback},
-    {Schedule::getStageName(LOCATION_BAR),          &schedule_talks_align, locations_callback},
-    {Schedule::getStageName(LOCATION_MODEL_FLYING), &schedule_talks_align, locations_callback},
-    {Schedule::getStageName(LOCATION_CATERING),     &schedule_talks_align, locations_callback},
-    {Schedule::getStageName(LOCATION_EMFFM),        &schedule_talks_align, locations_callback},
-    {Schedule::getStageName(LOCATION_COUNT),        &schedule_talks_align, locations_callback},
+    {Schedule::getStageName(LOCATION_STAGE_A),      &schedule_talks_align, ScheduleApp::locationsCallback},
+    {Schedule::getStageName(LOCATION_STAGE_B),      &schedule_talks_align, ScheduleApp::locationsCallback},
+    {Schedule::getStageName(LOCATION_STAGE_C),      &schedule_talks_align, ScheduleApp::locationsCallback},
+    {Schedule::getStageName(LOCATION_WORKSHOPS),    &schedule_talks_align, ScheduleApp::locationsCallback},
+    {Schedule::getStageName(LOCATION_KIDS),         &schedule_talks_align, ScheduleApp::locationsCallback},
+    {Schedule::getStageName(LOCATION_VILLAGES),     &schedule_talks_align, ScheduleApp::locationsCallback},
+    {Schedule::getStageName(LOCATION_LOUNGE),       &schedule_talks_align, ScheduleApp::locationsCallback},
+    {Schedule::getStageName(LOCATION_BAR),          &schedule_talks_align, ScheduleApp::locationsCallback},
+    {Schedule::getStageName(LOCATION_MODEL_FLYING), &schedule_talks_align, ScheduleApp::locationsCallback},
+    {Schedule::getStageName(LOCATION_CATERING),     &schedule_talks_align, ScheduleApp::locationsCallback},
+    {Schedule::getStageName(LOCATION_EMFFM),        &schedule_talks_align, ScheduleApp::locationsCallback},
     {NULL, NULL},
 };
 
@@ -99,45 +97,62 @@ SETUP_MENU(schedule_location_data,
 ScheduleDay LAST_SELECTED_DAY = SCHEDULE_FRIDAY;
 LocationId LAST_SELECTED_LOCATION = LOCATION_STAGE_A;
 
-const char* talks_callback(uint8_t talk, uint8_t msg) {
+const char* ScheduleApp::talksCallback(uint8_t talk, uint8_t msg) {
     debug::log("Talks: " + String(talk) + " " + String(msg));
-    schedule_label_talk_str = schedule_talks_data[talk].label;
 
     Event* event = schedule_talks_events[talk];
-    RTC_date_time start = RTC_clock::from_unixtime(event->startTimestamp + TIMEZONE_OFFSET);
-    RTC_date_time end = RTC_clock::from_unixtime(event->endTimestamp + TIMEZONE_OFFSET);
 
-    debug::log("start: " + String(start.hour) + ":" + String(start.minute));
+    if (event) {
+        // set the text that all talk screens point to
+        RTC_date_time start = RTC_clock::from_unixtime(event->startTimestamp + TIMEZONE_OFFSET);
+        RTC_date_time end = RTC_clock::from_unixtime(event->endTimestamp + TIMEZONE_OFFSET);
+        debug::log("start: " + String(start.hour) + ":" + String(start.minute));
+
+        schedule_label_talk_str = schedule_talks_data[talk].label;
+    } else {
+        debug::log("there is no event to display");
+        schedule_label_talk_str = schedule_label_talk_empty_str;
+    }
 
     return "";
 }
 
-Schedule* schedule = NULL;
-
-const char* locations_callback(uint8_t location, uint8_t msg) {
+const char* ScheduleApp::locationsCallback(uint8_t location, uint8_t msg) {
     debug::log("Location: " + String(location) + " " + String(msg));
     LAST_SELECTED_LOCATION = (LocationId)location;
 
-    delete schedule;
-    Schedule* schedule = Tilda::getDataStore().getSchedule(LAST_SELECTED_DAY, location);
+    delete mSchedule;
+    mSchedule = Tilda::getDataStore().getSchedule(LAST_SELECTED_DAY, location);
 
-    Event* events = schedule->getEvents();
-    for (int i ; i < schedule->getEventCount() ; ++i) {
+    if (mSchedule->getEventCount() > 0) {
+        Event* events = mSchedule->getEvents();
+        for (int i ; i < mSchedule->getEventCount() ; ++i) {
+            m2_xmenu_entry entry;
+            entry.label = events[i].title;
+            entry.element = &schedule_label_talk_align;
+            entry.cb = ScheduleApp::talksCallback;
+            schedule_talks_data[i] = entry;
+            schedule_talks_events[i] = &events[i];
+        }
+
+        // null terminate the event list
+        schedule_talks_data[mSchedule->getEventCount()] = {NULL, NULL, NULL};
+    } else {
+        // there are no events on this day for this location
+        // put in an empty item
         m2_xmenu_entry entry;
-        entry.label = events[i].title;
-        entry.element = &schedule_label_talk_align;
-        entry.cb = talks_callback;
-        schedule_talks_data[i] = entry;
-        schedule_talks_events[i] = &events[i];
+        entry.label = schedule_label_talk_empty_str;
+        entry.element = &schedule_label_talk_empty_align;
+        entry.cb = ScheduleApp::talksCallback;
+        schedule_talks_data[0] = entry;
+        schedule_talks_data[1] = {NULL, NULL, NULL};
+        schedule_talks_events[0] = NULL;
     }
-
-    // null terminate the event list
-    schedule_talks_data[schedule->getEventCount()] = {NULL, NULL, NULL};
 
     return "";
 }
 
-const char* days_callback(uint8_t day, uint8_t msg) {
+const char* ScheduleApp::daysCallback(uint8_t day, uint8_t msg) {
     debug::log("Days: " + String(day) + " " + String(msg));
     // Just remember what day was seleted
     LAST_SELECTED_DAY = (ScheduleDay)day;
@@ -145,9 +160,9 @@ const char* days_callback(uint8_t day, uint8_t msg) {
 }
 
 m2_xmenu_entry schedule_days_data[] = {
-    {"Friday",      &schedule_location_align, days_callback},
-    {"Saturday",    &schedule_location_align, days_callback},
-    {"Sunday",      &schedule_location_align, days_callback},
+    {"Friday",      &schedule_location_align, ScheduleApp::daysCallback},
+    {"Saturday",    &schedule_location_align, ScheduleApp::daysCallback},
+    {"Sunday",      &schedule_location_align, ScheduleApp::daysCallback},
     {NULL, NULL},
 };
 
@@ -166,8 +181,8 @@ App* ScheduleApp::New() {
 ScheduleApp::ScheduleApp() {}
 
 ScheduleApp::~ScheduleApp() {
-    delete schedule;
-    schedule = NULL;
+    delete mSchedule;
+    mSchedule = NULL;
 }
 
 String ScheduleApp::getName() const {

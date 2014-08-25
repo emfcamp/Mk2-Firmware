@@ -43,10 +43,17 @@ public:
     ~ScheduleApp();
 
 	String getName() const;
+
+public:
+    static const char* daysCallback(uint8_t location, uint8_t msg);
+    static const char* locationsCallback(uint8_t location, uint8_t msg);
+    static const char* talksCallback(uint8_t location, uint8_t msg);
+
 private:
     ScheduleApp();
     ScheduleApp(const ScheduleApp&);
 
     void task();
 private:
+    static Schedule* mSchedule;
 };
