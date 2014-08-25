@@ -73,6 +73,9 @@ private:
 	inline void _initialiseReceiveState();
 	inline void _clearSerialBuffer();
 
+	char* channelIdentifier();
+	uint8_t* rssi();
+
 private:
 	MessageCheckTask& mMessageCheckTask;
 	RTC_clock& mRealTimeClock;
@@ -85,7 +88,10 @@ private:
 	byte _currentMessageSignature[40];
 
 	uint8_t _bestRssi;
+	uint8_t _rssi;
 	uint8_t _bestChannel;
+	char _bestChannelIdentifier[4];
+
 	uint32_t _bestChannelRemainingTransmitWindow;
 	TickType_t _discoveryFinishingTime;
 	TickType_t _lastMessageReceived;

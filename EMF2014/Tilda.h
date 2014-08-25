@@ -81,7 +81,8 @@ public:
     static Orientation_t getOrientation();
     static uint32_t millisecondsSinceBoot();
     static void markActivity();
-
+    static char* radioChannelIdentifier();
+    static uint8_t* radioRssi();
 private:
     Tilda();
 
@@ -94,5 +95,6 @@ private:
     static GUITask* _guiTask;
     static SettingsStore* _settingsStore;
     static BatterySaverTask* _batterySaverTask;
+    static RadioReceiveTask* _radioReceiveTask;
 };
 

@@ -75,6 +75,7 @@ void TiLDATask::task() {
     Tilda::_settingsStore = settingsStore;
     Tilda::_batterySaverTask = new BatterySaverTask;
     RadioReceiveTask* radioReceiveTask = new RadioReceiveTask(*messageCheckTask, *Tilda::_realTimeClock);
+    Tilda::_radioReceiveTask = radioReceiveTask;
     RadioTransmitTask* radioTransmitTask = new RadioTransmitTask(*radioReceiveTask, *settingsStore, *messageCheckTask);
     AppOpenerTask* appOpenerTask = new AppOpenerTask(*Tilda::_appManager);
     Tilda::_lcdTask = new LCDTask;

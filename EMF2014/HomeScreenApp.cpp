@@ -101,7 +101,12 @@ const char *HomeScreenApp::headerText(m2_rom_void_p element) {
 }
 
 const char *HomeScreenApp::footerText(m2_rom_void_p element) {
-    return "FOOTER1";
+
+    String footer = Tilda::radioChannelIdentifier() + "(-" + String(Tilda::radioRssi()) + ") - BAT: " + String(Tilda::getBatteryPercent) + "%";
+    char* buffer = new char[22];
+    header.toCharArray(buffer, 22);
+    return buffer;
+    return [0]
 }
 
 void HomeScreenApp::task() {
@@ -125,7 +130,7 @@ void HomeScreenApp::task() {
 
     Tilda::getGUITask().setM2Root(&homeScreenApp_m2_top_el_expandable_menu);
 
-    EventBits_t uxBits;
+     EventBits_t uxBits;
     while(true) {
         uxBits = xEventGroupWaitBits(eventGroup,
                                      HOMESCREEN_ORIENATION_CHANGE_BIT,

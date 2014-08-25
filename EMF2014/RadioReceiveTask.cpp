@@ -42,6 +42,7 @@
 RadioReceiveTask::RadioReceiveTask(MessageCheckTask& aMessageCheckTask, RTC_clock& aRealTimeClock)
 	:mMessageCheckTask(aMessageCheckTask), mRealTimeClock(aRealTimeClock)
 {
+	_bestChannelIdentifier = "???";
 }
 
 String RadioReceiveTask::getName() const {
@@ -138,7 +139,7 @@ inline uint8_t RadioReceiveTask::_parsePacketBuffer(byte packetBuffer[], uint8_t
 	// If the data looks like a packet we can start parsing it
 	if (receivedWholePacket) {
 		// read rssi and then ignore the packet footer
-		uint8_t rssi = (packetBuffer[packetBufferLength - 1] - 48) +
+		_rssi = (packetBuffer[packetBufferLength - 1] - 48) +
 			(packetBuffer[packetBufferLength - 2] - 48) * 10 +
 			(packetBuffer[packetBufferLength - 3] - 48) * 100;
 		packetBufferLength -= 5;
@@ -148,7 +149,7 @@ inline uint8_t RadioReceiveTask::_parsePacketBuffer(byte packetBuffer[], uint8_t
 		#endif
 
 		if (_radioState == RADIO_STATE_DISCOVERY) {
-			_handleDiscoveryPacket(packetBuffer, packetBufferLength, rssi);
+			_handleDiscoveryPacket(packetBuffer, packetBufferLength, _rssi);
 		} else if (_radioState == RADIO_STATE_RECEIVE) {
 			_handleReceivePacket(packetBuffer, packetBufferLength);
 		}
@@ -183,10 +184,10 @@ inline void RadioReceiveTask::_handleDiscoveryPacket(byte packetBuffer[], uint8_
 		mRealTimeClock.set_unixtime(timestamp);
 	}
 
-	char identifier[3];
-	identifier[0] = packetBuffer[5];
-	identifier[1] = packetBuffer[6];
-	identifier[2] = packetBuffer[7];
+	_bestChannelIdentifier[0] = packetBuffer[5];
+	_bestChannelIdentifier[1] = packetBuffer[6];
+	_bestChannelIdentifier[2] = packetBuffer[7];
+	_bestChannelIdentifier[4] = 0;
 
 	if (rssi < _bestRssi) {
 		_bestRssi = rssi;
@@ -290,6 +291,7 @@ inline void RadioReceiveTask::_initialiseDiscoveryState() {
 	_radioState = RADIO_STATE_DISCOVERY;
 	_bestChannelRemainingTransmitWindow = 0;
 	_discoveryFinishingTime = xTaskGetTickCount() + RADIO_DISCOVERY_TIME;
+	_bestChannelIdentifier = "???";
 
 	_enterAtMode();
 	RADIO_SERIAL.println("ATZD3");  // output format <payload>|<rssi>
@@ -326,4 +328,12 @@ inline void RadioReceiveTask::_initialiseReceiveState() {
 
 inline void RadioReceiveTask::_clearSerialBuffer() {
 	while (RADIO_SERIAL.available()) RADIO_SERIAL.read();
+}
+
+char* RadioReceiveTask::channelIdentifier() {
+	return _bestChannelIdentifier;
+}
+
+uint8_t* RadioReceiveTask::rssi() {
+	return _rssi;
 }
