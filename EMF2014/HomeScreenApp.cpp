@@ -145,24 +145,24 @@ void HomeScreenApp::task() {
                                      pdFALSE,
                                      pdFALSE,
                                      portMAX_DELAY );
-        
+
         if ((uxBits & HOMESCREEN_ORIENATION_CHANGE_BIT) != 0 ) {
             // new orientation, update the screen
             Orientation_t orientation = Tilda::getOrientation();
             if (orientation == ORIENTATION_HUNG) {
                 // change rotation
-                
+
             } else if (orientation == ORIENTATION_HELD) {
                 // change rotation
-                
+
             }
-            
+
             xEventGroupClearBits(eventGroup,
                                  HOMESCREEN_ORIENATION_CHANGE_BIT);
-            
+
         } else {
             // wait timed out, nothing to do here
-            
+
         }
     }
 }
@@ -171,4 +171,6 @@ void HomeScreenApp::afterSuspension() {}
 void HomeScreenApp::beforeResume() {
     GLCD.SetRotation(ROTATION_90);
     Tilda::getGUITask().setM2Root(&top_el_expandable_menu);
+    // Turn of LEDs
+    Tilda::setLedColor({0, 0, 0});
 }

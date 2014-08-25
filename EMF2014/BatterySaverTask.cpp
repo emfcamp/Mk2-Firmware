@@ -36,18 +36,28 @@
 /**
  * BatterySaverTask class
  */
+BatterySaverTask::BatterySaverTask() {
+    backlightLit = true;
+    currentBrightnessLevel = 0;
+}
+
 String BatterySaverTask::getName() const {
     return "BatterySaverTask";
+}
+
+void BatterySaverTask::markActivity() {
+    lastActivity = Tilda::millisecondsSinceBoot();
+    currentBrightnessLevel = 7;
+    updateBacklightBrightnessLevel();
+    backlightLit = true;
 }
 
 void BatterySaverTask::task() {
     ButtonSubscription* allButtons = Tilda::createButtonSubscription(LIGHT | A | B | UP | DOWN | LEFT | RIGHT | CENTER);
 
-    bool backlightLit = true;
-    uint8_t currentBrightnessLevel = 0;
-    setBacklightBrightnessLevel(currentBrightnessLevel);
+    updateBacklightBrightnessLevel();
 
-    uint32_t lastButtonPress = Tilda::millisecondsSinceBoot();
+    lastActivity = Tilda::millisecondsSinceBoot();
     while(true) {
         uint32_t nextWait;
 
@@ -55,26 +65,26 @@ void BatterySaverTask::task() {
         if (backlightLit == false && currentBrightnessLevel > 0) {
             nextWait = BACKLIGHT_BRIGHTNESS_UPDATE_TIME;
             currentBrightnessLevel--;
-            setBacklightBrightnessLevel(currentBrightnessLevel);
-        } else if (backlightLit == true && currentBrightnessLevel < 8) {
+            updateBacklightBrightnessLevel();
+        } else if (backlightLit == true && currentBrightnessLevel < 7) {
             nextWait = BACKLIGHT_BRIGHTNESS_UPDATE_TIME;
             currentBrightnessLevel++;
-            setBacklightBrightnessLevel(currentBrightnessLevel);
+            updateBacklightBrightnessLevel();
         } else {
             nextWait = BACKLIGHT_TIMEOUT;
         }
 
         Button button = allButtons->waitForPress(nextWait);
         if (button == NONE) {
-            if (Tilda::millisecondsSinceBoot() - lastButtonPress >= BACKLIGHT_TIMEOUT) {
+            if (Tilda::millisecondsSinceBoot() - lastActivity >= BACKLIGHT_TIMEOUT) {
                 backlightLit = false;
             }
 
-            if (Tilda::millisecondsSinceBoot() - lastButtonPress >= APP_KILL_TIMEOUT) {
+            if (Tilda::millisecondsSinceBoot() - lastActivity >= APP_KILL_TIMEOUT) {
                 Tilda::openApp(HomeScreenApp::New);
             }
         } else {
-            lastButtonPress = Tilda::millisecondsSinceBoot();
+            lastActivity = Tilda::millisecondsSinceBoot();
             backlightLit = true;
         }
     }
@@ -82,10 +92,7 @@ void BatterySaverTask::task() {
     delete allButtons;
 }
 
-void BatterySaverTask::setBacklightBrightnessLevel(uint16_t brightness) {
-    uint8_t actualLightLevel = 1 << brightness;
-    if (brightness == 8) {
-        actualLightLevel = 255;
-    }
+void BatterySaverTask::updateBacklightBrightnessLevel() {
+    uint8_t actualLightLevel = 1 << currentBrightnessLevel;
     analogWrite(LCD_BACKLIGHT, 255 - actualLightLevel);
 }

@@ -38,11 +38,19 @@
 class BatterySaverTask: public Task {
 friend class ButtonSubscription;
 public:
+    BatterySaverTask();
+
     String getName() const;
+
+    void markActivity();
 protected:
     void task();
 private:
-    void setBacklightBrightnessLevel(uint16_t brightness);
+    void updateBacklightBrightnessLevel();
+
+    uint32_t lastActivity;
+    bool backlightLit;
+    uint8_t currentBrightnessLevel;
 };
 
 #endif // _BUTTON_TASK_H_
