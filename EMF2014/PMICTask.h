@@ -1,30 +1,30 @@
 /*
  TiLDA Mk2
- 
+
  PMICTask
  This task looks after Power Management keeping and eye on battery voltage, lipo battery charging
  It notifies other task of the battery voltage, charge state.
- 
+
  make current charge sate available
  read voltage at regular intervals and make available
  notify on significant points
  notify on charge state change
  allow interval period change (for sleeping at night)
- 
+
  The MIT License (MIT)
- 
+
  Copyright (c) 2014 Electromagnetic Field LTD
- 
+
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
  in the Software without restriction, including without limitation the rights
  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  copies of the Software, and to permit persons to whom the Software is
  furnished to do so, subject to the following conditions:
- 
+
  The above copyright notice and this permission notice shall be included in all
  copies or substantial portions of the Software.
- 
+
  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -41,7 +41,7 @@
 #include "EMF2014Config.h"
 #include "Task.h"
 
-#define PMIC_DEFAULT_RATE       15000 // 15 seconds
+#define PMIC_DEFAULT_RATE       15 * 60 * 1000 // 15 minutes
 #define PMIC_CHARGING           LOW
 #define PMIC_NOTCHARGING        HIGH
 

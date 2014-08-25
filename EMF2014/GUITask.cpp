@@ -62,27 +62,21 @@ uint8_t m2_es_button_subscription(m2_p ep, uint8_t msg)
         return M2_KEY_DATA_UP | M2_KEY_EVENT_MASK;
         break;
       case DOWN:
-        debug::log("[m2_es_button_subscription] returning M2_KEY_DATA_DOWN");
         return M2_KEY_DATA_DOWN | M2_KEY_EVENT_MASK;
         break;
       case LEFT:
-        debug::log("[m2_es_button_subscription] returning M2_KEY_DATA_PREV");
         return M2_KEY_PREV | M2_KEY_EVENT_MASK;
         break;
       case RIGHT:
-        debug::log("[m2_es_button_subscription] returning M2_KEY_DATA_NEXT");
         return M2_KEY_NEXT | M2_KEY_EVENT_MASK;
         break;
       case A:
-        debug::log("[m2_es_button_subscription] returning M2_KEY_DATA_SELECT");
         return M2_KEY_SELECT | M2_KEY_EVENT_MASK;
         break;
       case B:
-        debug::log("[m2_es_button_subscription] returning M2_KEY_DATA_EXIT");
         return M2_KEY_EXIT | M2_KEY_EVENT_MASK;
         break;
       case CENTER:
-        debug::log("[m2_es_button_subscription] returning M2_KEY_DATA_HOME");
         return M2_KEY_HOME | M2_KEY_EVENT_MASK;
         break;
       }
