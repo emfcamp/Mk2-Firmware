@@ -113,6 +113,7 @@ void DataStore::_unpackWeatherForecastPeriod(WeatherForecastPeriod& period, Pack
 	period.timestamp = (uint32_t)Utils::getInteger(reader);
 	period.weatherType = (WeatherType)Utils::getInteger(reader);
 	period.temperature = (int8_t)Utils::getInteger(reader);
+	period.feelsLikeTemperature = (int8_t)Utils::getInteger(reader);
 	period.windSpeed = (uint8_t)Utils::getInteger(reader);
 	period.screenRelativeHumidity = (uint8_t)Utils::getInteger(reader);
 	period.precipitationProbability = (uint8_t)Utils::getInteger(reader);
