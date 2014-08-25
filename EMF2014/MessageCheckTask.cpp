@@ -124,8 +124,6 @@ void MessageCheckTask::task() {
 
 					bool dispatched = false;
 					for (int i = 0 ; i < MAX_HANDLERS ; ++i) {
-						if (mHandlers[i] != NULL)
-							debug::log("Check for range " + String(mHandlers[i]->mRangeStart) + " - " + String(mHandlers[i]->mRangeEnd));
 						if (mHandlers[i] != NULL
 								&& message->rid() >= mHandlers[i]->mRangeStart
 								&& message->rid() <= mHandlers[i]->mRangeEnd) {
