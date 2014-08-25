@@ -61,35 +61,64 @@ tp_integer_t Utils::getInteger(PackReader& reader) {
     return reader.getInteger();
 }
 
-String Utils::getString(PackReader& reader) {
+char* Utils::getString(PackReader& reader) {
     reader.next();
-    char string[MAX_TEXT_LENGTH];
+    char* string = new char[MAX_TEXT_LENGTH];
     tp_length_t legnth = reader.getString(string, MAX_TEXT_LENGTH);
-    return String(string);
+    return string;
 }
 
-void Utils::wordWrap (char buffer[], const char in[], const uint8_t line_width, const uint8_t max_lines) {
-    uint8_t inI, outI, lines = 0;
-
-    int line = 0;
-    int charsInLine = 0;
-    int bufferIndex = 0;
-    int inIndex = 0;
-
-    while (in[charsInLine] != '\0' && line < max_lines) {
-        char inChar = in[inIndex++];
-        if (inChar != ' ' || charsInLine != 0) {
-            buffer[bufferIndex++] = inChar;
+char* Utils::wordWrap(char* buffer, const char* string, const uint8_t line_width, const uint8_t max_lines) {
+    int i = 0;
+    int k, counter;
+    int lines = 0;
+ 
+    while(i < strlen( string ) && lines < max_lines) 
+    {
+        // copy string until the end of the line is reached
+        for ( counter = 1; counter <= line_width; counter++ ) 
+        {
+            // check if end of string reached
+            if ( i == strlen( string ) ) 
+            {
+                buffer[ i ] = 0;
+                return buffer;
+            }
+            buffer[ i ] = string[ i ];
+            // check for newlines embedded in the original input 
+            // and reset the index
+            if ( buffer[ i ] == '\n' )
+            {
+                lines++;
+                counter = 1; 
+            }
+            i++;
         }
-
-
-        if (++charsInLine == line_width) {
-            buffer[bufferIndex++] = '\n';
-            ++line;
-            charsInLine = 0;
+        // check for whitespace
+        if ( isspace( string[ i ] ) ) 
+        {
+            lines++;
+            buffer[i] = '\n';
+            i++;
+        } 
+        else
+        {
+            // check for nearest whitespace back in string
+            for ( k = i; k > 0; k--) 
+            {
+                if ( isspace( string[ k ] ) ) 
+                {
+                    lines++;
+                    buffer[ k ] = '\n';
+                    // set string index back to character after this one
+                    i = k + 1;
+                    break;
+                }
+            }
         }
     }
-
-    buffer[bufferIndex] = '\0';
+    buffer[ i ] = 0;
+ 
+    return buffer;
 }
 

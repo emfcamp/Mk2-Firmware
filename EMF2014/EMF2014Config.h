@@ -73,6 +73,9 @@
 #define RADIO_MINIMUM_CURRENT_TIME 1408879302
 #define RADIO_MAXIMUM_CURRENT_TIME 1440415302
 
+// EMF Camp 2014 will be in Britain during British Summer Time
+#define TIMEZONE_OFFSET 3600
+
 //#define RADIO_DEBUG_MODE
 //#define RADIO_DEBUG_MODE_EXTENDED
 
