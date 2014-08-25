@@ -51,7 +51,7 @@ class RTC_clock
 		int date_already_set ();
 		int get_days ();
 		int get_day_of_week ();
-		int calculate_day_of_week (uint16_t _year, int _month, int _day);
+		static int calculate_day_of_week (uint16_t _year, int _month, int _day);
 		int set_hours (int _hour);
 		int set_minutes (int minute);
 		int set_seconds (int second);
