@@ -40,7 +40,13 @@ App* SnakeApp::New() {
         return new SnakeApp;
 }
 
-SnakeApp::SnakeApp() {}
+SnakeApp::SnakeApp() {
+    mButtonSubscription = Tilda::createButtonSubscription(UP | DOWN | LEFT | RIGHT);
+}
+
+SnakeApp::~SnakeApp() {
+    delete mButtonSubscription;
+}
 
 String SnakeApp::getName() const {
         return "SnakeApp";
@@ -59,6 +65,8 @@ void SnakeApp::setPixel(byte x, byte y, byte color) {
 
 uint8_t SnakeApp::highscore = 0;
 
+#define FRAME_DURATION 150;
+
 void SnakeApp::task() {
         GLCD.SelectFont(System5x7);
 
@@ -72,7 +80,7 @@ void SnakeApp::task() {
             uint8_t score = 0;
 
             while(!snake.game_over()) {
-                uint16_t nextFrame = Tilda::millisecondsSinceBoot() + 150;
+                uint16_t nextFrame = Tilda::millisecondsSinceBoot() + FRAME_DURATION;
 
                 if (score != snake.length()) {
                     score = snake.length();
@@ -91,24 +99,18 @@ void SnakeApp::task() {
                 snake.render_start();
                 snake.render_tick();
 
-                while (Tilda::millisecondsSinceBoot() < nextFrame) {
-                    uint16_t sleepFor = 50;
-                    if (nextFrame - Tilda::millisecondsSinceBoot() < sleepFor) {
-                        sleepFor = nextFrame - Tilda::millisecondsSinceBoot();
-                    }
-                    Tilda::delay(sleepFor);
-
-                    if (digitalRead(BUTTON_UP) == LOW) {
+                while (nextFrame - Tilda::millisecondsSinceBoot() > 0) {
+                    Button button = mButtonSubscription->waitForPress(nextFrame - Tilda::millisecondsSinceBoot());
+                    if (button == UP) {
                         snake.dir_up();
-                    } else if (digitalRead(BUTTON_DOWN) == LOW) {
+                    } else if (button == DOWN) {
                         snake.dir_down();
-                    } else if (digitalRead(BUTTON_LEFT) == LOW) {
+                    } else if (button == LEFT) {
                         snake.dir_left();
-                    } else if (digitalRead(BUTTON_RIGHT) == LOW) {
+                    } else if (button == RIGHT) {
                         snake.dir_right();
                     }
                 }
-
             }
 
             Tilda::delay(1000);

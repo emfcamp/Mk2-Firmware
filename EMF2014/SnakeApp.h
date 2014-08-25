@@ -35,11 +35,12 @@
 #include "App.h"
 #include "RGBTask.h"
 #include "GUITask.h"
+#include "ButtonSubscription.h"
 
 class SnakeApp: public App {
 public:
     static App* New();
-
+    ~SnakeApp();
     String getName() const;
 
     static void setPixel(byte x, byte y, byte color);
@@ -53,6 +54,8 @@ private:
     void task();
     void afterSuspension();
     void beforeResume();
+
+    ButtonSubscription* mButtonSubscription;
 
     static uint8_t highscore;
 private:
