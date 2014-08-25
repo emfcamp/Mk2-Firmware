@@ -45,6 +45,7 @@ LCDTask* Tilda::_lcdTask = NULL;
 GUITask* Tilda::_guiTask = NULL;
 SettingsStore* Tilda::_settingsStore = NULL;
 BatterySaverTask* Tilda::_batterySaverTask = NULL;
+RadioReceiveTask* Tilda::_radioReceiveTask = NULL;
 
 Tilda::Tilda() {}
 
@@ -134,4 +135,12 @@ uint32_t Tilda::millisecondsSinceBoot() {
 
 void Tilda::markActivity() {
     _batterySaverTask->markActivity();
+}
+
+char* Tilda::radioChannelIdentifier() {
+    return _radioReceiveTask->channelIdentifier();
+}
+
+uint8_t Tilda::radioRssi() {
+    return _radioReceiveTask->rssi();
 }

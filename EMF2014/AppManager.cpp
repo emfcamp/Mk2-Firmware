@@ -40,10 +40,9 @@
 // Add your app here to appear in the app list
 static const AppDefinition APPS[] = {
         AppDefinition("Schedule",      ScheduleApp::New),
-        AppDefinition("FlashLight",    FlashLightApp::New),
-        AppDefinition("SponsorsApp",   SponsorsApp::New),
-        AppDefinition("BadgeIdApp",    BadgeIdApp::New),
-        AppDefinition("Snake",         SnakeApp::New)
+        AppDefinition("Badge ID",      BadgeIdApp::New),
+        AppDefinition("Snake",         SnakeApp::New),
+        AppDefinition("Sponsors",      SponsorsApp::New)
 };
 
 AppManager::AppItem::AppItem(app_ctor aNew)
