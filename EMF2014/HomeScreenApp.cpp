@@ -92,7 +92,9 @@ const char *HomeScreenApp::headerText(m2_rom_void_p element) {
         } else {
             header = String(hours) + ":" + String(minutes);
         }
-        return header.c_str();
+        char* buffer = new char[6];
+        header.toCharArray(buffer, 6);
+        return buffer;
     } else {
         return "Welcome!";
     }
