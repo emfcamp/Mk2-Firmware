@@ -48,7 +48,7 @@ M2_X2LMENU(el_2lmenu,"l10e1w51",&homeScreenApp_m2_2lmenu_first,&homeScreenApp_m2
 //M2_LIST(list_2lmenu) = { &el_2lmenu, &el_space, &el_vsb };
 //M2_HLIST(el_hlist, NULL, list_2lmenu);
 M2_LABELFN(el_header, "f1", HomeScreenApp::headerText);
-M2_LABELFN(el_footer, "f0", HomeScreenApp::footerText);
+M2_LABELFN(el_footer, "f3", HomeScreenApp::footerText);
 M2_SPACE(el_vspace, "w1h2");
 M2_LIST(list_vspace) = {&el_header, &el_vspace, &el_2lmenu, &el_footer};
 M2_VLIST(el_vlist, NULL, list_vspace);
@@ -84,10 +84,14 @@ const char *launch_app(uint8_t idx, uint8_t msg) {
 
 const char *HomeScreenApp::headerText(m2_rom_void_p element) {
     if (Tilda::getClock().has_been_set()) {
-        int hour, minute, second;
-        //Tilda::getClock().get_time(&hour, &minute, &second);
-        //Tilda::log(String(Tilda::getClock().get_hours()) + ":" + String(minute) + ":" + String(second));
-        String header = String(Tilda::getClock().get_hours()) + ":" + String(Tilda::getClock().get_minutes());
+        int minutes = Tilda::getClock().get_minutes();
+        int hours = Tilda::getClock().get_hours() + 1;
+        String header;
+        if (minutes < 10) {
+            header = String(hours) + ":0" + String(minutes);
+        } else {
+            header = String(hours) + ":" + String(minutes);
+        }
         return header.c_str();
     } else {
         return "Welcome!";
