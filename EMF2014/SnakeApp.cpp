@@ -99,8 +99,9 @@ void SnakeApp::task() {
                 snake.render_start();
                 snake.render_tick();
 
-                while (nextFrame - Tilda::millisecondsSinceBoot() > 0) {
-                    Button button = mButtonSubscription->waitForPress(nextFrame - Tilda::millisecondsSinceBoot());
+                uint32_t current = Tilda::millisecondsSinceBoot();
+                while (nextFrame > current) {
+                    Button button = mButtonSubscription->waitForPress(nextFrame - current);
                     if (button == UP) {
                         snake.dir_up();
                     } else if (button == DOWN) {
@@ -110,6 +111,8 @@ void SnakeApp::task() {
                     } else if (button == RIGHT) {
                         snake.dir_right();
                     }
+
+                    current = Tilda::millisecondsSinceBoot();
                 }
             }
 
