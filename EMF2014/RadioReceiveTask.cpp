@@ -42,7 +42,10 @@
 RadioReceiveTask::RadioReceiveTask(MessageCheckTask& aMessageCheckTask, RTC_clock& aRealTimeClock)
 	:mMessageCheckTask(aMessageCheckTask), mRealTimeClock(aRealTimeClock)
 {
-	_bestChannelIdentifier = "???";
+	_bestChannelIdentifier[0] = '?';
+	_bestChannelIdentifier[1] = '?';
+	_bestChannelIdentifier[2] = '?';
+	_bestChannelIdentifier[3] = 0;
 }
 
 String RadioReceiveTask::getName() const {
@@ -291,7 +294,10 @@ inline void RadioReceiveTask::_initialiseDiscoveryState() {
 	_radioState = RADIO_STATE_DISCOVERY;
 	_bestChannelRemainingTransmitWindow = 0;
 	_discoveryFinishingTime = xTaskGetTickCount() + RADIO_DISCOVERY_TIME;
-	_bestChannelIdentifier = "???";
+	_bestChannelIdentifier[0] = '?';
+	_bestChannelIdentifier[1] = '?';
+	_bestChannelIdentifier[2] = '?';
+	_bestChannelIdentifier[3] = 0;
 
 	_enterAtMode();
 	RADIO_SERIAL.println("ATZD3");  // output format <payload>|<rssi>
@@ -334,6 +340,6 @@ char* RadioReceiveTask::channelIdentifier() {
 	return _bestChannelIdentifier;
 }
 
-uint8_t* RadioReceiveTask::rssi() {
+uint8_t RadioReceiveTask::rssi() {
 	return _rssi;
 }

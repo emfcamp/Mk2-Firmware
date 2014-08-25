@@ -51,6 +51,9 @@ public:
 	RadioReceiveTask(MessageCheckTask& aMessageCheckTask, RTC_clock& aRealTimeClock);
 
 	String getName() const;
+
+	char* channelIdentifier();
+	uint8_t rssi();
 protected:
 	void task();
 	void beforeResume();
@@ -72,9 +75,6 @@ private:
 	inline void _initialiseDiscoveryState();
 	inline void _initialiseReceiveState();
 	inline void _clearSerialBuffer();
-
-	char* channelIdentifier();
-	uint8_t* rssi();
 
 private:
 	MessageCheckTask& mMessageCheckTask;

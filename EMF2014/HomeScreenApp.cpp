@@ -102,11 +102,20 @@ const char *HomeScreenApp::headerText(m2_rom_void_p element) {
 
 const char *HomeScreenApp::footerText(m2_rom_void_p element) {
 
-    String footer = Tilda::radioChannelIdentifier() + "(-" + String(Tilda::radioRssi()) + ") - BAT: " + String(Tilda::getBatteryPercent) + "%";
+    String footer;
+    if (Tilda::radioChannelIdentifier()[0] == '?') {
+        footer = "            " +
+                 String(Tilda::getBatteryPercent()) + "%";
+    } else {
+        footer = String(Tilda::radioChannelIdentifier()) +
+                 " -" +
+                 String(Tilda::radioRssi()) +
+                 "    " +
+                 String(Tilda::getBatteryPercent()) + "%";
+    }
     char* buffer = new char[22];
-    header.toCharArray(buffer, 22);
+    footer.toCharArray(buffer, 22);
     return buffer;
-    return [0]
 }
 
 void HomeScreenApp::task() {

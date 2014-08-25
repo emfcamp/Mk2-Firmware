@@ -141,6 +141,6 @@ char* Tilda::radioChannelIdentifier() {
     return _radioReceiveTask->channelIdentifier();
 }
 
-uint8_t* Tilda::radioRssi() {
+uint8_t Tilda::radioRssi() {
     return _radioReceiveTask->rssi();
 }

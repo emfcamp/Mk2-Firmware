@@ -43,6 +43,7 @@
 #include "GUITask.h"
 #include "SettingsStore.h"
 #include "BatterySaverTask.h"
+#include "RadioReceiveTask.h"
 
 class BadgeNotifications;
 class DataStore;
@@ -82,7 +83,7 @@ public:
     static uint32_t millisecondsSinceBoot();
     static void markActivity();
     static char* radioChannelIdentifier();
-    static uint8_t* radioRssi();
+    static uint8_t radioRssi();
 private:
     Tilda();
 
