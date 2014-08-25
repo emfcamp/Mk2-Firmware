@@ -1,0 +1,10 @@
+flash KEYWORD1
+waitforitwaitforit KEYWORD2
+write_enable KEYWORD3
+erase_4k KEYWORD4
+erase_64k KEYWORD5
+erase_all KEYWORD6
+read KEYWORD7
+write KEYWORD8
+write_reg KEYWORD9
+read_info KEYWORD10
