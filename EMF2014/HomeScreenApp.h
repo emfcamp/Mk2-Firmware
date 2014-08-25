@@ -42,6 +42,9 @@ public:
 
     String getName() const;
     void newOrientation(uint8_t);
+
+    static const char *headerText(m2_rom_void_p element);
+    static const char *footerText(m2_rom_void_p element);
 protected:
 private:
     HomeScreenApp();
