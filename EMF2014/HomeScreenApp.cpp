@@ -123,10 +123,10 @@ void HomeScreenApp::task() {
     homeScreenApp_m2_app_list_menu[app_count].element=0;
     homeScreenApp_m2_app_list_menu[app_count].cb=0;
 
+    Tilda::getGUITask().setM2Root(&homeScreenApp_m2_top_el_expandable_menu);
+
     EventBits_t uxBits;
     while(true) {
-        Tilda::getGUITask().setM2Root(&homeScreenApp_m2_top_el_expandable_menu);
-
         uxBits = xEventGroupWaitBits(eventGroup,
                                      HOMESCREEN_ORIENATION_CHANGE_BIT,
                                      pdFALSE,
@@ -134,21 +134,19 @@ void HomeScreenApp::task() {
                                      15 * 1000 );
 
         if ((uxBits & HOMESCREEN_ORIENATION_CHANGE_BIT) != 0 ) {
-            // new orientation, update the screen
             Orientation_t orientation = Tilda::getOrientation();
             if (orientation == ORIENTATION_HUNG) {
-                // change rotation
+                GLCD.SetRotation(ROTATION_270);
+                Tilda::getGUITask().clearRoot();
+                GLCD.DrawBitmap(HOMESCREEN_HUNG_XBM ,0, 0);
 
-            } else if (orientation == ORIENTATION_HELD) {
-                // change rotation
-
+            } else {
+                GLCD.SetRotation(ROTATION_90);
+                Tilda::getGUITask().setM2Root(&homeScreenApp_m2_top_el_expandable_menu);
             }
 
             xEventGroupClearBits(eventGroup,
                                  HOMESCREEN_ORIENATION_CHANGE_BIT);
-
-        } else {
-            // wait timed out, nothing to do here
 
         }
     }
