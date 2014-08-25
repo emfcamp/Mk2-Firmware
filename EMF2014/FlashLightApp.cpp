@@ -34,17 +34,18 @@
 #include "RGBTask.h"
 #include "AppManager.h"
 #include "Tilda.h"
-
-
-
+#include <glcd.h>
 
 App* FlashLightApp::New() {
     return new FlashLightApp();
 }
 
 FlashLightApp::FlashLightApp()
-    :mLightLevel(8), mButtonSubscription(NULL)
-{}
+    :mLightLevel(7)
+{
+    mButtonSubscription = Tilda::createButtonSubscription(UP | DOWN | LEFT | RIGHT);
+
+}
 
 FlashLightApp::~FlashLightApp() {
     delete mButtonSubscription;
@@ -57,41 +58,36 @@ String FlashLightApp::getName() const {
 
 void FlashLightApp::updateLeds() {
     uint8_t actualLightLevel = 1 << mLightLevel;
-    if (mLightLevel == 8) {
-        actualLightLevel = 255;
-    }
+
     if (Tilda::getOrientation() != ORIENTATION_HUNG) {
         actualLightLevel = 2;
     }
+
     Tilda::setLedColor({actualLightLevel, actualLightLevel, actualLightLevel});
 }
 
-M2_LABEL(flashLightApp_m2_labelNotYetFound, "f0", "Light Level:\nIntolerable");
-
 void FlashLightApp::task() {
-    Tilda::getGUITask().setM2Root(&flashLightApp_m2_labelNotYetFound);
-
-    if (!mButtonSubscription)
-        mButtonSubscription = Tilda::createButtonSubscription(UP | DOWN);
+    GLCD.SetRotation(ROTATION_90);
+    Tilda::getGUITask().clearRoot();
+    GLCD.DrawBitmap(FLASHLIGHT_XBM ,0, 0);
 
     updateLeds();
     while(true) {
-        Button button = mButtonSubscription->waitForPress(( TickType_t ) 1000);
-        if (button == UP) {
-            if (mLightLevel < 8) {
+        Button button = mButtonSubscription->waitForPress(100);
+        if (button == UP || button == LEFT) {
+            if (mLightLevel < 7) {
                 mLightLevel++;
             } else {
-                mLightLevel = 8;
-            }
-            updateLeds();
-        } else if (button == DOWN) {
+                mLightLevel = 7;
+            };
+        } else if (button == DOWN || button == RIGHT) {
             if (mLightLevel > 1) {
                 mLightLevel--;
             } else {
                 mLightLevel = 0;
             }
-            updateLeds();
         }
+        updateLeds();
     }
 }
 
