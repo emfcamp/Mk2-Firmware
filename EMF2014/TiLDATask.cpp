@@ -45,6 +45,7 @@
 #include "SponsorsApp.h"
 #include "BadgeIdApp.h"
 #include "NotificationApp.h"
+#include "SnakeApp.h"
 #include "Tilda.h"
 #include "SettingsStore.h"
 #include "LCDTask.h"
