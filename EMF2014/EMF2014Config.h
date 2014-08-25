@@ -39,6 +39,12 @@
 
 // duration that center has to be pressed to go back to the homescreen
 #define CENTER_BUTTON_PRESS_DURATION_FOR_HOME_SCREEN 500
+// time before the backlight goes out
+#define BACKLIGHT_TIMEOUT 15 * 1000
+// time before the current app gets killed and the badge goes back to the homescreen
+#define APP_KILL_TIMEOUT 90 * 1000
+// backlight light level speed in ms
+#define BACKLIGHT_BRIGHTNESS_UPDATE_TIME 50
 
 // Radio serial port
 #define RADIO_SERIAL Serial

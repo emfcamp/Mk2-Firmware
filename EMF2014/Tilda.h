@@ -42,6 +42,7 @@
 #include "LCDTask.h"
 #include "GUITask.h"
 #include "SettingsStore.h"
+#include "BatterySaverTask.h"
 
 class BadgeNotifications;
 class DataStore;
@@ -78,7 +79,8 @@ public:
     static uint8_t getBatteryPercent();
     static uint8_t getChargeState();
     static Orientation_t getOrientation();
-    static uint16_t millisecondsSinceBoot();
+    static uint32_t millisecondsSinceBoot();
+    static void markActivity();
 
 private:
     Tilda();
@@ -91,5 +93,6 @@ private:
     static LCDTask* _lcdTask;
     static GUITask* _guiTask;
     static SettingsStore* _settingsStore;
+    static BatterySaverTask* _batterySaverTask;
 };
 

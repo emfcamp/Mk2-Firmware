@@ -125,7 +125,7 @@ void HomeScreenApp::task() {
                                      HOMESCREEN_ORIENATION_CHANGE_BIT,
                                      pdFALSE,
                                      pdFALSE,
-                                     60 * 1000 );
+                                     15 * 1000 );
 
         if ((uxBits & HOMESCREEN_ORIENATION_CHANGE_BIT) != 0 ) {
             // new orientation, update the screen
@@ -152,4 +152,6 @@ void HomeScreenApp::afterSuspension() {}
 void HomeScreenApp::beforeResume() {
     GLCD.SetRotation(ROTATION_90);
     Tilda::getGUITask().setM2Root(&homeScreenApp_m2_top_el_expandable_menu);
+    // Turn of LEDs
+    Tilda::setLedColor({0, 0, 0});
 }

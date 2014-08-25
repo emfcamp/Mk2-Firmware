@@ -44,6 +44,7 @@ DataStore* Tilda::_dataStore = NULL;
 LCDTask* Tilda::_lcdTask = NULL;
 GUITask* Tilda::_guiTask = NULL;
 SettingsStore* Tilda::_settingsStore = NULL;
+BatterySaverTask* Tilda::_batterySaverTask = NULL;
 
 Tilda::Tilda() {}
 
@@ -127,6 +128,10 @@ Orientation_t Tilda::getOrientation() {
     return (Orientation_t)imuTask.getOrientation();
 }
 
-uint16_t Tilda::millisecondsSinceBoot() {
+uint32_t Tilda::millisecondsSinceBoot() {
     return xTaskGetTickCount();
+}
+
+void Tilda::markActivity() {
+    _batterySaverTask->markActivity();
 }

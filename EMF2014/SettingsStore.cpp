@@ -113,7 +113,9 @@ void SettingsStore::handleMessage(const IncomingRadioMessage& radioMessage) {
 
         if (ourUniqueId) {
             mBadgeId = Utils::bytesToInt(radioMessage.content()[16], radioMessage.content()[17]);
-            debug::log("got badge id: " + String(mBadgeId));
+            debug::log("SettingsStore: Received Badge ID " + String(mBadgeId));
+
+            notifyObservers(mBadgeId);
         } else {
             debug::log("not our unique id");
         }

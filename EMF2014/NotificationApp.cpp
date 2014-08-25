@@ -82,6 +82,9 @@ char NotificationApp::stringBuffer[250];
 void NotificationApp::task() {
         GLCD.SetRotation(ROTATION_0);
 
+        // Light up screen
+        Tilda::markActivity();
+
         BadgeNotification* notification = Tilda::getBadgeNotifications().popNotification();
 
         if (notification == NULL) {
