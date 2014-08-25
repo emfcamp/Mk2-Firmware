@@ -40,7 +40,7 @@ public:
     static uint32_t bytesToInt(byte b1, byte b2, byte b3, byte b4);
     static String intToHex(uint8_t input);
 
-    static void wordWrap (char buffer[], const char in[], const uint8_t line_width, const uint8_t max_lines);
+    static char* wordWrap(char* buffer, const char* in, const uint8_t line_width, const uint8_t max_lines);
 
     // TinyPacks helpers
     static bool getBoolean(PackReader& reader);
