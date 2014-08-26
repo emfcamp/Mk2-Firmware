@@ -40,6 +40,10 @@
 
 Schedule* ScheduleApp::mSchedule = NULL;
 
+uint8_t LAST_SELECTED_DAY = 0;
+uint8_t LAST_SELECTED_LOCATION = 0;
+uint8_t LAST_SELECTED_TALK = 0;
+
 uint8_t first;
 uint8_t cnt;
 
@@ -92,9 +96,6 @@ SETUP_MENU(schedule_talks_data,
             schedule_talks_hlist,
             schedule_talks_align);
 
-const char* callback(uint8_t talk, uint8_t msg) {
-}
-
 m2_xmenu_entry schedule_location_data[] = {
     {Schedule::getStageName(LOCATION_STAGE_A),      &schedule_talks_align, ScheduleApp::locationsCallback},
     {Schedule::getStageName(LOCATION_STAGE_B),      &schedule_talks_align, ScheduleApp::locationsCallback},
@@ -108,7 +109,7 @@ m2_xmenu_entry schedule_location_data[] = {
     {Schedule::getStageName(LOCATION_CATERING),     &schedule_talks_align, ScheduleApp::locationsCallback},
     {Schedule::getStageName(LOCATION_EMFFM),        &schedule_talks_align, ScheduleApp::locationsCallback},
     {Schedule::getStageName(LOCATION_OTHER),        &schedule_talks_align, ScheduleApp::locationsCallback},
-    {schedule_label_back_str,                       &schedule_days_align,  callback},
+    {schedule_label_back_str,                       NULL,                  ScheduleApp::locationsBackCallback},
     {NULL,                                          NULL,                  NULL}
 };
 
@@ -120,15 +121,14 @@ SETUP_MENU(schedule_location_data,
             schedule_location_hlist,
             schedule_location_align);
 
-ScheduleDay LAST_SELECTED_DAY = SCHEDULE_FRIDAY;
-LocationId LAST_SELECTED_LOCATION = LOCATION_STAGE_A;
-
 void ScheduleApp::talkCallback(m2_el_fnarg_p fnarg) {
-    Tilda::getGUITask().setM2Root(&schedule_talks_align, false);
+    Tilda::getGUITask().setM2Root(&schedule_talks_align, LAST_SELECTED_TALK, 0, false);
 }
 
 const char* ScheduleApp::talksCallback(uint8_t talk, uint8_t msg) {
     debug::log("Talks: " + String(talk) + " " + String(msg));
+
+    LAST_SELECTED_TALK = talk;
 
     Event* event = schedule_talks_events[talk];
 
@@ -152,6 +152,10 @@ const char* ScheduleApp::talksCallback(uint8_t talk, uint8_t msg) {
     }
 
     return "";
+}
+
+const char* ScheduleApp::talksBackCallback(uint8_t talk, uint8_t msg) {
+    Tilda::getGUITask().setM2Root(&schedule_location_align, LAST_SELECTED_LOCATION, 0, false);
 }
 
 const char* ScheduleApp::locationsCallback(uint8_t location, uint8_t msg) {
@@ -186,10 +190,14 @@ const char* ScheduleApp::locationsCallback(uint8_t location, uint8_t msg) {
     }
 
     // end the list with a back button and a null termination
-    schedule_talks_data[mSchedule->getEventCount()] = {schedule_label_back_str, &schedule_location_align, callback};
+    schedule_talks_data[mSchedule->getEventCount()] = {schedule_label_back_str, NULL, ScheduleApp::talksBackCallback};
     schedule_talks_data[mSchedule->getEventCount() + 1] = {NULL, NULL, NULL};
 
     return "";
+}
+
+const char* ScheduleApp::locationsBackCallback(uint8_t location, uint8_t msg) {
+    Tilda::getGUITask().setM2Root(&schedule_days_align, LAST_SELECTED_DAY, 0, false);
 }
 
 const char* ScheduleApp::daysCallback(uint8_t day, uint8_t msg) {

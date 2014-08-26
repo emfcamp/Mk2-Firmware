@@ -47,7 +47,9 @@ public:
 public:
     static const char* daysCallback(uint8_t location, uint8_t msg);
     static const char* locationsCallback(uint8_t location, uint8_t msg);
+    static const char* locationsBackCallback(uint8_t talk, uint8_t msg);
     static const char* talksCallback(uint8_t location, uint8_t msg);
+    static const char* talksBackCallback(uint8_t talk, uint8_t msg);
     static void talkCallback(m2_el_fnarg_p fnarg);
 
 private:
