@@ -323,7 +323,22 @@ private:
 		level = l;
 		lines = 0;
 
-		period = 1.3 * l * l - 67 * l + 880;  // blame davel
+		// Levels assumed to begin at 0.
+
+		const float tick = 1000.0/59.73;
+		const float a    = tick * (5.0/40.0);
+		const float b    = tick * -5.0;
+		const float c    = tick * 53.0;
+		const int max_level = 20;
+		const int fast   = 3;
+
+		if (l >= max_level) {
+			period = fast;
+		}
+		else {
+			// Levels are modelled with a simple quadratic
+			period = nearbyint(l*l*a + l*b + c);
+		}
 	}
 
 	void drawAll() {
