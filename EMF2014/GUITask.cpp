@@ -128,10 +128,16 @@ void GUITask::task() {
 
 void GUITask::setM2Root(m2_rom_void_p newRoot) {
     debug::log("GUITask::setM2Root");
+
+    if (_m2->getRoot() == &m2_null_element) {
+        _m2->getKey(); //clear key buffer
+    }
     _m2->setRoot(newRoot);
     _m2->setHome(newRoot);
-    if (_buttons_p != 0)
+    if (_buttons_p != 0) {
+        _buttons_p->clear();
         _buttons_p->wake();
+    }
 }
 
 void GUITask::clearRoot() {
