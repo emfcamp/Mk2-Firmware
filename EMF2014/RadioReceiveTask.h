@@ -51,6 +51,9 @@ public:
 	RadioReceiveTask(MessageCheckTask& aMessageCheckTask, RTC_clock& aRealTimeClock);
 
 	String getName() const;
+
+	char* channelIdentifier();
+	uint8_t rssi();
 protected:
 	void task();
 	void beforeResume();
@@ -85,7 +88,10 @@ private:
 	byte _currentMessageSignature[40];
 
 	uint8_t _bestRssi;
+	uint8_t _rssi;
 	uint8_t _bestChannel;
+	char _bestChannelIdentifier[4];
+
 	uint32_t _bestChannelRemainingTransmitWindow;
 	TickType_t _discoveryFinishingTime;
 	TickType_t _lastMessageReceived;

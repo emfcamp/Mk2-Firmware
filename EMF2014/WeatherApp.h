@@ -1,7 +1,8 @@
 /*
  TiLDA Mk2
 
- ButtonTask
+ SponsorsApp
+ Displays a list of all sponsors
 
  The MIT License (MIT)
 
@@ -26,34 +27,32 @@
  SOFTWARE.
  */
 
-#include "ButtonTask.h"
-#include <debug.h>
+#pragma once
+
+#include <Arduino.h>
 #include <FreeRTOS_ARM.h>
-#include "ButtonSubscription.h"
-#include "Tilda.h"
+#include <rtc_clock.h>
+#include "EMF2014Config.h"
+#include "App.h"
+#include "Weather.h"
 
-/**
- * Button Task class
- */
-String ButtonTask::getName() const {
-    return "ButtonTask";
-}
+class WeatherApp: public App {
+public:
+    static App* New();
+    ~WeatherApp();
 
-void ButtonTask::task() {
-    ButtonSubscription* allButtons = Tilda::createButtonSubscription(LIGHT | A | B | UP | DOWN | LEFT | RIGHT | CENTER);
+    String getName() const;
 
-    while(true) {
-        Button button = allButtons->waitForPress(( TickType_t ) 1000);
-        if (button != NONE) {
-            // ToDo: Add some activity tracking in here for backlight etc..
-            debug::log("Button pressed: " + String(button));
-        }
+private:
+    WeatherApp();
+    WeatherApp(const WeatherApp&);
 
-        vTaskDelay((1000/portTICK_PERIOD_MS));
-    }
+    // helpers
+    static String getWeatherTypeString(WeatherType aWeatherType);
+    static String getDayOfWeekString(const RTC_date_time& timestamp);
+    static bool getWeatherString(String& forecastStr, const WeatherForecast& aWeatherForecast, uint8_t aWeatherPeriod);
 
-    delete allButtons;
-}
-
-
-
+    void task();
+private:
+    class ButtonSubscription* mButtonSubscription;
+};

@@ -33,7 +33,7 @@
 #pragma once
 
 // This maps to http://www.metoffice.gov.uk/datapoint/support/documentation/code-definitions
-enum class WeatherType : uint8_t {
+enum WeatherType : uint8_t {
     WEATHER_TYPE_NOT_AVAILABLE = 31,
     WEATHER_TYPE_CLEAR_NIGHT = 0,
     WEATHER_TYPE_SUNNY_NIGHT = 1,
@@ -77,12 +77,17 @@ struct WeatherForecastPeriod {
     uint8_t precipitationProbability;
 };
 
+enum WeatherPeriod : uint8_t  {
+    WEATHER_CURRENT,
+    WEATHER_3_HOURS,
+    WEATHER_6_HOURS,
+    WEATHER_12_HOURS,
+    WEATHER_24_HOURS,
+    WEATHER_48_HOURS,
+    WEATHER_PERIOD_COUNT
+};
+
 struct WeatherForecast {
-    bool valid;
-    WeatherForecastPeriod current;
-    WeatherForecastPeriod in3Hours;
-    WeatherForecastPeriod in6Hours;
-    WeatherForecastPeriod in12Hours;
-    WeatherForecastPeriod in24Hours;
-    WeatherForecastPeriod in48Hours;
+    bool mValid;
+    WeatherForecastPeriod mWeatherForecastPeriods[WEATHER_PERIOD_COUNT];
 };

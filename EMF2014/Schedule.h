@@ -34,25 +34,53 @@
 
 #include <Arduino.h>
 #include <FreeRTOS_ARM.h>
+#include "Utils.h"
 
-struct Event {
-    uint8_t stageId;
+enum LocationId : uint8_t {
+    LOCATION_STAGE_A,
+    LOCATION_STAGE_B,
+    LOCATION_STAGE_C,
+    LOCATION_WORKSHOPS,
+    LOCATION_KIDS,
+    LOCATION_VILLAGES,
+    LOCATION_LOUNGE,
+    LOCATION_BAR,
+    LOCATION_MODEL_FLYING,
+    LOCATION_CATERING,
+    LOCATION_EMFFM,
+    LOCATION_OTHER,
+    LOCATION_COUNT
+};
+
+class Event {
+public:
+    Event();
+    ~Event();
+    Event& operator=(const Event& that);
+
+private:
+    Event(Event&);    
+
+public:
+    LocationId locationId;
     uint8_t typeId;
     uint32_t startTimestamp;
     uint32_t endTimestamp;
-    String speaker;
-    String title;
+    char* speaker;
+    char* title;
 };
 
 class Schedule {
 public:
     Schedule(Event* aEvents, int32_t aEventCount);
-    ~Schedule();
+    Schedule(const Schedule&);
 
-    Schedule(const Schedule& that);
+    ~Schedule();
 
     int32_t getEventCount() const;
     Event* getEvents() const;
+
+    static char* getStageName(uint8_t aLocationId);
 
 private:
     Schedule();
@@ -65,5 +93,6 @@ private:
 enum ScheduleDay: uint8_t {
     SCHEDULE_FRIDAY = 0,
     SCHEDULE_SATURDAY = 1,
-    SCHEDULE_SUNDAY = 2
+    SCHEDULE_SUNDAY = 2,
+    SCHEDULE_NUM_DAYS
 };

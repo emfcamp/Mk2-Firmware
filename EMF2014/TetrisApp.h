@@ -1,7 +1,7 @@
 /*
  TiLDA Mk2
 
- Utils
+ Tetris
 
  The MIT License (MIT)
 
@@ -28,22 +28,11 @@
 
 #pragma once
 
-#include <Arduino.h>
-#include <TinyPacks.h>
+#include "Game.h"
 
-class Utils {
-private:
-    Utils();
-
+class TetrisApp : public GameApp {
 public:
-    static uint16_t bytesToInt(byte b1, byte b2);
-    static uint32_t bytesToInt(byte b1, byte b2, byte b3, byte b4);
-    static String intToHex(uint8_t input);
-
-    static char* wordWrap(char* buffer, const char* in, const uint8_t line_width, const uint8_t max_lines);
-
-    // TinyPacks helpers
-    static bool getBoolean(PackReader& reader);
-    static tp_integer_t getInteger(PackReader& reader);
-    static char* getString(PackReader& reader);
+	static App* New();
+	TetrisApp();
+	String getName() const;
 };

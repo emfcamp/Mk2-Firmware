@@ -35,7 +35,7 @@
 
 #include "EMF2014Config.h"
 #include "RGBTask.h"
-#include "ButtonTask.h"
+#include "BatterySaverTask.h"
 #include "RadioReceiveTask.h"
 #include "RadioTransmitTask.h"
 #include "MessageCheckTask.h"
@@ -45,6 +45,7 @@
 #include "SponsorsApp.h"
 #include "BadgeIdApp.h"
 #include "NotificationApp.h"
+#include "SnakeApp.h"
 #include "Tilda.h"
 #include "SettingsStore.h"
 #include "LCDTask.h"
@@ -72,8 +73,9 @@ void TiLDATask::task() {
     Tilda::_dataStore = new DataStore(*messageCheckTask);
     Tilda::_rgbTask = new RGBTask;
     Tilda::_settingsStore = settingsStore;
-    ButtonTask* buttonTask = new ButtonTask;
+    Tilda::_batterySaverTask = new BatterySaverTask;
     RadioReceiveTask* radioReceiveTask = new RadioReceiveTask(*messageCheckTask, *Tilda::_realTimeClock);
+    Tilda::_radioReceiveTask = radioReceiveTask;
     RadioTransmitTask* radioTransmitTask = new RadioTransmitTask(*radioReceiveTask, *settingsStore, *messageCheckTask);
     AppOpenerTask* appOpenerTask = new AppOpenerTask(*Tilda::_appManager);
     Tilda::_lcdTask = new LCDTask;
@@ -85,7 +87,7 @@ void TiLDATask::task() {
 
     // Background tasks
     Tilda::_rgbTask->start();
-    buttonTask->start();
+    Tilda::_batterySaverTask->start();
     messageCheckTask->start();
     radioReceiveTask->start();
     radioTransmitTask->start();

@@ -39,6 +39,12 @@
 
 // duration that center has to be pressed to go back to the homescreen
 #define CENTER_BUTTON_PRESS_DURATION_FOR_HOME_SCREEN 500
+// time before the backlight goes out
+#define BACKLIGHT_TIMEOUT 15 * 1000
+// time before the current app gets killed and the badge goes back to the homescreen
+#define APP_KILL_TIMEOUT 90 * 1000
+// backlight light level speed in ms
+#define BACKLIGHT_BRIGHTNESS_UPDATE_TIME 50
 
 // Radio serial port
 #define RADIO_SERIAL Serial
@@ -66,6 +72,9 @@
 // Another sanity check. Minimum/Maximum current time
 #define RADIO_MINIMUM_CURRENT_TIME 1408879302
 #define RADIO_MAXIMUM_CURRENT_TIME 1440415302
+
+// EMF Camp 2014 will be in Britain during British Summer Time
+#define TIMEZONE_OFFSET 3600
 
 //#define RADIO_DEBUG_MODE
 //#define RADIO_DEBUG_MODE_EXTENDED

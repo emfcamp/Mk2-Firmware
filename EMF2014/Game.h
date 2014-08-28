@@ -1,7 +1,7 @@
 /*
  TiLDA Mk2
 
- Utils
+ Base class for games
 
  The MIT License (MIT)
 
@@ -28,22 +28,27 @@
 
 #pragma once
 
-#include <Arduino.h>
-#include <TinyPacks.h>
+#include "EMF2014Config.h"
+#include "ButtonSubscription.h"
+#include "App.h"
 
-class Utils {
-private:
-    Utils();
-
+class Game {
 public:
-    static uint16_t bytesToInt(byte b1, byte b2);
-    static uint32_t bytesToInt(byte b1, byte b2, byte b3, byte b4);
-    static String intToHex(uint8_t input);
+	int period = 500;
+	bool paused = false;
+	virtual void init() = 0;
+	virtual void loop() = 0;
+	virtual void handleButton(Button) = 0;
+};
 
-    static char* wordWrap(char* buffer, const char* in, const uint8_t line_width, const uint8_t max_lines);
-
-    // TinyPacks helpers
-    static bool getBoolean(PackReader& reader);
-    static tp_integer_t getInteger(PackReader& reader);
-    static char* getString(PackReader& reader);
+class GameApp : public App {
+public:
+	~GameApp();
+protected:
+	Game *game;
+	void task();
+	void afterSuspension();
+	void beforeResume();
+private:
+	ButtonSubscription *bs = 0;
 };

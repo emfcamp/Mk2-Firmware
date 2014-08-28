@@ -44,6 +44,8 @@ DataStore* Tilda::_dataStore = NULL;
 LCDTask* Tilda::_lcdTask = NULL;
 GUITask* Tilda::_guiTask = NULL;
 SettingsStore* Tilda::_settingsStore = NULL;
+BatterySaverTask* Tilda::_batterySaverTask = NULL;
+RadioReceiveTask* Tilda::_radioReceiveTask = NULL;
 
 Tilda::Tilda() {}
 
@@ -125,4 +127,28 @@ uint8_t Tilda::getChargeState() {
 
 Orientation_t Tilda::getOrientation() {
     return (Orientation_t)imuTask.getOrientation();
+}
+
+uint32_t Tilda::millisecondsSinceBoot() {
+    return xTaskGetTickCount();
+}
+
+void Tilda::markActivity() {
+    _batterySaverTask->markActivity();
+}
+
+char* Tilda::radioChannelIdentifier() {
+    return _radioReceiveTask->channelIdentifier();
+}
+
+uint8_t Tilda::radioRssi() {
+    return _radioReceiveTask->rssi();
+}
+
+char* Tilda::getUserNameLine1() {
+    return "Name Line 1";
+}
+
+char* Tilda::getUserNameLine2() {
+    return "Name Line 2";
 }

@@ -36,19 +36,22 @@
 #include <debug.h>
 
 #define CONTENT_RID_WEATHER_FORECAST  40962
-#define CONTENT_RID_SCHEDULE_FRIDAY   40963
-#define CONTENT_RID_SCHEDULE_SATURDAY 40964
-#define CONTENT_RID_SCHEDULE_SUNDAY   40965
+#define CONTENT_RID_SCHEDULE_FRIDAY_START 0xA010
+#define CONTENT_RID_SCHEDULE_SATURDAY_START 0xA020
+#define CONTENT_RID_SCHEDULE_SUNDAY_START 0xA030
 
 DataStore::DataStore(MessageCheckTask& aMessageCheckTask)
 	:mMessageCheckTask(aMessageCheckTask)
 {
 	mWeatherForecast = new WeatherForecast;
-	mWeatherForecast->valid = false;
-	mSchedule = new Schedule*[3];
-	mSchedule[SCHEDULE_FRIDAY] = new Schedule(NULL, 0);
-	mSchedule[SCHEDULE_SATURDAY] = new Schedule(NULL, 0);
-	mSchedule[SCHEDULE_SUNDAY] = new Schedule(NULL, 0);
+	mWeatherForecast->mValid = false;
+	mSchedule = new Schedule**[SCHEDULE_NUM_DAYS];
+	for (int day = 0 ; day < SCHEDULE_NUM_DAYS ; ++day)
+		mSchedule[day] = new Schedule*[LOCATION_COUNT];
+
+	for (int day ; day < SCHEDULE_NUM_DAYS ; ++day)
+		for (int location = 0 ; location < LOCATION_COUNT ; ++location)
+			mSchedule[day][location] = new Schedule(NULL, 0);
 
 	mWeatherSemaphore = xSemaphoreCreateMutex();
 	mScheduleSemaphore = xSemaphoreCreateMutex();
@@ -60,6 +63,10 @@ DataStore::~DataStore() {
     mMessageCheckTask.unsubscribe(this);
 
     delete mWeatherForecast;
+
+    for (int day ; day < SCHEDULE_NUM_DAYS ; ++day)
+		for (int location = 0 ; location < LOCATION_COUNT ; ++location)
+			delete mSchedule[day][location];
     delete[] mSchedule;
 
     vSemaphoreDelete(mWeatherSemaphore);
@@ -69,12 +76,15 @@ DataStore::~DataStore() {
 void DataStore::handleMessage(const IncomingRadioMessage& aIncomingRadioMessage) {
 	if (aIncomingRadioMessage.rid() == CONTENT_RID_WEATHER_FORECAST) {
 		_addWeatherForecastRaw(aIncomingRadioMessage);
-	} else if (aIncomingRadioMessage.rid() == CONTENT_RID_SCHEDULE_FRIDAY) {
-		_addScheduleRaw(aIncomingRadioMessage, SCHEDULE_FRIDAY);
-	} else if (aIncomingRadioMessage.rid() == CONTENT_RID_SCHEDULE_SATURDAY) {
-		_addScheduleRaw(aIncomingRadioMessage, SCHEDULE_SATURDAY);
-	} else if (aIncomingRadioMessage.rid() == CONTENT_RID_SCHEDULE_SUNDAY) {
-		_addScheduleRaw(aIncomingRadioMessage, SCHEDULE_SUNDAY);
+	} else if (aIncomingRadioMessage.rid() >= CONTENT_RID_SCHEDULE_FRIDAY_START
+				&& aIncomingRadioMessage.rid() < CONTENT_RID_SCHEDULE_FRIDAY_START + LOCATION_COUNT) {
+		_addScheduleRaw(aIncomingRadioMessage, SCHEDULE_FRIDAY, aIncomingRadioMessage.rid() - CONTENT_RID_SCHEDULE_FRIDAY_START);
+	} else if (aIncomingRadioMessage.rid() >= CONTENT_RID_SCHEDULE_SATURDAY_START
+				&& aIncomingRadioMessage.rid() < CONTENT_RID_SCHEDULE_SATURDAY_START + LOCATION_COUNT) {
+		_addScheduleRaw(aIncomingRadioMessage, SCHEDULE_SATURDAY, aIncomingRadioMessage.rid() - CONTENT_RID_SCHEDULE_SATURDAY_START);
+	} else if (aIncomingRadioMessage.rid() >= CONTENT_RID_SCHEDULE_SUNDAY_START
+				&& aIncomingRadioMessage.rid() < CONTENT_RID_SCHEDULE_SUNDAY_START + LOCATION_COUNT) {
+		_addScheduleRaw(aIncomingRadioMessage, SCHEDULE_SUNDAY, aIncomingRadioMessage.rid() - CONTENT_RID_SCHEDULE_SUNDAY_START);
 	} else {
 		debug::log("DataStore: Rid not supported: " + String(aIncomingRadioMessage.rid()) + " " + String(aIncomingRadioMessage.length()));
 	}
@@ -90,10 +100,10 @@ WeatherForecast* DataStore::getWeatherForecast() const {
 	return weather;
 }
 
-Schedule* DataStore::getSchedule(ScheduleDay day) const {
+Schedule* DataStore::getSchedule(uint8_t aDay, uint8_t aLocationId) const {
 	Schedule* schedule = NULL;
 	if (xSemaphoreTake(mScheduleSemaphore, portMAX_DELAY) == pdTRUE) {
-		Schedule* schedule = new Schedule(*mSchedule[day]);
+		schedule = new Schedule(*mSchedule[aDay][aLocationId]);
 		xSemaphoreGive(mScheduleSemaphore);
 	}
 	return schedule;
@@ -103,6 +113,7 @@ void DataStore::_unpackWeatherForecastPeriod(WeatherForecastPeriod& period, Pack
 	period.timestamp = (uint32_t)Utils::getInteger(reader);
 	period.weatherType = (WeatherType)Utils::getInteger(reader);
 	period.temperature = (int8_t)Utils::getInteger(reader);
+	period.feelsLikeTemperature = (int8_t)Utils::getInteger(reader);
 	period.windSpeed = (uint8_t)Utils::getInteger(reader);
 	period.screenRelativeHumidity = (uint8_t)Utils::getInteger(reader);
 	period.precipitationProbability = (uint8_t)Utils::getInteger(reader);
@@ -110,23 +121,23 @@ void DataStore::_unpackWeatherForecastPeriod(WeatherForecastPeriod& period, Pack
 
 void DataStore::_addWeatherForecastRaw(const IncomingRadioMessage& aIncomingRadioMessage) {
 	if (xSemaphoreTake(mWeatherSemaphore, portMAX_DELAY) == pdTRUE) {
-		mWeatherForecast->valid = true;
+		mWeatherForecast->mValid = true;
 		mReader.setBuffer((unsigned char*)aIncomingRadioMessage.content(), aIncomingRadioMessage.length());
-		_unpackWeatherForecastPeriod(mWeatherForecast->current, mReader);
-		_unpackWeatherForecastPeriod(mWeatherForecast->in3Hours, mReader);
-		_unpackWeatherForecastPeriod(mWeatherForecast->in6Hours, mReader);
-		_unpackWeatherForecastPeriod(mWeatherForecast->in12Hours, mReader);
-		_unpackWeatherForecastPeriod(mWeatherForecast->in24Hours, mReader);
-		_unpackWeatherForecastPeriod(mWeatherForecast->in48Hours, mReader);
+		_unpackWeatherForecastPeriod(mWeatherForecast->mWeatherForecastPeriods[WEATHER_CURRENT], mReader);
+		_unpackWeatherForecastPeriod(mWeatherForecast->mWeatherForecastPeriods[WEATHER_3_HOURS], mReader);
+		_unpackWeatherForecastPeriod(mWeatherForecast->mWeatherForecastPeriods[WEATHER_6_HOURS], mReader);
+		_unpackWeatherForecastPeriod(mWeatherForecast->mWeatherForecastPeriods[WEATHER_12_HOURS], mReader);
+		_unpackWeatherForecastPeriod(mWeatherForecast->mWeatherForecastPeriods[WEATHER_24_HOURS], mReader);
+		_unpackWeatherForecastPeriod(mWeatherForecast->mWeatherForecastPeriods[WEATHER_48_HOURS], mReader);
 
 		debug::log("DataStore: Stored weather forecast: " +
-				String(mWeatherForecast->current.temperature) + "deg, Weather type: " + String((uint8_t) mWeatherForecast->current.weatherType));
+				String(mWeatherForecast->mWeatherForecastPeriods[WEATHER_CURRENT].temperature) + "deg, Weather type: " + String((uint8_t) mWeatherForecast->mWeatherForecastPeriods[WEATHER_CURRENT].weatherType));
 
 		xSemaphoreGive(mWeatherSemaphore);
 	}
 }
 
-void DataStore::_addScheduleRaw(const IncomingRadioMessage& aIncomingRadioMessage, ScheduleDay day) {
+void DataStore::_addScheduleRaw(const IncomingRadioMessage& aIncomingRadioMessage, uint8_t aDay, uint8_t aLocation) {
 	if (xSemaphoreTake(mScheduleSemaphore, portMAX_DELAY) == pdTRUE) {
 		mReader.setBuffer((unsigned char*)aIncomingRadioMessage.content(), aIncomingRadioMessage.length());
 
@@ -135,18 +146,18 @@ void DataStore::_addScheduleRaw(const IncomingRadioMessage& aIncomingRadioMessag
 		Event* events = new Event[eventCount];
 
 		for (int i = 0 ; i < eventCount ; ++i) {
-			events[i].stageId = (uint8_t)Utils::getInteger(mReader);
+			events[i].locationId = (LocationId)Utils::getInteger(mReader);
 			events[i].typeId = (uint8_t)Utils::getInteger(mReader);
 			events[i].startTimestamp = (uint32_t)Utils::getInteger(mReader);
 			events[i].endTimestamp = (uint32_t)Utils::getInteger(mReader);
 			events[i].speaker = Utils::getString(mReader);
 			events[i].title = Utils::getString(mReader);
-		}
+		};
 
-		delete mSchedule[day];
-		mSchedule[day] = new Schedule(events, eventCount);
+		delete mSchedule[aDay][aLocation];
+		mSchedule[aDay][aLocation] = new Schedule(events, eventCount);
 
-		debug::log("DataStore: Got schedule: " + String(mSchedule[day]->getEventCount()) + " events");
+		debug::log("DataStore: Got schedule: day: " +  String(aDay) + " location: " + String(aLocation) + " events: " + String(mSchedule[aDay][aLocation]->getEventCount()));
 
 		xSemaphoreGive(mScheduleSemaphore);
 	}

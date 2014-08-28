@@ -1,7 +1,7 @@
 /*
  TiLDA Mk2
 
- Utils
+ Base class for games
 
  The MIT License (MIT)
 
@@ -26,24 +26,45 @@
  SOFTWARE.
  */
 
-#pragma once
+#include "glcd.h"
+#include "Tilda.h"
+#include "Game.h"
 
-#include <Arduino.h>
-#include <TinyPacks.h>
+GameApp::~GameApp() {
+	delete game;
+	delete bs;
+}
 
-class Utils {
-private:
-    Utils();
+void GameApp::task() {
+	TickType_t lw = xTaskGetTickCount();
+	bs = Tilda::createButtonSubscription(A | B | UP | DOWN | LEFT | RIGHT);
 
-public:
-    static uint16_t bytesToInt(byte b1, byte b2);
-    static uint32_t bytesToInt(byte b1, byte b2, byte b3, byte b4);
-    static String intToHex(uint8_t input);
+	Tilda::getLCDTask().disable();
+	Tilda::getGUITask().clearRoot();
+	GLCD.SetRotation(ROTATION_90);
 
-    static char* wordWrap(char* buffer, const char* in, const uint8_t line_width, const uint8_t max_lines);
+	game->init();
 
-    // TinyPacks helpers
-    static bool getBoolean(PackReader& reader);
-    static tp_integer_t getInteger(PackReader& reader);
-    static char* getString(PackReader& reader);
-};
+	while (true) {
+		Button b;
+		while ((b = bs->waitForPress((TickType_t) 0))) {
+			game->handleButton(b);
+		}
+
+		if (!game->paused) game->loop();
+
+		vTaskDelayUntil(&lw, game->period / portTICK_PERIOD_MS);
+	}
+}
+
+void GameApp::afterSuspension() {
+	Tilda::getLCDTask().enable();
+}
+
+void GameApp::beforeResume() {
+        if (bs) bs->clear();
+
+	Tilda::getLCDTask().disable();
+	Tilda::getGUITask().clearRoot();
+	GLCD.SetRotation(ROTATION_90);
+}

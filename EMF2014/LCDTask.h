@@ -43,13 +43,16 @@ class LCDTask: public Task {
 
 private:
   // Control functions
- 
+  boolean _enabled;
 
 protected:
 
 public:
+  LCDTask(): _enabled(true){}
   String getName() const;
   void task();
+  void disable();
+  void enable();
 };
 
 #endif // _LCD_TASK_H_

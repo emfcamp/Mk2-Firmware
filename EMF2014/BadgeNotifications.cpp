@@ -29,14 +29,17 @@
 #include "MessageCheckTask.h"
 #include "BadgeNotifications.h"
 #include "IncomingRadioMessage.h"
+#include "NotificationApp.h"
 #include "AppManager.h"
 #include "Utils.h"
 #include "Tilda.h"
+#include <debug.h>
 
 String BadgeNotification::text() const { return _text; }
 RGBColor BadgeNotification::led1() const { return _led1; }
 RGBColor BadgeNotification::led2() const { return _led2; }
 boolean BadgeNotification::sound() const { return _sound; }
+uint8_t BadgeNotification::type() const { return _type; }
 
 BadgeNotifications::BadgeNotifications(SettingsStore& aSettingsStore, MessageCheckTask& aMessageCheckTask, AppManager& aAppManager)
     :mSettingsStore(aSettingsStore),
@@ -53,6 +56,9 @@ BadgeNotifications::BadgeNotifications(SettingsStore& aSettingsStore, MessageChe
     mSettingsStore.addObserver(this);
 
     mNotificationMutex = xSemaphoreCreateMutex();
+    mMessageCheckTask.subscribe(this, 0xb003, 0xb003);
+
+    badgeIdSubscriptionSet = false;
 }
 
 BadgeNotifications::~BadgeNotifications() {
@@ -78,11 +84,15 @@ void BadgeNotifications::handleMessage(const IncomingRadioMessage& aIncomingRadi
         RGBColor rgb1 = getRGBColor(mReader);
         RGBColor rgb2 = getRGBColor(mReader);
         boolean sound = Utils::getBoolean(mReader);
+        uint8_t type = static_cast<uint8_t>(Utils::getInteger(mReader));
         String text = Utils::getString(mReader);
+        debug::log("BADGER NOTIFICATION");
+        debug::log(text);
 
         delete mBadgeNotification;
-        mBadgeNotification = new BadgeNotification(text, rgb1, rgb2, sound);
+        mBadgeNotification = new BadgeNotification(text, rgb1, rgb2, sound, type);
         xSemaphoreGive(mNotificationMutex);
+        Tilda::openApp(NotificationApp::New);
     }
 
     // start the notification app to start it
@@ -90,8 +100,10 @@ void BadgeNotifications::handleMessage(const IncomingRadioMessage& aIncomingRadi
 }
 
 void BadgeNotifications::badgeIdChanged(uint16_t badgeId) {
-    mMessageCheckTask.unsubscribe(this);
-    mMessageCheckTask.subscribe(this, badgeId, badgeId);
+    if (!badgeIdSubscriptionSet) {
+        badgeIdSubscriptionSet = true;
+        mMessageCheckTask.subscribe(this, badgeId, badgeId);
+    }
 }
 
 BadgeNotification* BadgeNotifications::popNotification() {

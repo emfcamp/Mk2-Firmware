@@ -22,6 +22,15 @@
 #define MEZ  1
 #define MESZ -1
 
+struct RTC_date_time {
+	int hour;
+	int minute;
+	int second;
+	int day;
+	int month;
+	uint16_t year;
+};
+
 class RTC_clock
 {
 	public:
@@ -29,6 +38,7 @@ class RTC_clock
 		void init ();
 		void set_time (int hour, int minute, int second);
 		void set_time (char* time);
+		static RTC_date_time from_unixtime (uint32_t unixtime);
 		void set_unixtime (uint32_t unixtime);
 		int get_hours ();
 		int get_minutes ();
@@ -41,7 +51,7 @@ class RTC_clock
 		int date_already_set ();
 		int get_days ();
 		int get_day_of_week ();
-		int calculate_day_of_week (uint16_t _year, int _month, int _day);
+		static int calculate_day_of_week (uint16_t _year, int _month, int _day);
 		int set_hours (int _hour);
 		int set_minutes (int minute);
 		int set_seconds (int second);
@@ -63,7 +73,7 @@ class RTC_clock
 		bool has_been_set();
 
 	private:
-		bool is_leap_year(uint16_t year);
+		static bool is_leap_year(uint16_t year);
 
 		int _source;
 		int _hour;

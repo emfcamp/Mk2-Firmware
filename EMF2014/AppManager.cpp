@@ -34,15 +34,23 @@
 #include "SponsorsApp.h"
 #include "AppManager.h"
 #include "BadgeIdApp.h"
-
-
+#include "SnakeApp.h"
+#include "BlinkApp.h"
+#include "HelloWorldApp.h"
+#include "ScheduleApp.h"
+#include "TetrisApp.h"
+#include "WeatherApp.h"
 
 // Add your app here to appear in the app list
 static const AppDefinition APPS[] = {
-        AppDefinition("HomeScreen",    HomeScreenApp::New),
-        AppDefinition("FlashLight",    FlashLightApp::New),
-        AppDefinition("SponsorsApp",   SponsorsApp::New),
-        AppDefinition("BadgeIdApp", BadgeIdApp::New)
+        AppDefinition("Schedule",      ScheduleApp::New),
+        AppDefinition("Weather",       WeatherApp::New),
+        AppDefinition("Badge ID",      BadgeIdApp::New),
+        AppDefinition("Snake",         SnakeApp::New),
+        AppDefinition("Tetris",        TetrisApp::New),
+        AppDefinition("HelloWorld",    HelloWorldApp::New),
+        AppDefinition("Blink!",        BlinkApp::New),
+        AppDefinition("Sponsors",      SponsorsApp::New)
 };
 
 AppManager::AppItem::AppItem(app_ctor aNew)

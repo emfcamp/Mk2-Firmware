@@ -1,8 +1,7 @@
 /*
  TiLDA Mk2
 
- ButtonTask
- Buttons are handled via interrupt callbacks
+ Task
 
  The MIT License (MIT)
 
@@ -27,20 +26,33 @@
  SOFTWARE.
  */
 
-#ifndef _BUTTON_TASK_H_
-#define _BUTTON_TASK_H_
+#include "BlinkApp.h"
+#include "Tilda.h"
 
-#include <Arduino.h>
-#include <FreeRTOS_ARM.h>
-#include "EMF2014Config.h"
-#include "Task.h"
+App* BlinkApp::New() {
+    return new BlinkApp;
+}
 
-class ButtonTask: public Task {
-friend class ButtonSubscription;
-public:
-    String getName() const;
-protected:
-    void task();
-};
+BlinkApp::BlinkApp() {}
 
-#endif // _BUTTON_TASK_H_
+String BlinkApp::getName() const {
+    return "BlinkApp";
+}
+
+bool BlinkApp::keepAlive() const {
+    return false;
+}
+
+void BlinkApp::task() {
+    Tilda::getGUITask().clearRoot(); // Clean screen
+
+    while(true) {
+        Tilda::setLedColor({255, 0, 0}); // red
+        Tilda::delay(300);
+        Tilda::setLedColor({0, 255, 0}); // green
+        Tilda::delay(300);
+        Tilda::setLedColor({0, 0, 255}); // blue
+        Tilda::delay(300);
+    }
+}
+

@@ -42,16 +42,18 @@ class AppManager;
 
 class BadgeNotification {
 public:
-    BadgeNotification(String text, RGBColor led1, RGBColor led2, boolean sound) :_text(text), _led1(led1), _led2(led2), _sound(sound) {}
+    BadgeNotification(String text, RGBColor led1, RGBColor led2, boolean sound, uint8_t type) :_text(text), _led1(led1), _led2(led2), _sound(sound), _type(type) {}
     String text() const;
     RGBColor led1() const;
     RGBColor led2() const;
     boolean sound() const;
+    uint8_t type() const;
 private:
     String _text;
     RGBColor _led1;
     RGBColor _led2;
     boolean _sound;
+    uint8_t _type;
 };
 
 class BadgeNotifications : public SettingsStoreObserver, public RadioMessageHandler {
@@ -69,6 +71,8 @@ private: // from SettingsStoreObserver
 
 private:
     static RGBColor getRGBColor(PackReader& aReader);
+
+    bool badgeIdSubscriptionSet;
 
 private:
     MessageCheckTask& mMessageCheckTask;

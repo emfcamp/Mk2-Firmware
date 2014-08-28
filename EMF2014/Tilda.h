@@ -42,6 +42,8 @@
 #include "LCDTask.h"
 #include "GUITask.h"
 #include "SettingsStore.h"
+#include "BatterySaverTask.h"
+#include "RadioReceiveTask.h"
 
 class BadgeNotifications;
 class DataStore;
@@ -60,6 +62,9 @@ public:
     static SettingsStore& getSettingsStore();
     static AppManager& getAppManager();
 
+    static char* getUserNameLine1();
+    static char* getUserNameLine2();
+
     // helpers
     static ButtonSubscription* createButtonSubscription(uint16_t buttons);
     static void log(String text);
@@ -71,7 +76,10 @@ public:
     static uint8_t getBatteryPercent();
     static uint8_t getChargeState();
     static Orientation_t getOrientation();
-
+    static uint32_t millisecondsSinceBoot();
+    static void markActivity();
+    static char* radioChannelIdentifier();
+    static uint8_t radioRssi();
 private:
     Tilda();
 
@@ -83,5 +91,6 @@ private:
     static LCDTask* _lcdTask;
     static GUITask* _guiTask;
     static SettingsStore* _settingsStore;
+    static BatterySaverTask* _batterySaverTask;
+    static RadioReceiveTask* _radioReceiveTask;
 };
-

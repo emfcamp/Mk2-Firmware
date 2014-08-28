@@ -169,7 +169,7 @@ void SPIClass::configureDMA(uint8_t _txChannel, uint8_t _rxChannel) {
 
 /* start a dma transfer, need to setup spi for a fixed peripheral xfer, and setup the dma channels
 */
-byte SPIClass::transferDMA(uint32_t _pin, uint8_t *txBuffer, uint8_t *rxBuffer, uint32_t length, SPITransferMode _mode) {
+byte SPIClass::transferDMA(uint32_t _pin, uint8_t *txBuffer, uint8_t *rxBuffer, uint16_t length, SPITransferMode _mode) {
     
     // reconfigure SPI for fixed peripheral mode
     //SPI_Disable(spi);
@@ -220,12 +220,11 @@ void SPIClass::DMAFinished(uint32_t _status) {
     // check that it was our rxChannel finish interrupt that fired
     if (_status & (1 << rxChannel)) {
         
-        // yes it was
-        // clean up SPI
-        //SPI_Disable(spi);
+        // Clear CS
+        SPI_Disable(spi);
         spi->SPI_MR = (SPI_MR_MSTR | SPI_MR_PS | SPI_MR_MODFDIS);
+        SPI_Enable(spi);
 
-        //SPI_Enable(spi);
         // clean up DMA?
         // channels should have been automatically disabled at end of xfer
         // TODO: Check DMA doesn't need clean up
@@ -239,7 +238,6 @@ void SPIClass::DMAFinished(uint32_t _status) {
  */
 void DMAC_Handler(void) {
     static uint32_t ul_status;
-    digitalWrite(PIN_LED_RXL, LOW);
     ul_status = dmac_get_status(DMAC);
     SPI.DMAFinished(ul_status);
 }

@@ -1,10 +1,8 @@
 /*
  TiLDA Mk2
 
- DataStore
-
- This is a helper class that knows how to de-serialise and store data send via
- radio. Other apps/tasks can look up data
+ HelloWorldApp
+ Play around in this app or use it as a skeleton for your own one
 
  The MIT License (MIT)
 
@@ -33,43 +31,28 @@
 
 #include <Arduino.h>
 #include <FreeRTOS_ARM.h>
-#include <TinyPacks.h>
-
 #include "EMF2014Config.h"
-#include "RadioMessageHandler.h"
-#include "Schedule.h"
+#include "App.h"
+#include "RGBTask.h"
+#include "GUITask.h"
+#include "ButtonSubscription.h"
 
-class IncomingRadioMessage;
-class MessageCheckTask;
-class WeatherForecast;
-class WeatherForecastPeriod;
-
-class DataStore: public RadioMessageHandler {
+class HelloWorldApp: public App {
 public:
-	DataStore(MessageCheckTask& aMessageCheckTask);
-	~DataStore();
+    static App* New();
 
-	WeatherForecast* getWeatherForecast() const;
-	Schedule* getSchedule(uint8_t aDay, uint8_t aLocationId) const;
-
-private: // from RadioMessageHandler
-	void handleMessage(const IncomingRadioMessage& aIncomingRadioMessage);
-
+    String getName() const;
+protected:
 private:
-	void _addWeatherForecastRaw(const IncomingRadioMessage& aIncomingRadioMessage);
-	void _addScheduleRaw(const IncomingRadioMessage& aIncomingRadioMessage, uint8_t day, uint8_t aLocationId);
+    HelloWorldApp();
+    ~HelloWorldApp();
+    HelloWorldApp(const HelloWorldApp&);
 
-	static void _unpackWeatherForecastPeriod(WeatherForecastPeriod& period, PackReader& reader);
+    bool keepAlive() const;
 
+    void task();
+    void afterSuspension();
+    void beforeResume();
 private:
-	MessageCheckTask& mMessageCheckTask;
-
-	PackReader mReader;
-
-	// data
-	WeatherForecast* mWeatherForecast;
-	Schedule*** mSchedule;
-
-	SemaphoreHandle_t mWeatherSemaphore;
-	SemaphoreHandle_t mScheduleSemaphore;
+    ButtonSubscription* mButtonSubscription;
 };
