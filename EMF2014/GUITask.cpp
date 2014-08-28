@@ -30,7 +30,7 @@
 #include "ButtonSubscription.h"
 #include "debug.h"
 #include "Tilda.h"
-#include <GLCD.h>
+#include <glcd.h>
 #include <fonts/allFonts.h>
 #include <M2tk.h>
 

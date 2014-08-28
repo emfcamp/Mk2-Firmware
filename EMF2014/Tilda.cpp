@@ -146,9 +146,9 @@ uint8_t Tilda::radioRssi() {
 }
 
 char* Tilda::getUserNameLine1() {
-    return "Name Line 1";
+    return _settingsStore->getUserNameLine1();
 }
 
 char* Tilda::getUserNameLine2() {
-    return "Name Line 2";
+    return _settingsStore->getUserNameLine2();
 }
