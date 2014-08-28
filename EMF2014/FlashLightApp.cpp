@@ -35,6 +35,7 @@
 #include "AppManager.h"
 #include "Tilda.h"
 #include <glcd.h>
+#include <fonts/allFonts.h>
 
 App* FlashLightApp::New() {
     return new FlashLightApp();
@@ -88,6 +89,9 @@ void FlashLightApp::task() {
             }
         }
         updateLeds();
+        GLCD.SelectFont(fixednums8x16);
+        GLCD.CursorToXY(8,72);
+        GLCD.print(mLightLevel);
     }
 }
 
