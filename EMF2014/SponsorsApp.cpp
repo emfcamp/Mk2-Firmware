@@ -60,7 +60,7 @@ void SponsorsApp::_draw() {
 
 void SponsorsApp::task() {
     Tilda::getGUITask().clearRoot();
-    GLCD.SetRotation(ROTATION_0);
+    Tilda::getGUITask().setOrientation(ORIENTATION_LEFT); //Image is rotated
     _page = 0;
     while(true) {
         _draw();
@@ -73,6 +73,6 @@ void SponsorsApp::afterSuspension() {}
 void SponsorsApp::beforeResume() {
   Tilda::getGUITask().clearRoot();
   GLCD.ClearScreen();
-  GLCD.SetRotation(ROTATION_0);
+  Tilda::getGUITask().setOrientation(ORIENTATION_LEFT); //Image is rotated.
   _draw();
 }

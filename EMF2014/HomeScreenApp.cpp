@@ -168,7 +168,7 @@ void HomeScreenApp::task() {
 
 void HomeScreenApp::afterSuspension() {}
 void HomeScreenApp::beforeResume() {
-    GLCD.SetRotation(ROTATION_90);
+    Tilda::getGUITask().setOrientation(ORIENTATION_HELD);
     Tilda::getGUITask().setM2Root(&homeScreenApp_m2_top_el_expandable_menu);
     // Turn of LEDs
     Tilda::setLedColor({0, 0, 0});

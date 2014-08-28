@@ -48,13 +48,6 @@
 class BadgeNotifications;
 class DataStore;
 
-enum Orientation_t{
-    ORIENTATION_HELD,
-    ORIENTATION_RIGHT,  // joystick to the right of the screen
-    ORIENTATION_HUNG,
-    ORIENTATION_LEFT   // joystick to the left of the screen,
-};
-
 class Tilda {
     friend class TiLDATask;
     friend class IMUTask;

@@ -30,10 +30,27 @@
 #include "ButtonSubscription.h"
 #include "debug.h"
 #include "Tilda.h"
+#include <GLCD.h>
 #include <fonts/allFonts.h>
 #include <M2tk.h>
 
 static ButtonSubscription* _buttons_p;
+static Orientation_t _current_orientation;
+enum ButtonMap_t{
+    BUTTONMAP_UP,
+    BUTTONMAP_DOWN,
+    BUTTONMAP_LEFT,
+    BUTTONMAP_RIGHT
+};
+
+//HELD,RIGHT,HUNG,LEFT
+    //UP,DOWN,LEFT,RIGHT
+static uint8_t keymap[4][4] = {
+  {M2_KEY_DATA_UP, M2_KEY_DATA_DOWN, M2_KEY_PREV, M2_KEY_NEXT},
+  {M2_KEY_PREV, M2_KEY_NEXT, M2_KEY_DATA_DOWN, M2_KEY_DATA_UP},
+  {M2_KEY_DATA_DOWN, M2_KEY_DATA_UP, M2_KEY_NEXT, M2_KEY_PREV},
+  {M2_KEY_NEXT, M2_KEY_PREV, M2_KEY_DATA_UP, M2_KEY_DATA_DOWN}
+};
 
 uint8_t m2_es_button_subscription(m2_p ep, uint8_t msg)
 {
@@ -59,16 +76,16 @@ uint8_t m2_es_button_subscription(m2_p ep, uint8_t msg)
       switch (button)
       {
       case UP:
-        return M2_KEY_DATA_UP | M2_KEY_EVENT_MASK;
+        return keymap[_current_orientation][BUTTONMAP_UP] | M2_KEY_EVENT_MASK;
         break;
       case DOWN:
-        return M2_KEY_DATA_DOWN | M2_KEY_EVENT_MASK;
+        return keymap[_current_orientation][BUTTONMAP_DOWN] | M2_KEY_EVENT_MASK;
         break;
       case LEFT:
-        return M2_KEY_PREV | M2_KEY_EVENT_MASK;
+        return keymap[_current_orientation][BUTTONMAP_LEFT] | M2_KEY_EVENT_MASK;
         break;
       case RIGHT:
-        return M2_KEY_NEXT | M2_KEY_EVENT_MASK;
+        return keymap[_current_orientation][BUTTONMAP_RIGHT] | M2_KEY_EVENT_MASK;
         break;
       case A:
         return M2_KEY_SELECT | M2_KEY_EVENT_MASK;
@@ -122,4 +139,23 @@ void GUITask::clearRoot() {
     if (_buttons_p != 0)
         _buttons_p->wake();
     Tilda::delay(250); //Give the screen chance to update.
+}
+
+void GUITask::setOrientation(Orientation_t orientation) {
+  _current_orientation = orientation;
+  switch (orientation)
+  {
+    case ORIENTATION_HELD:
+      GLCD.SetRotation(ROTATION_90);
+      break;
+    case ORIENTATION_HUNG:
+      GLCD.SetRotation(ROTATION_270);
+      break;
+    case ORIENTATION_RIGHT:
+      GLCD.SetRotation(ROTATION_180);
+      break;
+    case ORIENTATION_LEFT:
+      GLCD.SetRotation(ROTATION_0);
+      break;
+  }
 }
