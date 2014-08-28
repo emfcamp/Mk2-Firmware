@@ -56,6 +56,7 @@ private:
     void afterSuspension();
     void beforeResume();
     EventGroupHandle_t eventGroup;
+    void drawHungScreen();
 private:
 };
 
