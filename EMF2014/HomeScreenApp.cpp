@@ -35,6 +35,7 @@
 #include <M2tk.h>
 #include "GUITask.h"
 #include "fonts/allFonts.h"
+#include "TiLDA_64x96.h"
 
 #define HOMESCREEN_ORIENATION_CHANGE_BIT (1 << 0)
 
@@ -173,10 +174,12 @@ void HomeScreenApp::drawHungScreen() {
         GLCD.DrawBitmap(HOMESCREEN_HUNG_XBM ,0, 0); // Full Screen Image
     } else {
         GLCD.SelectFont(System5x7);
-        GLCD.DrawString("  Hello!  ", 2,64);
-        GLCD.DrawString("My Name is",2,72);
-        GLCD.DrawString(Tilda::getUserNameLine1(),2,80);
-        GLCD.DrawString(Tilda::getUserNameLine2(),2,88);
+        GLCD.DrawString("  Hello  ", 5,0);
+        GLCD.DrawString("My name is",2,8);
+        GLCD.DrawString(Tilda::getUserNameLine1(),2,16);
+        GLCD.DrawString(Tilda::getUserNameLine2(),2,24);
+        GLCD.DrawBitmap(TiLDA_64x96,0,32);
+
     }
 }
 
