@@ -94,7 +94,7 @@ uint8_t m2_es_button_subscription(m2_p ep, uint8_t msg)
         return M2_KEY_EXIT | M2_KEY_EVENT_MASK;
         break;
       case CENTER:
-        return M2_KEY_HOME | M2_KEY_EVENT_MASK;
+        return M2_KEY_SELECT | M2_KEY_EVENT_MASK;
         break;
       }
       /* return M2_KEY_NONE if there is no button pressed. */
