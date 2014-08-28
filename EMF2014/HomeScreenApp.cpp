@@ -172,10 +172,9 @@ void HomeScreenApp::drawHungScreen() {
         GLCD.DrawBitmap(TiLDA_Logo_64x128 ,0, 0); // Full Screen Image
     } else {
         GLCD.SelectFont(System5x7);
-        GLCD.DrawString("  Hello  ", 5,0);
-        GLCD.DrawString("My name is",2,8);
-        GLCD.DrawString(Tilda::getUserNameLine1(),2,16);
-        GLCD.DrawString(Tilda::getUserNameLine2(),2,24);
+
+        GLCD.DrawString(Tilda::getUserNameLine1(),2,8);
+        GLCD.DrawString(Tilda::getUserNameLine2(),2,16);
         GLCD.DrawBitmap(TiLDA_64x96,0,32);
 
     }
