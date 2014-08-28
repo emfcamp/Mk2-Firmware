@@ -76,8 +76,8 @@
 // EMF Camp 2014 will be in Britain during British Summer Time
 #define TIMEZONE_OFFSET 3600
 
-#define RADIO_DEBUG_MODE
-#define RADIO_DEBUG_MODE_EXTENDED
+//#define RADIO_DEBUG_MODE
+//#define RADIO_DEBUG_MODE_EXTENDED
 
 
 // EMF2014 Public Key
