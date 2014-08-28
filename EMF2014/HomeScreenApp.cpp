@@ -31,7 +31,6 @@
 #include "HomeScreenApp.h"
 #include "Tilda.h"
 #include <glcd.h>
-#include "logo.h"
 #include <M2tk.h>
 #include "GUITask.h"
 #include "fonts/allFonts.h"
@@ -122,8 +121,6 @@ const char *HomeScreenApp::footerText(m2_rom_void_p element) {
 
 void HomeScreenApp::task() {
     eventGroup = xEventGroupCreate();
-    GLCD.DrawBitmap(logo,0,8);
-    //Tilda::delay(5000);
 
     const uint8_t app_count = Tilda::getAppManager().getAppCount();
 

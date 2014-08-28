@@ -35,7 +35,6 @@
 #include "AppManager.h"
 #include "BadgeIdApp.h"
 #include "SnakeApp.h"
-#include "BlinkApp.h"
 #include "HelloWorldApp.h"
 #include "ScheduleApp.h"
 #include "TetrisApp.h"
@@ -48,8 +47,7 @@ static const AppDefinition APPS[] = {
         AppDefinition("Badge ID",      BadgeIdApp::New),
         AppDefinition("Snake",         SnakeApp::New),
         AppDefinition("Tetris",        TetrisApp::New),
-        //AppDefinition("HelloWorld",    HelloWorldApp::New),
-        //AppDefinition("Blink!",        BlinkApp::New),
+        // AppDefinition("HelloWorld",    HelloWorldApp::New), // Uncomment this
         AppDefinition("Sponsors",      SponsorsApp::New)
 };
 

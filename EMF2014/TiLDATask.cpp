@@ -55,6 +55,7 @@
 #include "GUITask.h"
 #include "IMUTask.h"
 #include <glcd.h>
+#include "logo.h"
 
 TiLDATask::TiLDATask() {
 
@@ -92,11 +93,13 @@ void TiLDATask::task() {
     radioReceiveTask->start();
     radioTransmitTask->start();
     Tilda::_lcdTask->start();
+    GLCD.DrawBitmap(EMF_BOOT_SCREEN_XBM, 0, 8);
     Tilda::_guiTask->start();
     appOpenerTask->start();
     PMIC.start();
     imuTask.start();
 
+    Tilda::delay(BOOT_SCREEN_TIME);
     Tilda::openApp(HomeScreenApp::New);
 
     suspend();

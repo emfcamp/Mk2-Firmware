@@ -57,12 +57,12 @@
 // Radio discovery channel (in hex)
 #define RADIO_DISCOVERY_CHANNEL "02"
 // Discovery time in ticks
-#define RADIO_DISCOVERY_TIME 1000
+#define RADIO_DISCOVERY_TIME 3000
 // Sleep between unsuccessful discoverys
 #define RADIO_UNSUCCESSFUL_DISCOVERY_SLEEP 10000
 // Time spend without incoming messages before badge goes back into
 // discovery mode (in ticks)
-#define RADIO_RECEIVE_TIMEOUT 5000
+#define RADIO_RECEIVE_TIMEOUT 10000
 // Sleep time for the receiver task when no serial data is available
 #define RADIO_NO_DATA_SLEEP_DURATION 5
 // This is how long we'll wait before sending after waking up the radio
@@ -75,6 +75,8 @@
 
 // EMF Camp 2014 will be in Britain during British Summer Time
 #define TIMEZONE_OFFSET 3600
+
+#define BOOT_SCREEN_TIME 2000
 
 //#define RADIO_DEBUG_MODE
 //#define RADIO_DEBUG_MODE_EXTENDED
@@ -102,5 +104,5 @@ enum Orientation_t{
     ORIENTATION_HELD,
     ORIENTATION_RIGHT,  // joystick to the right of the screen
     ORIENTATION_HUNG,
-    ORIENTATION_LEFT   // joystick to the left of the screen,
+    ORIENTATION_LEFT    // joystick to the left of the screen,
 };
