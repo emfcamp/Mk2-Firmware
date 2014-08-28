@@ -93,6 +93,7 @@ void TiLDATask::task() {
     radioReceiveTask->start();
     radioTransmitTask->start();
     Tilda::_lcdTask->start();
+    GLCD.SetRotation(ROTATION_0);
     GLCD.DrawBitmap(EMF_BOOT_SCREEN_XBM, 0, 8);
     Tilda::_guiTask->start();
     appOpenerTask->start();
@@ -104,4 +105,3 @@ void TiLDATask::task() {
 
     suspend();
 }
-

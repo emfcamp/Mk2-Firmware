@@ -121,7 +121,7 @@ const char *HomeScreenApp::footerText(m2_rom_void_p element) {
 
 void HomeScreenApp::task() {
     eventGroup = xEventGroupCreate();
-
+    Tilda::getGUITask().setOrientation(ORIENTATION_HELD);
     const uint8_t app_count = Tilda::getAppManager().getAppCount();
 
     for (uint8_t i = 0; i < app_count; ++i) {
