@@ -38,6 +38,7 @@
 #include "BlinkApp.h"
 #include "HelloWorldApp.h"
 #include "ScheduleApp.h"
+#include "TetrisApp.h"
 #include "WeatherApp.h"
 
 // Add your app here to appear in the app list
@@ -46,6 +47,7 @@ static const AppDefinition APPS[] = {
         AppDefinition("Weather",       WeatherApp::New),
         AppDefinition("Badge ID",      BadgeIdApp::New),
         AppDefinition("Snake",         SnakeApp::New),
+        AppDefinition("Tetris",        TetrisApp::New),
         AppDefinition("HelloWorld",    HelloWorldApp::New),
         AppDefinition("Blink!",        BlinkApp::New),
         AppDefinition("Sponsors",      SponsorsApp::New)
