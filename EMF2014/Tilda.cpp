@@ -152,3 +152,9 @@ char* Tilda::getUserNameLine1() {
 char* Tilda::getUserNameLine2() {
     return _settingsStore->getUserNameLine2();
 }
+
+void Tilda::waitForButton(uint16_t buttons) {
+    ButtonSubscription* buttonSubscription = createButtonSubscription(buttons);
+    buttonSubscription->waitForPress();
+    delete buttonSubscription;
+}

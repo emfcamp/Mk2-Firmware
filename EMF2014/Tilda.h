@@ -80,6 +80,7 @@ public:
     static void markActivity();
     static char* radioChannelIdentifier();
     static uint8_t radioRssi();
+    static void waitForButton(uint16_t buttons);
 private:
     Tilda();
 
