@@ -93,6 +93,11 @@ void BatterySaverTask::task() {
 }
 
 void BatterySaverTask::updateBacklightBrightnessLevel() {
-    uint8_t actualLightLevel = 1 << currentBrightnessLevel;
+    uint8_t actualLightLevel;
+    if (currentBrightnessLevel == 0) {
+        actualLightLevel = 0;
+    } else {
+        actualLightLevel = 1 << currentBrightnessLevel;
+    }
     analogWrite(LCD_BACKLIGHT, 255 - actualLightLevel);
 }
