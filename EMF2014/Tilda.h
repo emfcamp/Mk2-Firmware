@@ -69,6 +69,9 @@ public:
     static SettingsStore& getSettingsStore();
     static AppManager& getAppManager();
 
+    static char* getUserNameLine1();
+    static char* getUserNameLine2();
+
     // helpers
     static ButtonSubscription* createButtonSubscription(uint16_t buttons);
     static void log(String text);
@@ -98,4 +101,3 @@ private:
     static BatterySaverTask* _batterySaverTask;
     static RadioReceiveTask* _radioReceiveTask;
 };
-
