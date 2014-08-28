@@ -56,6 +56,8 @@
 #include "IMUTask.h"
 #include <glcd.h>
 #include "logo.h"
+#include "TiLDA_64x128.h"
+
 
 TiLDATask::TiLDATask() {
 
@@ -93,8 +95,7 @@ void TiLDATask::task() {
     radioReceiveTask->start();
     radioTransmitTask->start();
     Tilda::_lcdTask->start();
-    GLCD.SetRotation(ROTATION_0);
-    GLCD.DrawBitmap(EMF_BOOT_SCREEN_XBM, 0, 8);
+    GLCD.DrawBitmap(TiLDA_Logo_64x128, 0, 0);
     Tilda::_guiTask->start();
     appOpenerTask->start();
     PMIC.start();
