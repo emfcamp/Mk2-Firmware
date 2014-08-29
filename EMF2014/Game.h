@@ -36,6 +36,7 @@ class Game {
 public:
 	int period = 500;
 	bool paused = false;
+	virtual ~Game() {}
 	virtual void init() = 0;
 	virtual void loop() = 0;
 	virtual void handleButton(Button) = 0;

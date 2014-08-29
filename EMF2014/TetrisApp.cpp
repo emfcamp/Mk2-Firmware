@@ -362,18 +362,17 @@ private:
 
 		GLCD.Display();
 	}
-
 	void newGame() {
 		GLCD.ClearScreen();
 		GLCD.Display();
 
-		if (board) delete board;
+		delete board;
 		board = new Board;
 
-		if (current) delete current;
+		delete current;
 		current = Tetrad::createRandom(board);
 
-		if (next) delete next;
+		delete next;
 		next = Tetrad::createRandom(board);
 
 		score = 0;
@@ -383,6 +382,14 @@ private:
 	}
 
 public:
+
+	~Tetris() {
+		debug::log("Tetris DTOR");
+		delete board;
+		delete next;
+		delete current;
+	}
+
 	void init() {
 		debug::log("I know you're going to dig this");
 		newGame();
