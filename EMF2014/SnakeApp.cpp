@@ -69,7 +69,9 @@ void SnakeApp::task() {
             Snake snake(21, 33, SnakeApp::setPixel);
 
             Tilda::getGUITask().clearRoot();
-
+            Tilda::delay(80);
+            GLCD.ClearScreen();
+            Tilda::delay(80);
             snake.render_start();
 
             uint8_t score = 0;
