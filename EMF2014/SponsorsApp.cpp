@@ -68,10 +68,13 @@ void SponsorsApp::task() {
         for (uint8_t i=0; i<5; ++i) {
             Tilda::setLedColor({255, 0, 0}); // red
             Tilda::delay(300);
+            _draw();
             Tilda::setLedColor({0, 255, 0}); // green
             Tilda::delay(300);
+            _draw();
             Tilda::setLedColor({0, 0, 255}); // blue
             Tilda::delay(300);
+            _draw();
         }
     }
 }
