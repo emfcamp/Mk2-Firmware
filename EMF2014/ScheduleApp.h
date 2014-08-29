@@ -43,6 +43,7 @@ public:
     ~ScheduleApp();
 
 	String getName() const;
+    bool killByPressingB() const;
 
 public:
     static const char* daysCallback(uint8_t location, uint8_t msg);
