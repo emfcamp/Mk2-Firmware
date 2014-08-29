@@ -88,6 +88,7 @@ const char *HomeScreenApp::headerText(m2_rom_void_p element) {
     if (Tilda::getClock().has_been_set()) {
         int minutes = Tilda::getClock().get_minutes();
         int hours = Tilda::getClock().get_hours() + 1;
+        if (hours == 24) {hours = 0;} //Fix 24:x times
         String header;
         if (minutes < 10) {
             header = String(hours) + ":0" + String(minutes);
