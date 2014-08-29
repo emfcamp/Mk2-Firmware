@@ -62,6 +62,7 @@ public:
     ~BadgeNotifications();
 
     BadgeNotification* popNotification();
+    void pushNotification(String text, RGBColor rgb1, RGBColor rgb2, boolean sound, uint8_t type);
 
 private: // from RadioMessageHandler
     void handleMessage(const IncomingRadioMessage&);
