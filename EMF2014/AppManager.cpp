@@ -40,6 +40,7 @@
 #include "TetrisApp.h"
 #include "WeatherApp.h"
 
+
 // Add your app here to appear in the app list
 static const AppDefinition APPS[] = {
         AppDefinition("Schedule",      ScheduleApp::New),

@@ -85,7 +85,9 @@ void BadgeNotifications::handleMessage(const IncomingRadioMessage& aIncomingRadi
         RGBColor rgb2 = getRGBColor(mReader);
         boolean sound = Utils::getBoolean(mReader);
         uint8_t type = static_cast<uint8_t>(Utils::getInteger(mReader));
-        String text = Utils::getString(mReader);
+        char* textChars = Utils::getString(mReader);
+        String text(textChars);
+        delete textChars;
         debug::log("BADGER NOTIFICATION");
         debug::log(text);
 

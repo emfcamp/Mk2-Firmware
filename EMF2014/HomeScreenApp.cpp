@@ -88,6 +88,8 @@ const char *launch_app(uint8_t idx, uint8_t msg) {
   return "";
 }
 
+char timeBuffer[6];
+
 const char *HomeScreenApp::headerText(m2_rom_void_p element) {
     if (Tilda::getClock().has_been_set()) {
         int minutes = Tilda::getClock().get_minutes();
@@ -99,13 +101,15 @@ const char *HomeScreenApp::headerText(m2_rom_void_p element) {
         } else {
             header = String(hours) + ":" + String(minutes);
         }
-        char* buffer = new char[6];
-        header.toCharArray(buffer, 6);
-        return buffer;
+
+        header.toCharArray(timeBuffer, 6);
+        return timeBuffer;
     } else {
         return "Welcome!";
     }
 }
+
+char footerBuffer[22];
 
 const char *HomeScreenApp::footerText(m2_rom_void_p element) {
 
@@ -120,9 +124,9 @@ const char *HomeScreenApp::footerText(m2_rom_void_p element) {
                  "    " +
                  String(Tilda::getBatteryPercent()) + "%";
     }
-    char* buffer = new char[22];
-    footer.toCharArray(buffer, 22);
-    return buffer;
+
+    footer.toCharArray(footerBuffer, 22);
+    return footerBuffer;
 }
 
 void HomeScreenApp::task() {
