@@ -78,7 +78,6 @@ void BadgeNotifications::handleMessage(const IncomingRadioMessage& aIncomingRadi
     // parse the radio message content into mBadgeNotification
     // <3 bytes rgb1> <3 bytes rgb2> <1 byte sound> <text>
 
-    if (xSemaphoreTake(mNotificationMutex, portMAX_DELAY) == pdTRUE) {
         mReader.setBuffer((unsigned char*)aIncomingRadioMessage.content(), aIncomingRadioMessage.length());
 
         RGBColor rgb1 = getRGBColor(mReader);
@@ -90,15 +89,16 @@ void BadgeNotifications::handleMessage(const IncomingRadioMessage& aIncomingRadi
         delete textChars;
         debug::log("BADGER NOTIFICATION");
         debug::log(text);
+        pushNotification(text, rgb1, rgb2, sound, type);
+}
 
+void BadgeNotifications::pushNotification(String text, RGBColor rgb1, RGBColor rgb2, boolean sound, uint8_t type) {
+    if (xSemaphoreTake(mNotificationMutex, portMAX_DELAY) == pdTRUE) {
         delete mBadgeNotification;
         mBadgeNotification = new BadgeNotification(text, rgb1, rgb2, sound, type);
         xSemaphoreGive(mNotificationMutex);
         Tilda::openApp(NotificationApp::New);
     }
-
-    // start the notification app to start it
-    //mAppManager->open(NotificationApp::New);
 }
 
 void BadgeNotifications::badgeIdChanged(uint16_t badgeId) {
