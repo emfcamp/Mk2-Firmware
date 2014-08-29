@@ -70,8 +70,9 @@ public:
     // Your app should have a `static App* New()` that creates the app
     // which can be passed in here like `MyApp::New`
 	void open(app_ctor aNew);
-	String getActiveAppName() const;
-    
+    String getActiveAppName() const;
+    App* getActiveApp() const;
+
     void orientationCallback(uint8_t orientation);
 
 private:

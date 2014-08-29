@@ -35,6 +35,10 @@ bool App::keepAlive() const {
     return false;
 }
 
+bool App::killByPressingB() const {
+    return true;
+}
+
 void App::newOrientation(uint8_t orientation) {
     return;
 }

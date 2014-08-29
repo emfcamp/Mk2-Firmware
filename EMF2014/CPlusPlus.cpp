@@ -1,8 +1,7 @@
 /*
  TiLDA Mk2
 
- ScheduleApp
- This is just a placeholder at the moment - Later this will be showing some sort of menu
+ CPlusPlus
 
  The MIT License (MIT)
 
@@ -27,37 +26,20 @@
  SOFTWARE.
  */
 
-#pragma once
-
-#include <Arduino.h>
 #include <FreeRTOS_ARM.h>
-#include "EMF2014Config.h"
-#include "App.h"
-#include "RGBTask.h"
-#include "GUITask.h"
-#include "Schedule.h"
 
-class ScheduleApp: public App {
-public:
-    static App* New();
-    ~ScheduleApp();
+void *operator new(size_t size){
+    return pvPortMalloc(size);
+}
 
-	String getName() const;
-    bool killByPressingB() const;
+void operator delete(void *p){
+    vPortFree( p );
+}
 
-public:
-    static const char* daysCallback(uint8_t location, uint8_t msg);
-    static const char* locationsCallback(uint8_t location, uint8_t msg);
-    static const char* locationsBackCallback(uint8_t talk, uint8_t msg);
-    static const char* talksCallback(uint8_t location, uint8_t msg);
-    static const char* talksBackCallback(uint8_t talk, uint8_t msg);
-    static void talkCallback(m2_el_fnarg_p fnarg);
+void *operator new[](size_t size){
+    return pvPortMalloc(size);
+}
 
-private:
-    ScheduleApp();
-    ScheduleApp(const ScheduleApp&);
-
-    void task();
-private:
-    static Schedule* mSchedule;
-};
+void operator delete[](void *p){
+    vPortFree( p );
+}

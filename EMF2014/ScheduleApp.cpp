@@ -223,6 +223,10 @@ String ScheduleApp::getName() const {
     return "Schedule";
 }
 
+bool ScheduleApp::killByPressingB() const {
+    return false;
+}
+
 void ScheduleApp::task() {
     GLCD.SetRotation(ROTATION_0);
     Tilda::getGUITask().setM2Root(&schedule_days_align);
