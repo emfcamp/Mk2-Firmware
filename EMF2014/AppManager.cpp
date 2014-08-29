@@ -41,32 +41,6 @@
 #include "WeatherApp.h"
 
 
-//
-// Define the 'new' operator for C++ to use the freeRTOS memory management
-// functions. THIS IS NOT OPTIONAL!
-//
-void *operator new(size_t size){
-    void* p = pvPortMalloc(size);
-    debug::log("*** new " + String((int)p));
-    return p;
-}
-
-void operator delete(void *p){
-    debug::log("*** delete " + String((int)p));
-    vPortFree( p );
-}
-
-void *operator new[](size_t size){
-    void* p = pvPortMalloc(size);
-    debug::log("*** new[] " + String((int)p));
-    return p;
-}
-
-void operator delete[](void *p){
-    debug::log("*** delete[] " + String((int)p));
-    vPortFree( p );
-}
-
 // Add your app here to appear in the app list
 static const AppDefinition APPS[] = {
         AppDefinition("Schedule",      ScheduleApp::New),
