@@ -45,6 +45,8 @@ public:
 
     static const char *headerText(m2_rom_void_p element);
     static const char *footerText(m2_rom_void_p element);
+
+    bool killByPressingB() const;
 protected:
 private:
     HomeScreenApp();

@@ -49,6 +49,7 @@ protected:
 	void task();
 	void afterSuspension();
 	void beforeResume();
+	bool killByPressingB() const;
 private:
 	ButtonSubscription *bs = 0;
 };

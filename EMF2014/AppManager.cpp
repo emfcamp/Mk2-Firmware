@@ -92,6 +92,10 @@ String AppManager::getActiveAppName() const {
     return "";
 }
 
+App* AppManager::getActiveApp() const {
+    return mActiveAppItem->mApp;
+}
+
 AppManager::AppItem* AppManager::createAndAddApp(app_ctor aNew) {
     for (int i = 0 ; i < MAX_APPS ; ++i) {
         if (mAppItems[i] == NULL) {

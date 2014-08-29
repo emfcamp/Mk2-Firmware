@@ -59,7 +59,7 @@
 // Discovery time in ticks
 #define RADIO_DISCOVERY_TIME 3000
 // Sleep between unsuccessful discoverys
-#define RADIO_UNSUCCESSFUL_DISCOVERY_SLEEP 10000
+#define RADIO_UNSUCCESSFUL_DISCOVERY_SLEEP 60000
 // Time spend without incoming messages before badge goes back into
 // discovery mode (in ticks)
 #define RADIO_RECEIVE_TIMEOUT 10000

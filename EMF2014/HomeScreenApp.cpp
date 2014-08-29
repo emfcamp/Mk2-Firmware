@@ -70,6 +70,10 @@ bool HomeScreenApp::keepAlive() const {
     return true;
 }
 
+bool HomeScreenApp::killByPressingB() const {
+    return false;
+}
+
 void HomeScreenApp::newOrientation(uint8_t orientation) {
     if (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING && eventGroup != NULL) {
         xEventGroupSetBits(eventGroup,
