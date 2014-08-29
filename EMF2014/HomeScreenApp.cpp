@@ -31,9 +31,11 @@
 #include "HomeScreenApp.h"
 #include "Tilda.h"
 #include <glcd.h>
-#include "logo.h"
 #include <M2tk.h>
 #include "GUITask.h"
+#include "fonts/allFonts.h"
+#include "TiLDA_64x96.h"
+#include "TiLDA_64x128.h"
 
 #define HOMESCREEN_ORIENATION_CHANGE_BIT (1 << 0)
 
@@ -120,9 +122,7 @@ const char *HomeScreenApp::footerText(m2_rom_void_p element) {
 
 void HomeScreenApp::task() {
     eventGroup = xEventGroupCreate();
-    GLCD.DrawBitmap(logo,0,8);
-    //Tilda::delay(5000);
-
+    Tilda::getGUITask().setOrientation(ORIENTATION_HELD);
     const uint8_t app_count = Tilda::getAppManager().getAppCount();
 
     for (uint8_t i = 0; i < app_count; ++i) {
@@ -150,12 +150,9 @@ void HomeScreenApp::task() {
         if ((uxBits & HOMESCREEN_ORIENATION_CHANGE_BIT) != 0 ) {
             Orientation_t orientation = Tilda::getOrientation();
             if (orientation == ORIENTATION_HUNG) {
-                GLCD.SetRotation(ROTATION_270);
-                Tilda::getGUITask().clearRoot();
-                GLCD.DrawBitmap(HOMESCREEN_HUNG_XBM ,0, 0);
-
+                drawHungScreen();
             } else {
-                GLCD.SetRotation(ROTATION_90);
+                Tilda::getGUITask().setOrientation(ORIENTATION_HELD);
                 Tilda::getGUITask().setM2Root(&homeScreenApp_m2_top_el_expandable_menu);
             }
 
@@ -166,9 +163,26 @@ void HomeScreenApp::task() {
     }
 }
 
+void HomeScreenApp::drawHungScreen() {
+    Tilda::getGUITask().setOrientation(ORIENTATION_HUNG);
+    Tilda::getGUITask().clearRoot();
+    Tilda::log(Tilda::getUserNameLine1());
+    Tilda::log(Tilda::getUserNameLine2());
+    if (*(Tilda::getUserNameLine1()) == 0 && *(Tilda::getUserNameLine2()) == 0) { // No name set
+        GLCD.DrawBitmap(TiLDA_Logo_64x128 ,0, 0); // Full Screen Image
+    } else {
+        GLCD.SelectFont(System5x7);
+
+        GLCD.DrawString(Tilda::getUserNameLine1(),2,8);
+        GLCD.DrawString(Tilda::getUserNameLine2(),2,16);
+        GLCD.DrawBitmap(TiLDA_64x96,0,32);
+
+    }
+}
+
 void HomeScreenApp::afterSuspension() {}
 void HomeScreenApp::beforeResume() {
-    GLCD.SetRotation(ROTATION_90);
+    Tilda::getGUITask().setOrientation(ORIENTATION_HELD);
     Tilda::getGUITask().setM2Root(&homeScreenApp_m2_top_el_expandable_menu);
     // Turn of LEDs
     Tilda::setLedColor({0, 0, 0});

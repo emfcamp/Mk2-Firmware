@@ -1,7 +1,7 @@
 /*
  TiLDA Mk2
 
- Task
+ Tetris
 
  The MIT License (MIT)
 
@@ -26,33 +26,13 @@
  SOFTWARE.
  */
 
-#include "BlinkApp.h"
-#include "Tilda.h"
+#pragma once
 
-App* BlinkApp::New() {
-    return new BlinkApp;
-}
+#include "Game.h"
 
-BlinkApp::BlinkApp() {}
-
-String BlinkApp::getName() const {
-    return "BlinkApp";
-}
-
-bool BlinkApp::keepAlive() const {
-    return false;
-}
-
-void BlinkApp::task() {
-    Tilda::getGUITask().clearRoot(); // Clean screen
-
-    while(true) {
-        Tilda::setLedColor({255, 0, 0}); // red
-        Tilda::delay(300);
-        Tilda::setLedColor({0, 255, 0}); // green
-        Tilda::delay(300);
-        Tilda::setLedColor({0, 0, 255}); // blue
-        Tilda::delay(300);
-    }
-}
-
+class TetrisApp : public GameApp {
+public:
+	static App* New();
+	TetrisApp();
+	String getName() const;
+};

@@ -49,4 +49,5 @@ public:
 
     void setM2Root(m2_rom_void_p newRoot, uint8_t next_cnt = 0, uint8_t cv = 0, bool setHome = true);
     void clearRoot();
+    void setOrientation(Orientation_t orientation);
 };

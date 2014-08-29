@@ -91,10 +91,22 @@ String LCDTask::getName() const
 void LCDTask::task() {
   GLCD.Init();
   while(true) {
+    if(_enabled){
     GLCD.WaitForUpdate();
     // Write framebuffer to display
     GLCD.Display();
+    }
     // Sleep for 40ms, to limit updates to 25fps
     vTaskDelay(40);
    }
+}
+
+void LCDTask::disable()
+{
+  _enabled=false;
+}
+
+void LCDTask::enable()
+{
+  _enabled=true;
 }

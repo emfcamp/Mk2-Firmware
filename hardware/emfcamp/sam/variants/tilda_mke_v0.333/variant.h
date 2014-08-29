@@ -134,7 +134,7 @@ static const uint8_t SCK  = PIN_SPI_SCK;
 #define WIRE_INTERFACE_ID    ID_TWI1
 #define WIRE_ISR_HANDLER     TWI1_Handler
 #define WIRE_ISR_ID          TWI1_IRQn
-    
+
 #define PIN_WIRE1_SDA        (70u)
 #define PIN_WIRE1_SCL        (71u)
 #define WIRE1_INTERFACE      TWI0
@@ -251,7 +251,7 @@ static const uint8_t CAN1TX = 107;
 #define TP25                  (33u) //D33
 #define TP26                  (32u) //D32
 #define TP27                  (96u) //UOTGVOBOF
-    
+
 // LCD display v0.2+
 #define LCD_CS                BOARD_SPI_SS2
 #define LCD_POWER             (40u)
@@ -263,15 +263,15 @@ static const uint8_t CAN1TX = 107;
 
 // MCP73831 v0.2+
 #define MCP_STAT              (62u)
-    
+
 // RGB LED's
-#define LED1_RED              (37u)
+#define LED1_BLUE              (37u)
 #define LED1_GREEN            (39u)
-#define LED1_BLUE             (41u)
-#define LED2_RED              (82u)
+#define LED1_RED             (41u)
+#define LED2_BLUE              (82u)
 #define LED2_GREEN            (44u)
-#define LED2_BLUE             (45u)
-    
+#define LED2_RED             (45u)
+
 // epaper display v0.1
 #define EPD_CS                BOARD_SPI_SS2
 #define EPD_BUSY              (38u)
@@ -280,11 +280,11 @@ static const uint8_t CAN1TX = 107;
 #define EPD_DISCHARGE         (32u)
 #define EPD_BORDER_CONTROL    (40u)
 #define EPD_PANEL_ON          (33u)
-    
+
 // SD socket
 #define SD_CS                 BOARD_SPI_SS1
 #define SD_CARD_DECTECT       (36u)
-    
+
 // Flash
 #define FLASH_CS              BOARD_SPI_SS0
 #define FLASH_HOLD            (49u)
@@ -292,15 +292,15 @@ static const uint8_t CAN1TX = 107;
 // IMU (MPU & HMC)
 #define MPU_INT               (31u)
 #define HMC_DRDY              (30u)
-    
+
 // Radio (SRF)
 #define SRF_SLEEP             (61u)
 #define SRF_AT_COMMAND        (43u)
-    
+
 //IR
 #define IR_TX_PWM             (6u)
 #define IR_RX                 (42u)
-    
+
 //Buttons
 #define BUTTON_LIGHT          (60u)
 #define BUTTON_SCREEN_RIGHT   (46u)
@@ -312,7 +312,7 @@ static const uint8_t CAN1TX = 107;
 #define BUTTON_DOWN           (26u)
 #define BUTTON_LEFT           (28u)
 #define BUTTON_CENTER         (24u)
-    
+
 //PMIC
 #define VBATT_MON             A11
 #define PMIC_ENOTG            (96u)
@@ -369,4 +369,3 @@ extern USARTClass Serial3;
 #define SERIAL_PORT_HARDWARE3       Serial3
 
 #endif /* _VARIANT_TILDA_MK2_ */
-

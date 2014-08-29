@@ -1,8 +1,7 @@
 /*
  TiLDA Mk2
 
- Blink!
- Because every arduino sketch needs blinking lights
+ Base class for games
 
  The MIT License (MIT)
 
@@ -27,29 +26,45 @@
  SOFTWARE.
  */
 
-#pragma once
+#include "glcd.h"
+#include "Tilda.h"
+#include "Game.h"
 
-#include <Arduino.h>
-#include <FreeRTOS_ARM.h>
-#include "EMF2014Config.h"
-#include "App.h"
-#include "RGBTask.h"
-#include "GUITask.h"
-#include "ButtonSubscription.h"
+GameApp::~GameApp() {
+	delete game;
+	delete bs;
+}
 
-class BlinkApp: public App {
-public:
-    static App* New();
+void GameApp::task() {
+	TickType_t lw = xTaskGetTickCount();
+	bs = Tilda::createButtonSubscription(A | B | UP | DOWN | LEFT | RIGHT);
 
-    String getName() const;
-protected:
-private:
-    BlinkApp();
-    BlinkApp(const BlinkApp&);
+	Tilda::getLCDTask().disable();
+	Tilda::getGUITask().clearRoot();
+	GLCD.SetRotation(ROTATION_90);
 
-    bool keepAlive() const;
+	game->init();
 
-    void task();
-private:
+	while (true) {
+		Button b;
+		while ((b = bs->waitForPress((TickType_t) 0))) {
+			game->handleButton(b);
+		}
 
-};
+		if (!game->paused) game->loop();
+
+		vTaskDelayUntil(&lw, game->period / portTICK_PERIOD_MS);
+	}
+}
+
+void GameApp::afterSuspension() {
+	Tilda::getLCDTask().enable();
+}
+
+void GameApp::beforeResume() {
+        if (bs) bs->clear();
+
+	Tilda::getLCDTask().disable();
+	Tilda::getGUITask().clearRoot();
+	GLCD.SetRotation(ROTATION_90);
+}

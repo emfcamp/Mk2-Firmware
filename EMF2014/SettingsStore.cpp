@@ -46,6 +46,11 @@ SettingsStore::SettingsStore(MessageCheckTask& aMessageCheckTask)
         mObservers[i] = NULL;
     }
 
+    for (int i = 0; i < 11; ++i) {
+        name1[i] = 0;
+        name2[i] = 0;
+    }
+
     mMessageCheckTask.subscribe(this, CONTENT_RID_RETURN_BADGE_ID, CONTENT_RID_RETURN_BADGE_ID);
 
     mObserversMutex = xSemaphoreCreateMutex();
@@ -113,13 +118,27 @@ void SettingsStore::handleMessage(const IncomingRadioMessage& radioMessage) {
 
         if (ourUniqueId) {
             mBadgeId = Utils::bytesToInt(radioMessage.content()[16], radioMessage.content()[17]);
-            debug::log("SettingsStore: Received Badge ID " + String(mBadgeId));
+
+            for (int i = 0; i < 10; ++i) {
+                name1[i] = radioMessage.content()[18 + i];
+                name2[i] = radioMessage.content()[28 + i];
+            }
+
+            debug::log("SettingsStore: Received Badge ID " + String(mBadgeId) + " with name1 " + String(name1) + " and name2 " + String(name2));
 
             notifyObservers(mBadgeId);
         } else {
             debug::log("not our unique id");
         }
     }
+}
+
+char* SettingsStore::getUserNameLine1() {
+    return name1;
+}
+
+char* SettingsStore::getUserNameLine2() {
+    return name2;
 }
 
 bool SettingsStore::getUniqueId(uint32_t* unique_id) const {

@@ -144,3 +144,11 @@ char* Tilda::radioChannelIdentifier() {
 uint8_t Tilda::radioRssi() {
     return _radioReceiveTask->rssi();
 }
+
+char* Tilda::getUserNameLine1() {
+    return _settingsStore->getUserNameLine1();
+}
+
+char* Tilda::getUserNameLine2() {
+    return _settingsStore->getUserNameLine2();
+}

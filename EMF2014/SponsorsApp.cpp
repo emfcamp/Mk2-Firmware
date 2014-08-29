@@ -60,12 +60,19 @@ void SponsorsApp::_draw() {
 
 void SponsorsApp::task() {
     Tilda::getGUITask().clearRoot();
-    GLCD.SetRotation(ROTATION_0);
-    _page = 0;
+    Tilda::getGUITask().setOrientation(ORIENTATION_LEFT); //Image is rotated
+    _page = 1;
     while(true) {
         _draw();
-        Tilda::delay(5000);
         _page = (_page + 1) % 2;
+        for (uint8_t i=0; i<5; ++i) {
+            Tilda::setLedColor({255, 0, 0}); // red
+            Tilda::delay(300);
+            Tilda::setLedColor({0, 255, 0}); // green
+            Tilda::delay(300);
+            Tilda::setLedColor({0, 0, 255}); // blue
+            Tilda::delay(300);
+        }
     }
 }
 
@@ -73,6 +80,6 @@ void SponsorsApp::afterSuspension() {}
 void SponsorsApp::beforeResume() {
   Tilda::getGUITask().clearRoot();
   GLCD.ClearScreen();
-  GLCD.SetRotation(ROTATION_0);
+  Tilda::getGUITask().setOrientation(ORIENTATION_LEFT); //Image is rotated.
   _draw();
 }

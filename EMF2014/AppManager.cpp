@@ -35,9 +35,9 @@
 #include "AppManager.h"
 #include "BadgeIdApp.h"
 #include "SnakeApp.h"
-#include "BlinkApp.h"
 #include "HelloWorldApp.h"
 #include "ScheduleApp.h"
+#include "TetrisApp.h"
 #include "WeatherApp.h"
 
 // Add your app here to appear in the app list
@@ -45,9 +45,9 @@ static const AppDefinition APPS[] = {
         AppDefinition("Schedule",      ScheduleApp::New),
         AppDefinition("Weather",       WeatherApp::New),
         AppDefinition("Badge ID",      BadgeIdApp::New),
-        AppDefinition("Snake",         SnakeApp::New),
-        AppDefinition("HelloWorld",    HelloWorldApp::New),
-        AppDefinition("Blink!",        BlinkApp::New),
+        //AppDefinition("Snake",         SnakeApp::New),
+        AppDefinition("Tetris",        TetrisApp::New),
+        // AppDefinition("HelloWorld",    HelloWorldApp::New), // Uncomment this
         AppDefinition("Sponsors",      SponsorsApp::New)
 };
 

@@ -35,6 +35,8 @@
 #include "AppManager.h"
 #include "Tilda.h"
 #include <glcd.h>
+#include "logo.h"
+#include <fonts/allFonts.h>
 
 App* FlashLightApp::New() {
     return new FlashLightApp();
@@ -61,17 +63,46 @@ void FlashLightApp::updateLeds() {
 
     if (Tilda::getOrientation() != ORIENTATION_HUNG) {
         actualLightLevel = 2;
+        if (!showDimMessage) {
+            showDimMessage = true;
+            updateMessage();
+        }
+    } else {
+        if (showDimMessage) {
+            showDimMessage = false;
+            updateMessage();
+        }
     }
 
     Tilda::setLedColor({actualLightLevel, actualLightLevel, actualLightLevel});
 }
 
+void FlashLightApp::updateMessage() {
+    Tilda::getGUITask().clearRoot();
+    GLCD.DrawBitmap(EMF_LOGO_XBM ,17, 8);
+    GLCD.SelectFont(System5x7);
+    if (showDimMessage) {
+        GLCD.SetRotation(ROTATION_90);
+        GLCD.CursorToXY(0, 105);
+        GLCD.print(" Non-blind");
+        GLCD.CursorToXY(0, 115);
+        GLCD.print("   Mode");
+    } else {
+        GLCD.SetRotation(ROTATION_270);
+        GLCD.CursorToXY(0, 105);
+        GLCD.print("UP/DOWN for");
+        GLCD.CursorToXY(0, 115);
+        GLCD.print("brightness");
+    }
+}
+
 void FlashLightApp::task() {
     GLCD.SetRotation(ROTATION_90);
-    Tilda::getGUITask().clearRoot();
-    GLCD.DrawBitmap(FLASHLIGHT_XBM ,0, 0);
 
     updateLeds();
+    showDimMessage = true;
+    updateMessage();
+
     while(true) {
         Button button = mButtonSubscription->waitForPress(100);
         if (button == UP || button == LEFT) {
@@ -88,6 +119,9 @@ void FlashLightApp::task() {
             }
         }
         updateLeds();
+        GLCD.SelectFont(fixednums8x16);
+        GLCD.CursorToXY(8,72);
+        GLCD.print(mLightLevel);
     }
 }
 

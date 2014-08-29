@@ -1,8 +1,7 @@
 /*
  TiLDA Mk2
 
- FlashLightApp
- Torch Mode - Press the light button and both RGB LEDs light up.
+ Base class for games
 
  The MIT License (MIT)
 
@@ -29,34 +28,27 @@
 
 #pragma once
 
-#include <Arduino.h>
-#include <FreeRTOS_ARM.h>
 #include "EMF2014Config.h"
-#include "App.h"
-#include "RGBTask.h"
 #include "ButtonSubscription.h"
+#include "App.h"
 
-class FlashLightApp: public App {
+class Game {
 public:
-    static App* New();
-    ~FlashLightApp();
+	int period = 500;
+	bool paused = false;
+	virtual void init() = 0;
+	virtual void loop() = 0;
+	virtual void handleButton(Button) = 0;
+};
 
-	  String getName() const;
-
+class GameApp : public App {
+public:
+	~GameApp();
+protected:
+	Game *game;
+	void task();
+	void afterSuspension();
+	void beforeResume();
 private:
-    FlashLightApp();
-    FlashLightApp(FlashLightApp&);
-
-    void updateLeds();
-    void task();
-    void afterSuspension();
-    void beforeResume();
-
-    void updateMessage();
-
-    bool showDimMessage;
-
-private:
-	unsigned char mLightLevel;
-	ButtonSubscription* mButtonSubscription;
+	ButtonSubscription *bs = 0;
 };

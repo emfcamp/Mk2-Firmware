@@ -58,6 +58,9 @@ public:
     void setBadgeId(uint16_t aBadgeId);
     bool hasBadgeId() const;
 
+    char* getUserNameLine1();
+    char* getUserNameLine2();
+
     void addObserver(SettingsStoreObserver* aObserver);
     void removeObserver(SettingsStoreObserver* aObserver);
 
@@ -69,6 +72,9 @@ private:
 
 private:
     uint16_t mBadgeId;
+
+    char name1[11];
+    char name2[11];
 
     SettingsStoreObserver** mObservers;
     SemaphoreHandle_t mObserversMutex;
