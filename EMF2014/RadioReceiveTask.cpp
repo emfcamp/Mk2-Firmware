@@ -273,7 +273,10 @@ inline void RadioReceiveTask::_checkForStateChange() {
 		if (_discoveryFinishingTime <= xTaskGetTickCount()) {
 			if (_bestChannel == NO_CHANNEL_DISCOVERED) {
 				debug::log("RadioReceiveTask: No channel discovered during this discovery period. Will sleep for certain time and try again");
+				_sleep();
 				vTaskDelay(RADIO_UNSUCCESSFUL_DISCOVERY_SLEEP);
+				_wakeUp();
+				vTaskDelay(RADIO_WAKEUP_TIME);
 				_initialiseDiscoveryState();
 			} else {
 				_initialiseReceiveState();
