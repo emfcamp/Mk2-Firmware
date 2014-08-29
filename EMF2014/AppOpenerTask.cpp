@@ -45,7 +45,7 @@ String AppOpenerTask::getName() const {
 }
 
 void AppOpenerTask::task() {
-    ButtonSubscription* buttonSubscription = Tilda::createButtonSubscription(LIGHT | CENTER);
+    ButtonSubscription* buttonSubscription = Tilda::createButtonSubscription(LIGHT | CENTER | B);
 
     while(true) {
         Button button = buttonSubscription->waitForPress();
@@ -58,6 +58,11 @@ void AppOpenerTask::task() {
         } else if (button == CENTER) {
             delay(CENTER_BUTTON_PRESS_DURATION_FOR_HOME_SCREEN);
             if (digitalRead(BUTTON_CENTER) == LOW) {
+                mAppManager.open(HomeScreenApp::New);
+            }
+        } else if (button == B) {
+            App* activeApp = Tilda::getAppManager().getActiveApp();
+            if (activeApp && activeApp->killByPressingB()) {
                 mAppManager.open(HomeScreenApp::New);
             }
         }

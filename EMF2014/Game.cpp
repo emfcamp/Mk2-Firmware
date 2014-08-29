@@ -68,3 +68,7 @@ void GameApp::beforeResume() {
 	Tilda::getGUITask().clearRoot();
 	GLCD.SetRotation(ROTATION_90);
 }
+
+bool GameApp::killByPressingB() const {
+	return false;
+}
