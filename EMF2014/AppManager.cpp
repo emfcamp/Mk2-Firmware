@@ -45,7 +45,7 @@ static const AppDefinition APPS[] = {
         AppDefinition("Schedule",      ScheduleApp::New),
         AppDefinition("Weather",       WeatherApp::New),
         AppDefinition("Badge ID",      BadgeIdApp::New),
-        //AppDefinition("Snake",         SnakeApp::New),
+        AppDefinition("Snake",         SnakeApp::New),
         AppDefinition("Tetris",        TetrisApp::New),
         // AppDefinition("HelloWorld",    HelloWorldApp::New), // Uncomment this
         AppDefinition("Sponsors",      SponsorsApp::New)
