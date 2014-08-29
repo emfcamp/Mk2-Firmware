@@ -132,7 +132,7 @@ void HomeScreenApp::task() {
 
     for (uint8_t i = 0; i < app_count; ++i) {
         uint8_t name_length = Tilda::getAppManager().getById(i).mName.length() + 1;
-        char* entry_label = new char(name_length);
+        char* entry_label = new char[name_length];
         Tilda::getAppManager().getById(i).mName.toCharArray(entry_label,name_length);
         homeScreenApp_m2_app_list_menu[i].label = entry_label;
         homeScreenApp_m2_app_list_menu[i].element=0;
