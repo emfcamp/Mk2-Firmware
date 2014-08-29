@@ -33,13 +33,11 @@
 GameApp::~GameApp() {
 	delete game;
 	delete bs;
-	Tilda::getLCDTask().enable();
 }
 
 void GameApp::task() {
 	TickType_t lw = xTaskGetTickCount();
-	bs = Tilda::createButtonSubscription(A | B | UP | DOWN | LEFT | RIGHT);
-  if (bs) bs->clear();
+  bs = Tilda::createButtonSubscription(A | B | UP | DOWN | LEFT | RIGHT);
 	Tilda::getLCDTask().disable();
 	Tilda::getGUITask().clearRoot();
 	GLCD.SetRotation(ROTATION_90);
@@ -59,9 +57,12 @@ void GameApp::task() {
 }
 
 void GameApp::afterSuspension() {
-
+	Tilda::getLCDTask().enable();
 }
 
 void GameApp::beforeResume() {
-
+  if (bs) bs->clear();
+	Tilda::getLCDTask().disable();
+	Tilda::getGUITask().clearRoot();
+	GLCD.SetRotation(ROTATION_90);
 }
