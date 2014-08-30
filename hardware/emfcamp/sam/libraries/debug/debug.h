@@ -39,7 +39,7 @@
 #include <FreeRTOS_ARM.h>
 
 // Enable debug task and output
-#define DEBUG 1
+// #define DEBUG 1
 // send the debug output out over the USB Serial line
 #define DEBUG_SERIAL SerialUSB
 // define a pin that will be set to high if stopWithMessage is called
