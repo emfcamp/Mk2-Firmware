@@ -417,10 +417,10 @@ public:
 	void handleButton(Button b) {
 		switch (b) {
 		case A:
-			current->rotateLeft();
+			current->rotateRight();
 			break;
 		case B:
-			current->rotateRight();
+			current->rotateLeft();
 			break;
 		case LEFT:
 			current->moveLeft();
