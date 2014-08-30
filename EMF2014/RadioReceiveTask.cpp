@@ -190,7 +190,7 @@ inline void RadioReceiveTask::_handleDiscoveryPacket(byte packetBuffer[], uint8_
 	_bestChannelIdentifier[0] = packetBuffer[5];
 	_bestChannelIdentifier[1] = packetBuffer[6];
 	_bestChannelIdentifier[2] = packetBuffer[7];
-	_bestChannelIdentifier[4] = 0;
+	_bestChannelIdentifier[3] = 0;
 
 	if (rssi < _bestRssi) {
 		_bestRssi = rssi;
