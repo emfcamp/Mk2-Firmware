@@ -120,7 +120,7 @@ bool WeatherApp::getWeatherString(String& forecastStr, const WeatherForecast& aW
         forecastStr += String(wfp.screenRelativeHumidity) + "% humidity\n";
         forecastStr += String(wfp.precipitationProbability) + "% chance of rain\n";
     } else {
-        forecastStr = "Sorry, no forecast recieved yet. Please try later (or wiggle the joystick to check for update).";
+        forecastStr = "Sorry, no forecast received yet. Please try later (or wiggle the joystick to check for update).";
     }
     return aWeatherForecast.mValid;
 }
