@@ -86,7 +86,7 @@ void BadgeNotifications::handleMessage(const IncomingRadioMessage& aIncomingRadi
         uint8_t type = static_cast<uint8_t>(Utils::getInteger(mReader));
         char* textChars = Utils::getString(mReader);
         String text(textChars);
-        delete textChars;
+        delete[] textChars;
         debug::log("BADGER NOTIFICATION");
         debug::log(text);
         pushNotification(text, rgb1, rgb2, sound, type);
