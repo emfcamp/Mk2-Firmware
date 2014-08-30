@@ -36,6 +36,7 @@ namespace debug {
     static SemaphoreHandle_t serialPortMutex;
 
     void log(String text) {
+#if DEBUG
         // ToDo: Add other debug outputs
         if (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING) {
             if (serialPortMutex == 0) {
@@ -48,9 +49,11 @@ namespace debug {
         } else {
             DEBUG_SERIAL.println(text);
         }
+#endif
     }
 
     void logByteArray(const byte in[], int len) {
+#if DEBUG
         // ToDo: Add other debug outputs
         if (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING) {
             if (serialPortMutex == 0) {
@@ -70,18 +73,22 @@ namespace debug {
         } else {
             DEBUG_SERIAL.println("Can't print hash, scheduler not running.");
         }
+#endif
     }
 
     void logHWM() {
+#if DEBUG
          if (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING) {
             UBaseType_t uxHighWaterMark = uxTaskGetStackHighWaterMark( NULL );
             DEBUG_SERIAL.println("HWM: " + String(uxHighWaterMark));
         } else {
             DEBUG_SERIAL.println("HWM: not running");
         }
+#endif
     }
 
     void logFromISR(String text) {
+#if DEBUG
         // ToDo: Add other debug outputs
         if (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING) {
             if (xSemaphoreTakeFromISR(serialPortMutex, NULL) == pdTRUE) {
@@ -93,6 +100,7 @@ namespace debug {
         } else {
             DEBUG_SERIAL.println(text);
         }
+#endif
     }
 
     /**
