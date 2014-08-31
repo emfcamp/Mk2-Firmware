@@ -166,7 +166,7 @@ const char* ScheduleApp::locationsCallback(uint8_t location, uint8_t msg) {
     mSchedule = Tilda::getDataStore().getSchedule(LAST_SELECTED_DAY, location);
 
     Event* events = mSchedule->getEvents();
-    for (int i ; i < mSchedule->getEventCount() ; ++i) {
+    for (int i = 0 ; i < mSchedule->getEventCount() ; ++i) {
         // Create a string for the list
         // <start time> (title)
         RTC_date_time start = RTC_clock::from_unixtime(events[i].startTimestamp + TIMEZONE_OFFSET);

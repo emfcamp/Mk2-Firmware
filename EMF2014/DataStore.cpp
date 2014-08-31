@@ -49,7 +49,7 @@ DataStore::DataStore(MessageCheckTask& aMessageCheckTask)
 	for (int day = 0 ; day < SCHEDULE_NUM_DAYS ; ++day)
 		mSchedule[day] = new Schedule*[LOCATION_COUNT];
 
-	for (int day ; day < SCHEDULE_NUM_DAYS ; ++day)
+	for (int day = 0 ; day < SCHEDULE_NUM_DAYS ; ++day)
 		for (int location = 0 ; location < LOCATION_COUNT ; ++location)
 			mSchedule[day][location] = new Schedule(NULL, 0);
 
@@ -64,7 +64,7 @@ DataStore::~DataStore() {
 
     delete mWeatherForecast;
 
-    for (int day ; day < SCHEDULE_NUM_DAYS ; ++day)
+    for (int day = 0 ; day < SCHEDULE_NUM_DAYS ; ++day)
 		for (int location = 0 ; location < LOCATION_COUNT ; ++location)
 			delete mSchedule[day][location];
     delete[] mSchedule;
