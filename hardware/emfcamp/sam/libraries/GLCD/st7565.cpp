@@ -282,13 +282,11 @@ void glcd_Device::_do_display() {
         //debug::logByteArray(txBuffer + DEVICE_WIDTH * pagemap[p], 128);
         ::LCDDataDoneFlag = 0;
         digitalWrite(LCD_A0, HIGH); // Select Data Mode
-        digitalWrite(LCD_CS, LOW);  // Select LCD (why doesn't SPI do this?)
         SPI.transferDMA(LCD_CS, txBuffer + DEVICE_WIDTH  * p , rxBuffer, 128,
                         SPI_LAST);
         while (::LCDDataDoneFlag == 0) {
             vTaskDelay(10);
         }
-        digitalWrite(LCD_CS, HIGH);  // De-select LCD (why doesn't SPI do this?)
         ::LCDDataDoneFlag = 0;
     }
     //free(txBuffer);
