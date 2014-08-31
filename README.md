@@ -8,7 +8,7 @@ TiLDA v2 Firmware
 * N.B. Arduino 1.5.7 stores its preferences in a separate location to that of the Arduino 1.0.x IDE).
 
 
-* The TiLDA code base if split in 3 distinct sections:
+* The TiLDA code base is split in 3 distinct sections:
   * The custom TiLDA board definition is kept in **hardware/emfcamp/sam/**.
   * The custom TiLDA hardware libraries are kept in **hardware/emfcamp/sam/libraries** and will only be used if a TiLDA board is selected from the _Tools->Board_ menu.
   * Third is the main firmware sketch which is kept in **EMF2014/**, this has the _.ino_, _.c[pp]_ and _.h_ files for each task.
