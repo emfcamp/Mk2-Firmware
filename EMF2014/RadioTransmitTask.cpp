@@ -83,6 +83,8 @@ void RadioTransmitTask::task() {
 	while(true) {
 		uint32_t transmitDuration;
 		if(xQueueReceive(mQueue, &transmitDuration, portMAX_DELAY) == pdTRUE) {
+			pinMode(PIN_LED_TXL, OUTPUT);
+			digitalWrite(PIN_LED_TXL, 1);
 			mRadioReceiveTask.suspend();
 			#ifdef RADIO_DEBUG_MODE
 				debug::log("RadioTransmitTask: transmit duration (ms): " + String(transmitDuration));
@@ -100,6 +102,8 @@ void RadioTransmitTask::task() {
 			}
 
 			respond();
+
+			digitalWrite(PIN_LED_TXL, 0);
 
 			if (postDelay > RADIO_WAKEUP_TIME) {
 				_sleep();
