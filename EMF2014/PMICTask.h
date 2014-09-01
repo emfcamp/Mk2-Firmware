@@ -41,16 +41,16 @@
 #include "EMF2014Config.h"
 #include "Task.h"
 
-#define PMIC_DEFAULT_RATE       15 * 60 * 1000 // 15 minutes
+#define PMIC_DEFAULT_RATE       1000 // 15 minutes
 #define PMIC_CHARGING           LOW
 #define PMIC_NOTCHARGING        HIGH
 
-#define PMIC_BATTERY_FULL 652               // 100%
-#define PMIC_BATTERY_GOOD 512               // 25%
-#define PMIC_BATTERY_LOW 496                // 17%
-#define PMIC_BATTERY_VERYLOW 481            // 9%
-#define PMIC_BATTERY_FLAT 465               // 0%
-#define PMIC_BATTERY_PERCENT_RATIO 0.534
+#define PMIC_BATTERY_FULL 717               // 4,2v
+#define PMIC_BATTERY_GOOD 666               // 3.9v
+#define PMIC_BATTERY_LOW 648                // 3.8v
+#define PMIC_BATTERY_VERYLOW 631            // 3.7v
+#define PMIC_BATTERY_FLAT 597               // 3.5v
+#define PMIC_BATTERY_PERCENT_RATIO 0.83
 
 
 static void PMICChargeStateInterrupt(void);

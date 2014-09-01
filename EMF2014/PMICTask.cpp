@@ -71,7 +71,7 @@ uint32_t PMICTask::getBatteryReading()
 
 float PMICTask::getBatteryVoltage()
 {
-    return (batteryReading * (3.3 /512));
+    return ((batteryReading*2)/(1024/3));
 }
 
 uint8_t PMICTask::getBatteryPercent()
@@ -110,7 +110,7 @@ void PMICTask::task()
     // initial reading
     batteryReading = analogRead(VBATT_MON);
     chargeState = digitalRead(MCP_STAT);
-    debug::log("PMICTask: Battery: " + String(getBatteryVoltage()) + " Charging: " + chargeState);
+    debug::log("PMICTask: Battery: " + String(getBatteryVoltage()) + " Raw:"+ String(getBatteryReading()) +" Charging: " + chargeState);
     
     if (batteryReading <= PMIC_BATTERY_VERYLOW) {
         // TODO: Panic and Charge now notifications
@@ -148,7 +148,7 @@ void PMICTask::task()
             // wait timed out, time to sample the battery voltage
             batteryReading = analogRead(VBATT_MON);
             chargeState = digitalRead(MCP_STAT);
-            debug::log("PMICTask: Battery: " + String(getBatteryVoltage()) + " Charging: " + chargeState);
+          debug::log("PMICTask: Battery: " + String(getBatteryVoltage()) + " Raw:"+ String(getBatteryReading()) +" Charging: " + chargeState);
             // check battery state and notify others
             if (batteryReading <= PMIC_BATTERY_VERYLOW) {
                 // TODO: Panic and Charge now notifications
