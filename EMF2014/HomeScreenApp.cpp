@@ -115,13 +115,13 @@ const char *HomeScreenApp::footerText(m2_rom_void_p element) {
 
     String footer;
     if (Tilda::radioChannelIdentifier()[0] == '?') {
-        footer = "            " +
-                 String(Tilda::getBatteryPercent()) + "%";
+        footer = ( Tilda::getChargeState() ? "charging " : "         " +
+        String(Tilda::getBatteryPercent()) + "%";
     } else {
         footer = String(Tilda::radioChannelIdentifier()) +
-                 " -" +
+                 "-" +
                  String(Tilda::radioRssi()) +
-                 "    " +
+                 " "+String((Tilda::getChargeState()?"crg":"   "))+" " +
                  String(Tilda::getBatteryPercent()) + "%";
     }
 
