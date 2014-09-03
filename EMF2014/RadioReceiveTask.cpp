@@ -78,6 +78,9 @@ void RadioReceiveTask::task() {
 	while (true) {
 		uint8_t availableBytes = RADIO_SERIAL.available();
 		if (availableBytes > 0) {
+			pinMode(PIN_LED_RXL, OUTPUT);
+			digitalWrite(PIN_LED_RXL, 1);
+
 			#ifdef RADIO_DEBUG_MODE
 				if (serialRingBufferHWM < availableBytes) {
 					serialRingBufferHWM = availableBytes;
@@ -102,6 +105,8 @@ void RadioReceiveTask::task() {
 			#endif
 
 			packetBufferLength = _parsePacketBuffer(packetBuffer, packetBufferLength);
+
+			digitalWrite(PIN_LED_RXL, 0);
 
 			_lastMessageReceived = xTaskGetTickCount();
 		} else {
