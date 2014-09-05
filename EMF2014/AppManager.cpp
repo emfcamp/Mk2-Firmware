@@ -49,7 +49,8 @@ static const AppDefinition APPS[] = {
         AppDefinition("Badge ID",      BadgeIdApp::New),
         AppDefinition("Snake",         SnakeApp::New),
         AppDefinition("Tetris",        TetrisApp::New),
-        AppDefinition("Ed Balls",      EdBallsApp::New),
+//        AppDefinition("Ed Balls",      EdBallsApp::New),
+//        AppDefinition("Hello World",   HelloWorldApp::New),
         AppDefinition("Sponsors",      SponsorsApp::New)
 };
 
