@@ -1,7 +1,7 @@
 /*
  TiLDA Mk2
 
- Task
+ Ed Balls
 
  The MIT License (MIT)
 
@@ -35,15 +35,14 @@
 #include "GUITask.h"
 #include <fonts/allFonts.h>
 
-// Use this as a boilerplate app class. If you create a new one, make sure to also register it in the AppManager
-// otherwise it won't show up on the HomeScreen
+// Ed Balls
 
 App* EdBallsApp::New() {
     return new EdBallsApp;
 }
 
 EdBallsApp::EdBallsApp() {
-    mButtonSubscription = Tilda::createButtonSubscription(UP | DOWN); // Define the buttons you're interested in here
+    mButtonSubscription = Tilda::createButtonSubscription(UP | DOWN);
 }
 
 EdBallsApp::~EdBallsApp() {
@@ -55,22 +54,20 @@ String EdBallsApp::getName() const {
 }
 
 bool EdBallsApp::keepAlive() const {
-        return false; // Should this app be suspended or killed when another app is started?
+        return false;
 }
 
 void EdBallsApp::task() {
-        // Do some setup in here
         Tilda::getGUITask().clearRoot(); // Clean screen
-        GLCD.SetRotation(ROTATION_90);   // Orientation
+        GLCD.SetRotation(ROTATION_90);
 
-        Tilda::setLedColor({0, 0, 0});   // LEDs off
+        Tilda::setLedColor({0, 0, 0});
 
         while(true) {  // Make sure this loop goes on forever
-          GLCD.SelectFont(System5x7);      // Font
-          GLCD.CursorToXY(8, 60);           // Position cursor
-          GLCD.print("Ed Balls");             // Write text
-          Button button = mButtonSubscription->waitForPress(1000); // Wait for up to a second for a button press
-            // Make sure all the buttons you're interested in are defined in the constructor
+          GLCD.SelectFont(System5x7);
+          GLCD.CursorToXY(8, 60);
+          GLCD.print("Ed Balls");             // Ed Balls
+          Button button = mButtonSubscription->waitForPress(1000);
             if (button == UP) {
                 Tilda::setLedColor({250, 129, 0}); // orange
             } else if (button == DOWN) {
