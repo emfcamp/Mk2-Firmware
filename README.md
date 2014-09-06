@@ -6,6 +6,7 @@ TiLDA v2 Firmware
 * The easiest way to work with this repo is to set it as the sketchbook folder in the IDE's File->Preferences menu (restart the IDE after changing this setting).
 * This way you will not have any conflicts with your existing sketchbook and library folders.
 * N.B. Arduino 1.5.7 stores its preferences in a separate location to that of the Arduino 1.0.x IDE).
+* If you're using git or your own editor, you'll need to restart the IDE after touching any file that's open. To avoid this, go to File->Preferences, and tick "Use external editor"
 
 
 * The TiLDA code base is split in 3 distinct sections:
