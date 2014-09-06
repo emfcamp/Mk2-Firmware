@@ -1,8 +1,7 @@
 /*
  TiLDA Mk2
 
- HelloWorldApp
- Play around in this app or use it as a skeleton for your own one
+ Ed Balls
 
  The MIT License (MIT)
 
