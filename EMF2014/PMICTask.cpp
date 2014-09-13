@@ -135,16 +135,17 @@ void PMICTask::task()
             // new sample rate notting todo but clear the bit and re enter the wait
             xEventGroupClearBits(eventGroup,
                                  PMIC_SAMPLE_RATE_BIT);
-            
-        } else if ((uxBits & PMIC_CHAREG_STATE_BIT) != 0 ) {
+        }
+
+        if ((uxBits & PMIC_CHAREG_STATE_BIT) != 0 ) {
             chargeState = digitalRead(MCP_STAT);
             xEventGroupClearBits(eventGroup,
                                  PMIC_CHAREG_STATE_BIT);
             debug::log("PMICTask: New charge state: " + String(chargeState));
             // TODO: notify others that want to know about state change
-            
-            
-        } else {
+        }
+
+        if ((uxBits & (PMIC_CHAREG_STATE_BIT | PMIC_SAMPLE_RATE_BIT)) == 0 ) {
             // wait timed out, time to sample the battery voltage
             batteryReading = analogRead(VBATT_MON);
             chargeState = digitalRead(MCP_STAT);
