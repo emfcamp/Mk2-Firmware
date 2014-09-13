@@ -77,14 +77,15 @@ static signed char gyro_orientation[9] = { 1, 0, 0,             // X axis mappin
 // Callbacks
 static void IMU_interrupt(void) {
     if (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING) {
-        static BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+        BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+        BaseType_t xResult;
         
         // set the int state bit to wake the IMU Task
-        xEventGroupSetBitsFromISR(imuTask.eventGroup,
-                                  IMU_INT_BIT,
-                                  &xHigherPriorityTaskWoken);
+        xResult = xEventGroupSetBitsFromISR(imuTask.eventGroup,
+                                            IMU_INT_BIT,
+                                            &xHigherPriorityTaskWoken);
         
-        if (xHigherPriorityTaskWoken) {
+        if (xResult == pdPASS) {
             portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
         }
     }
