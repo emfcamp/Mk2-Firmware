@@ -42,17 +42,13 @@ void Task::start() {
     if (mTaskHandle == NULL) {
         debug::log("Creating task: " + getName());
         
-        // get and convert the task name
+        // get task name
         String taskName = getName();
-        char* name = new char[taskName.length()];
-        taskName.toCharArray(name, taskName.length());
 
         // start the task
-        if (xTaskCreate(_task, name, ( uint8_t ) 255, static_cast<void*>(this), 2, &mTaskHandle) != pdPASS) {
+        if (xTaskCreate(_task, taskName.c_str(), ( uint8_t ) 255, static_cast<void*>(this), 2, &mTaskHandle) != pdPASS) {
             debug::stopWithMessage("Failed to create " + getName() + " task");
         }
-
-        delete[] name;
     } else if (eTaskGetState(mTaskHandle) == eSuspended) {
         debug::log("Resume task: " + getName());
         beforeResume();
