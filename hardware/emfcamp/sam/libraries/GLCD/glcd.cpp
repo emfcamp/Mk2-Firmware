@@ -34,6 +34,7 @@
 
 #include <avr/pgmspace.h>
 #include "glcd.h"
+#include <debug.h>
 #include "glcd_Device.h"
 
 glcd::glcd() {}
@@ -359,45 +360,51 @@ void glcd::InvertRect(uint8_t x, uint8_t y, uint8_t width, uint8_t height) {
     }
     mask <<= pageOffset;
 
-    /*
-     * First do the fractional pages at the top of the region
-     */
-    this->GotoXY(x, y);
-    for (i = 0; i <= width; i++) {
-        data = this->ReadData();
-        tmpData = ~data;
-        data = (tmpData & mask) | (data & ~mask);
-        this->WriteData(data);
-    }
-
-    /*
-     * Now do the full pages
-     */
-    while (h + 8 <= height) {
-        h += 8;
-        y += 8;
+    debug::log("GLCD: InvertRect");
+    if (LockFrameBuffer()) {
+        /*
+         * First do the fractional pages at the top of the region
+         */
         this->GotoXY(x, y);
-
         for (i = 0; i <= width; i++) {
-            data = this->ReadData();
-            this->WriteData(~data);
-        }
-    }
-
-    /*
-     * Now do the fractional pages aat the bottom of the region
-     */
-    if (h < height) {
-        mask = ~(0xFF << (height - h));
-        this->GotoXY(x, y + 8);
-
-        for (i = 0; i <= width; i++) {
-            data = this->ReadData();
+            data = _do_ReadData();
             tmpData = ~data;
             data = (tmpData & mask) | (data & ~mask);
-            this->WriteData(data);
+            _do_WriteData(data);
         }
+
+        /*
+         * Now do the full pages
+         */
+        while (h + 8 <= height) {
+            h += 8;
+            y += 8;
+            this->GotoXY(x, y);
+
+            for (i = 0; i <= width; i++) {
+                data = _do_ReadData();
+                _do_WriteData(~data);
+            }
+        }
+
+        /*
+         * Now do the fractional pages aat the bottom of the region
+         */
+        if (h < height) {
+            mask = ~(0xFF << (height - h));
+            this->GotoXY(x, y + 8);
+
+            for (i = 0; i <= width; i++) {
+                data = _do_ReadData();
+                tmpData = ~data;
+                data = (tmpData & mask) | (data & ~mask);
+                _do_WriteData(data);
+            }
+        }
+
+        UnlockFrameBuffer();
     }
+    _updateDisplay();
 }
 /**
  * Set LCD Display mode
@@ -433,7 +440,7 @@ void glcd::SetDisplayMode(uint8_t invert) { // was named SetInverted
  */
 
 void glcd::DrawBitmap(Image_t bitmap, uint8_t x, uint8_t y, uint8_t color) {
-    uint8_t width, height;
+    uint8_t width, height, newheight;
     uint8_t i, j;
 
     width = ReadPgmData(bitmap++);
@@ -468,23 +475,46 @@ void glcd::DrawBitmap(Image_t bitmap, uint8_t x, uint8_t y, uint8_t color) {
      *	would just suck up a few more cycles.
      */
     if ((y & 7) || (height & 7)) {
+        debug::log("GLCD: DrawBitmap filling rect");
         this->FillRect(x, y, width, height, WHITE);
     }
 #endif
 
-    height +=
-        height % 8; // Force heght to multiple of 8 so you don't miss a row next
+    /* We write bytes from the top-left (0, 0) to bottom-right (64, 128),
+     * writing 8 bits at a time vertically, and increasing x, so:
+     *     64
+     * +--------+
+     * |------->|
+     * |---->   |
+     * |        | 1
+     * |        | 2
+     * |        | 8
+     * |        |
+     * |        |
+     * +--------+
+     *
+     */
 
-    for (j = 0; j < height / 8; j++) {
-        this->GotoXY(x, y + (j * 8));
-        for (i = 0; i < width; i++) {
-            uint8_t displayData = ReadPgmData(bitmap++);
-            if (color == BLACK)
-                this->WriteData(displayData);
-            else
-                this->WriteData(~displayData);
+    // FIXME: deal with y not being a multiple of 8
+
+    newheight = (height + 7) & ~7; // Round height up to multiple of 8 so you don't miss a row next
+    debug::log("GLCD: DrawBitmap height " + String(height) + " -> " + String(newheight));
+
+    if (LockFrameBuffer()) {
+        for (j = 0; j < newheight / 8; j++) {
+            this->GotoXY(x, y + (j * 8));
+            for (i = 0; i < width; i++) {
+                uint8_t displayData = ReadPgmData(bitmap++);
+                if (color == BLACK)
+                    _do_WriteData(displayData);
+                else
+                    _do_WriteData(~displayData);
+            }
         }
+
+        UnlockFrameBuffer();
     }
+    _updateDisplay();
 }
 
 #ifdef NOTYET

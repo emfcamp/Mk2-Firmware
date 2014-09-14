@@ -109,17 +109,16 @@ class glcd_Device : public Print {
     static uint8_t _y;
     static uint8_t _framebuffer[DEVICE_HEIGHT / 8 * DEVICE_WIDTH];
     static QueueHandle_t _updateWaiting;
-    void _updateDisplay();
     static SemaphoreHandle_t frameBufferMutex;
     void _do_display();
-    uint8_t _do_ReadData(void);
-    void _do_WriteData(uint8_t data);
     void _spiwrite(uint8_t c);
     static uint8_t LCDDataDoneFlag;
     rotation_t _rotation;
   public:
     glcd_Device();
     void WaitForUpdate(void);
+    bool LockFrameBuffer();
+    void UnlockFrameBuffer();
     uint8_t ReadData(void);
     void WriteData(uint8_t);
     void Init();
@@ -130,6 +129,9 @@ class glcd_Device : public Print {
     rotation_t GetRotation();
 
   protected:
+    void _updateDisplay();
+    uint8_t _do_ReadData(void);
+    void _do_WriteData(uint8_t data);
     void SetDot(uint8_t x, uint8_t y, uint8_t color);
     void SetPixels(uint8_t x, uint8_t y, uint8_t x1, uint8_t y1, uint8_t color);
 

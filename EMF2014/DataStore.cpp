@@ -46,12 +46,15 @@ DataStore::DataStore(MessageCheckTask& aMessageCheckTask)
 	mWeatherForecast = new WeatherForecast;
 	mWeatherForecast->mValid = false;
 	mSchedule = new Schedule**[SCHEDULE_NUM_DAYS];
-	for (int day = 0 ; day < SCHEDULE_NUM_DAYS ; ++day)
+	for (int day = 0 ; day < SCHEDULE_NUM_DAYS ; ++day) {
 		mSchedule[day] = new Schedule*[LOCATION_COUNT];
+	}
 
-	for (int day = 0 ; day < SCHEDULE_NUM_DAYS ; ++day)
-		for (int location = 0 ; location < LOCATION_COUNT ; ++location)
+	for (int day = 0 ; day < SCHEDULE_NUM_DAYS ; ++day) {
+		for (int location = 0 ; location < LOCATION_COUNT ; ++location) {
 			mSchedule[day][location] = new Schedule(NULL, 0);
+		}
+	}
 
 	mWeatherSemaphore = xSemaphoreCreateMutex();
 	mScheduleSemaphore = xSemaphoreCreateMutex();
@@ -64,9 +67,12 @@ DataStore::~DataStore() {
 
     delete mWeatherForecast;
 
-    for (int day = 0 ; day < SCHEDULE_NUM_DAYS ; ++day)
-		for (int location = 0 ; location < LOCATION_COUNT ; ++location)
+	for (int day = 0 ; day < SCHEDULE_NUM_DAYS ; ++day) {
+		for (int location = 0 ; location < LOCATION_COUNT ; ++location) {
 			delete mSchedule[day][location];
+		}
+		delete[] mSchedule[day];
+	}
     delete[] mSchedule;
 
     vSemaphoreDelete(mWeatherSemaphore);
@@ -152,13 +158,14 @@ void DataStore::_addScheduleRaw(const IncomingRadioMessage& aIncomingRadioMessag
 			events[i].endTimestamp = (uint32_t)Utils::getInteger(mReader);
 			events[i].speaker = Utils::getString(mReader);
 			events[i].title = Utils::getString(mReader);
-		};
+		}
 
 		delete mSchedule[aDay][aLocation];
 		mSchedule[aDay][aLocation] = new Schedule(events, eventCount);
 
 		debug::log("DataStore: Got schedule: day: " +  String(aDay) + " location: " + String(aLocation) + " events: " + String(mSchedule[aDay][aLocation]->getEventCount()));
 
+		// FIXME: delete events
 		xSemaphoreGive(mScheduleSemaphore);
 	}
 }

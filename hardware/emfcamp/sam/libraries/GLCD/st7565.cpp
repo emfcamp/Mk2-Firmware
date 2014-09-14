@@ -89,8 +89,8 @@ The functions affected are:
 // Use this flag to show debug information
 //#define GLCD_DEBUG
 
-QueueHandle_t glcd_Device::_updateWaiting;
-SemaphoreHandle_t glcd_Device::frameBufferMutex;
+QueueHandle_t glcd_Device::_updateWaiting = 0;
+SemaphoreHandle_t glcd_Device::frameBufferMutex = 0;
 uint8_t glcd_Device::_framebuffer[DEVICE_HEIGHT / 8 * DEVICE_WIDTH];
 uint8_t glcd_Device::_x;
 uint8_t glcd_Device::_y;
@@ -117,8 +117,6 @@ void glcd_Device::_set_brightness(uint8_t val) {
 void spiDMADoneCallback(void) { LCDDataDoneFlag = 1; }
 
 void glcd_Device::Init(void) {
-    frameBufferMutex = 0;
-    _updateWaiting = 0;
 
     pinMode(LCD_POWER, OUTPUT);
     digitalWrite(LCD_POWER, LOW);
@@ -216,7 +214,7 @@ void glcd_Device::_do_display() {
         debug::logHWM();
     #endif
 
-    static uint8_t txBuffer[1024];
+    static uint8_t txBuffer[DEVICE_HEIGHT / 8 * DEVICE_WIDTH];
     //txBuffer=(uint8_t*)malloc(1024*sizeof(uint8_t));
     switch (_rotation)
     {
@@ -227,15 +225,17 @@ void glcd_Device::_do_display() {
         case ROTATION_270:
         {
             uint16_t i = 0;
-            memset(txBuffer,0,1024); //Clear txBuffer
+            memset(txBuffer,0,DEVICE_HEIGHT / 8 * DEVICE_WIDTH); //Clear txBuffer
             // Loop array
-            for (; i < 1024; i++) {
+            for (; i < DEVICE_HEIGHT / 8 * DEVICE_WIDTH; i++) {
                 uint8_t x,y,nx,ny;
                 uint8_t byte = _framebuffer[i];
                 x = i % DEVICE_HEIGHT; // Height is width when portrait
                 // Loop round byte
                 uint8_t b=0;
+                #ifdef GLCD_DEBUG
                 //debug::logByteArray(&byte,1);
+                #endif
                 for (; b < 8; b++) {
                     y = i / DEVICE_HEIGHT * 8 + b;
                     if (_rotation == ROTATION_90) {
@@ -255,9 +255,9 @@ void glcd_Device::_do_display() {
             break;
         }
         case ROTATION_180:
-            for (uint16_t i = 0; i < 1024; i++)
+            for (uint16_t i = 0; i < DEVICE_HEIGHT / 8 * DEVICE_WIDTH; i++)
             {
-                txBuffer[1023-i] = reverse(_framebuffer[i]);
+                txBuffer[DEVICE_HEIGHT / 8 * DEVICE_WIDTH - i - 1] = reverse(_framebuffer[i]);
             }
             break;
     }
@@ -279,7 +279,9 @@ void glcd_Device::_do_display() {
         _command(CMD_RMW);
 
         uint8_t rxBuffer[128]; //discarded
+        #ifdef GLCD_DEBUG
         //debug::logByteArray(txBuffer + DEVICE_WIDTH * pagemap[p], 128);
+        #endif
         ::LCDDataDoneFlag = 0;
         digitalWrite(LCD_A0, HIGH); // Select Data Mode
         SPI.transferDMA(LCD_CS, txBuffer + DEVICE_WIDTH  * p , rxBuffer, 128,
@@ -292,26 +294,81 @@ void glcd_Device::_do_display() {
     //free(txBuffer);
 }
 
-void glcd_Device::Display(void) {
-    if (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING) {
-        if (frameBufferMutex == 0) {
-            frameBufferMutex = xSemaphoreCreateMutex();
+bool glcd_Device::LockFrameBuffer() {
+    #ifdef GLCD_DEBUG
+    debug::log("st7565: LockFrameBuffer");
+    #endif
+    if (xTaskGetSchedulerState() != taskSCHEDULER_RUNNING) {
+        // No synchronisation possible
+        #ifdef GLCD_DEBUG
+        debug::log("st7565: Quick return as scheduler not running");
+        #endif
+        return true;
+    }
+
+    if (frameBufferMutex == 0) {
+        #ifdef GLCD_DEBUG
+        debug::log("st7565: Creating framebuffer mutex");
+        #endif
+        frameBufferMutex = xSemaphoreCreateMutex();
+    }
+
+    if (xSemaphoreTake(frameBufferMutex, portMAX_DELAY) == pdTRUE) {
+        return true;
+    }
+
+    return false;
+}
+
+/*
+ * Can only be called after a successful call to LockFrameBuffer
+ */
+void glcd_Device::UnlockFrameBuffer() {
+    #ifdef GLCD_DEBUG
+    debug::log("st7565: UnlockFrameBuffer");
+    #endif
+
+    if (xTaskGetSchedulerState() != taskSCHEDULER_RUNNING) {
+        #ifdef GLCD_DEBUG
+        debug::log("st7565: Quick return as scheduler not running");
+        #endif
+        return;
+    }
+
+    if (xSemaphoreGive(frameBufferMutex) != pdTRUE) {
+        while(true) {
+            debug::log("st7565: Unable to give framebuffer mutex");
         }
-        if (xSemaphoreTake(frameBufferMutex, (TickType_t)100) == pdTRUE) {
-            _do_display();
-            xSemaphoreGive(frameBufferMutex);
-        } else {
-        }
-    } else {
-        _do_display();
     }
 }
 
-// Never call this directly, as it has no mutex
+void glcd_Device::Display(void) {
+    #ifdef GLCD_DEBUG
+    debug::log("st7565: Display");
+    #endif
+    if (LockFrameBuffer()) {
+        _do_display();
+        UnlockFrameBuffer();
+    }
+}
+
+/*
+ * Never call this directly, as it has no mutex
+ * TODO: Should probably be called setDisplayDirty.
+ * Why do we use a queue instead of a semaphore?
+ */
 void glcd_Device::_updateDisplay() {
+    #ifdef GLCD_DEBUG
+    debug::log("st7565: _updateDisplay");
+    #endif
     if (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING) {
-        while (_updateWaiting == 0) {
-            vTaskDelay((100 / portTICK_PERIOD_MS));
+        if (_updateWaiting == 0) {
+            #ifdef GLCD_DEBUG
+            debug::log("st7565: waiting for queue to be created");
+            #endif
+            while (!_updateWaiting) {
+                vTaskDelay((100 / portTICK_PERIOD_MS));
+            }
         }
         uint8_t discard = 1;
         xQueueOverwrite(_updateWaiting, &discard);
@@ -339,18 +396,13 @@ uint8_t glcd_Device::_do_ReadData() {
 
 uint8_t glcd_Device::ReadData() {
     uint8_t data;
-    if (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING) {
-        if (frameBufferMutex == 0) {
-            frameBufferMutex = xSemaphoreCreateMutex();
-        }
-        if (xSemaphoreTake(frameBufferMutex, (TickType_t)100) == pdTRUE) {
-            data = _do_ReadData();
-            xSemaphoreGive(frameBufferMutex);
-            return data;
-        } else {
-        }
-    } else {
-        return _do_ReadData();
+    #ifdef GLCD_DEBUG
+    debug::log("st7565: ReadData");
+    #endif
+    if (LockFrameBuffer()) {
+        data = _do_ReadData();
+        UnlockFrameBuffer();
+        return data;
     }
 }
 
@@ -406,31 +458,33 @@ void glcd_Device::_do_WriteData(uint8_t data) {
 }
 
 void glcd_Device::WriteData(uint8_t data) {
-    if (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING) {
-        if (frameBufferMutex == 0) {
-            frameBufferMutex = xSemaphoreCreateMutex();
-        }
-        if (xSemaphoreTake(frameBufferMutex, (TickType_t)100) == pdTRUE) {
-            _do_WriteData(data);
-            xSemaphoreGive(frameBufferMutex);
-        } else {
-        }
-    } else {
+    #ifdef GLCD_DEBUG
+    debug::log("st7565: WriteData");
+    #endif
+    if (LockFrameBuffer()) {
         _do_WriteData(data);
+        UnlockFrameBuffer();
     }
     _updateDisplay();
 }
 
 void glcd_Device::WaitForUpdate() {
     uint8_t discard;
+    #ifdef GLCD_DEBUG
+    debug::log("st7565: WaitForUpdate");
+    #endif
     if (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING) {
         if (_updateWaiting == 0) {
             _updateWaiting = xQueueCreate(1, sizeof(uint8_t));
+            if (!_updateWaiting) {
+                while (true) {
+                    debug::log("st7565: Unable to create queue");
+                    vTaskDelay(1000);
+                }
+            }
         }
-        if (_updateWaiting != 0) {
-            xQueueReceive(_updateWaiting, &discard,
-                          portMAX_DELAY); // Sleep until there is a message
-        }
+        xQueueReceive(_updateWaiting, &discard,
+                      portMAX_DELAY); // Sleep until there is a message
     }
 }
 

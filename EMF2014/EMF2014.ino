@@ -65,14 +65,16 @@ void setup() {
     pinMode(SRF_AT_COMMAND, OUTPUT);
     pinMode(SRF_SLEEP, OUTPUT);
 
+    // Uncomment this to wait for a serial connection before continuing startup
+    // while (!SerialUSB);
+
+    debug::setup();
+
     tildaButtonSetup();
     tildaButtonAttachInterrupts();
     tildaButtonInterruptPriority();
 
-    debug::setup();
-    // Uncomment this if you want to see serial output during startup
-    // This will require you to send a character over serial before unblocking
-    // the startup
+    // Uncomment to wait for a keypress before continuing startup
     // debug::waitForKey();
 
     GLCD.Init();

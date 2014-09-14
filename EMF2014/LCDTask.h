@@ -48,7 +48,7 @@ private:
 protected:
 
 public:
-  LCDTask(): _enabled(true){}
+  LCDTask();
   String getName() const;
   void task();
   void disable();

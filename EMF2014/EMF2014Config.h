@@ -40,9 +40,10 @@
 // duration that center has to be pressed to go back to the homescreen
 #define CENTER_BUTTON_PRESS_DURATION_FOR_HOME_SCREEN 500
 // time before the backlight goes out
-#define BACKLIGHT_TIMEOUT 15 * 1000
+//#define BACKLIGHT_TIMEOUT (15 * 1000)
+#define BACKLIGHT_TIMEOUT (125 * 1000)
 // time before the current app gets killed and the badge goes back to the homescreen
-#define APP_KILL_TIMEOUT 90 * 1000
+#define APP_KILL_TIMEOUT (90 * 1000)
 // backlight light level speed in ms
 #define BACKLIGHT_BRIGHTNESS_UPDATE_TIME 50
 
@@ -51,7 +52,7 @@
 #define RADIO_SERIAL_BAUD 115200
 // Packet length
 #define RADIO_PACKET_LENGTH 58
-#define RADIO_PACKET_WITH_RSSI_LENGTH 58 + 1 + 4
+#define RADIO_PACKET_WITH_RSSI_LENGTH (58 + 1 + 4)
 // Radio message buffer length
 #define RADIO_MAX_MESSAGE_BUFFER_LENGTH 40960
 // Radio discovery channel (in hex)
@@ -68,7 +69,7 @@
 // This is how long we'll wait before sending after waking up the radio
 #define RADIO_WAKEUP_TIME 400
 // This is a sanity check. Make sure no transmit window is longer than this
-#define RADIO_MAX_TRANSMIT_WINDOW_LENGTH 3 * 60 * 1000
+#define RADIO_MAX_TRANSMIT_WINDOW_LENGTH (3 * 60 * 1000)
 // Another sanity check. Minimum/Maximum current time
 #define RADIO_MINIMUM_CURRENT_TIME 1408879302
 #define RADIO_MAXIMUM_CURRENT_TIME 1440415302

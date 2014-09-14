@@ -28,6 +28,7 @@ configuration.
 
 #include "glcd_Device.h"
 
+#include <debug.h>
 #include "ST7565.h"
 #include "SPI.h"
 
@@ -60,15 +61,21 @@ void glcd_Device::SetDot(uint8_t x, uint8_t y, uint8_t color) {
     if ((x >= this->CurrentWidth()) || (y >= this->CurrentHeight()))
         return;
 
-    this->GotoXY(x, y - y % 8); // read data from display memory
+    debug::log("GLCD_Device: SetDot");
+    if (LockFrameBuffer()) {
+        this->GotoXY(x, y - y % 8); // read data from display memory
 
-    data = this->ReadData();
-    if (color == BLACK) {
-        data |= 0x01 << (y % 8); // set dot
-    } else {
-        data &= ~(0x01 << (y % 8)); // clear dot
+        data = _do_ReadData();
+        if (color == BLACK) {
+            data |= 0x01 << (y % 8); // set dot
+        } else {
+            data &= ~(0x01 << (y % 8)); // clear dot
+        }
+        _do_WriteData(data); // write data back to display
+
+        UnlockFrameBuffer();
     }
-    this->WriteData(data); // write data back to display
+    _updateDisplay();
 }
 
 /**
@@ -111,35 +118,11 @@ void glcd_Device::SetPixels(uint8_t x, uint8_t y, uint8_t x2, uint8_t y2,
     }
     mask <<= pageOffset;
 
-    this->GotoXY(x, y);
-    for (i = 0; i < width; i++) {
-        data = this->ReadData();
-
-        if (color == BLACK) {
-            data |= mask;
-        } else {
-            data &= ~mask;
-        }
-
-        this->WriteData(data);
-    }
-
-    while (h + 8 <= height) {
-        h += 8;
-        y += 8;
+    debug::log("GLCD_Device: SetPixels");
+    if (LockFrameBuffer()) {
         this->GotoXY(x, y);
-
         for (i = 0; i < width; i++) {
-            this->WriteData(color);
-        }
-    }
-
-    if (h < height) {
-        mask = ~(0xFF << (height - h));
-        this->GotoXY(x, y + 8);
-
-        for (i = 0; i < width; i++) {
-            data = this->ReadData();
+            data = _do_ReadData();
 
             if (color == BLACK) {
                 data |= mask;
@@ -147,9 +130,39 @@ void glcd_Device::SetPixels(uint8_t x, uint8_t y, uint8_t x2, uint8_t y2,
                 data &= ~mask;
             }
 
-            this->WriteData(data);
+            _do_WriteData(data);
         }
+
+        while (h + 8 <= height) {
+            h += 8;
+            y += 8;
+            this->GotoXY(x, y);
+
+            for (i = 0; i < width; i++) {
+                _do_WriteData(color);
+            }
+        }
+
+        if (h < height) {
+            mask = ~(0xFF << (height - h));
+            this->GotoXY(x, y + 8);
+
+            for (i = 0; i < width; i++) {
+                data = _do_ReadData();
+
+                if (color == BLACK) {
+                    data |= mask;
+                } else {
+                    data &= ~mask;
+                }
+
+                _do_WriteData(data);
+            }
+        }
+
+        UnlockFrameBuffer();
     }
+    _updateDisplay();
 }
 
 /*
