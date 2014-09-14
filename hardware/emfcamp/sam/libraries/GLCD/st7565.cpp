@@ -318,6 +318,7 @@ void glcd_Device::_updateDisplay() {
     }
 }
 
+// Must Acquire() mutex before this is called
 void glcd_Device::GotoXY(uint8_t x, uint8_t y) {
     if ((x > this->CurrentWidth() - 1) ||
         (y > this->CurrentHeight() - 1)) // exit if coordinates are not legal
@@ -328,8 +329,8 @@ void glcd_Device::GotoXY(uint8_t x, uint8_t y) {
     _y = y;
 }
 
-// Never call this directly, as it has no mutex
-uint8_t glcd_Device::_do_ReadData() {
+// Must Acquire() mutex before you call this
+uint8_t glcd_Device::ReadData() {
     if (_x >= this->CurrentWidth()) {
         return (0);
     }
@@ -337,25 +338,8 @@ uint8_t glcd_Device::_do_ReadData() {
     return this->_framebuffer[_y /8 * this->CurrentWidth() + _x];
 }
 
-uint8_t glcd_Device::ReadData() {
-    uint8_t data;
-    if (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING) {
-        if (frameBufferMutex == 0) {
-            frameBufferMutex = xSemaphoreCreateMutex();
-        }
-        if (xSemaphoreTake(frameBufferMutex, (TickType_t)100) == pdTRUE) {
-            data = _do_ReadData();
-            xSemaphoreGive(frameBufferMutex);
-            return data;
-        } else {
-        }
-    } else {
-        return _do_ReadData();
-    }
-}
-
-// Never call this directly, as it has no mutex
-void glcd_Device::_do_WriteData(uint8_t data) {
+// Must Acquire() mutex before you call this
+void glcd_Device::WriteData(uint8_t data) {
     uint8_t displayData, yOffset, chip;
     uint8_t current_width = this->CurrentWidth();
     if (_x >= current_width) {
@@ -403,22 +387,6 @@ void glcd_Device::_do_WriteData(uint8_t data) {
         this->_framebuffer[_y / 8 * current_width + _x] = data; // save to read cache
         _x++;
     }
-}
-
-void glcd_Device::WriteData(uint8_t data) {
-    if (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING) {
-        if (frameBufferMutex == 0) {
-            frameBufferMutex = xSemaphoreCreateMutex();
-        }
-        if (xSemaphoreTake(frameBufferMutex, (TickType_t)100) == pdTRUE) {
-            _do_WriteData(data);
-            xSemaphoreGive(frameBufferMutex);
-        } else {
-        }
-    } else {
-        _do_WriteData(data);
-    }
-    _updateDisplay();
 }
 
 void glcd_Device::WaitForUpdate() {
@@ -470,4 +438,24 @@ rotation_t glcd_Device::GetRotation()
 void glcd_Device::SetRotation(rotation_t rotation)
 {
   _rotation = rotation;
+}
+
+uint8_t glcd_Device::Acquire(void)
+{
+    if (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING) {
+        if (frameBufferMutex == 0) {
+            frameBufferMutex = xSemaphoreCreateMutex();
+        }
+        return xSemaphoreTake(frameBufferMutex, (TickType_t)100);
+    } else {
+        return pdTRUE;
+    }
+}
+
+void glcd_Device::Release(void)
+{
+    if (frameBufferMutex != 0) {
+        xSemaphoreGive(frameBufferMutex);
+    }
+    _updateDisplay();
 }

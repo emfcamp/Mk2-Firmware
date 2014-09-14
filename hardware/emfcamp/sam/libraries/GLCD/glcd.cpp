@@ -362,6 +362,9 @@ void glcd::InvertRect(uint8_t x, uint8_t y, uint8_t width, uint8_t height) {
     /*
      * First do the fractional pages at the top of the region
      */
+    if (this->Acquire() != pdTRUE)
+      return;
+
     this->GotoXY(x, y);
     for (i = 0; i <= width; i++) {
         data = this->ReadData();
@@ -398,6 +401,7 @@ void glcd::InvertRect(uint8_t x, uint8_t y, uint8_t width, uint8_t height) {
             this->WriteData(data);
         }
     }
+    this->Release();
 }
 /**
  * Set LCD Display mode
@@ -438,6 +442,10 @@ void glcd::DrawBitmap(Image_t bitmap, uint8_t x, uint8_t y, uint8_t color) {
 
     width = ReadPgmData(bitmap++);
     height = ReadPgmData(bitmap++);
+
+    if (this->Acquire() != pdTRUE)
+      return;
+
 #define BITMAP_FIX
 #ifdef BITMAP_FIX // temporary ifdef just to show what changes if a new
                   // bit rendering routine is written.
@@ -485,6 +493,7 @@ void glcd::DrawBitmap(Image_t bitmap, uint8_t x, uint8_t y, uint8_t color) {
                 this->WriteData(~displayData);
         }
     }
+    this->Release();
 }
 
 #ifdef NOTYET

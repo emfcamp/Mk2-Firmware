@@ -286,6 +286,9 @@ void gText::ScrollUp(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2,
         return;
     }
 
+    if (this->Acquire() != pdTRUE)
+        return;
+
     for (col = x1; col <= x2; col++) {
         dy = y1;
         glcd_Device::GotoXY(col, dy & ~7);
@@ -366,6 +369,7 @@ void gText::ScrollUp(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2,
             this->WriteData(dbyte);
         }
     }
+    this->Release();
 }
 
 #ifndef GLCD_NO_SCROLLDOWN
@@ -389,6 +393,9 @@ void gText::ScrollDown(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2,
         glcd_Device::SetPixels(x1, y1, x2, y2, color);
         return;
     }
+
+    if (this->Acquire() != pdTRUE)
+        return;
 
     /*
     * Process region from left to right
@@ -467,6 +474,7 @@ void gText::ScrollDown(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2,
             this->WriteData(dbyte);
         }
     }
+    this->Release();
 }
 #endif // GLCD_NO_SCROLLDOWN
 
@@ -753,6 +761,9 @@ int gText::PutChar(uint8_t c) {
 
 #ifdef GLCD_OLD_FONTDRAW
     /*================== OLD FONT DRAWING ============================*/
+    if (this->Acquire() != pdTRUE)
+        return 0;
+
     glcd_Device::GotoXY(this->x, this->y);
 
     /*
@@ -805,6 +816,8 @@ int gText::PutChar(uint8_t c) {
     }
     this->x = this->x + width + 1;
 
+    this->Release();
+
 /*================== END of OLD FONT DRAWING ============================*/
 #else
 
@@ -838,6 +851,9 @@ int gText::PutChar(uint8_t c) {
     uint8_t dp;
     uint8_t dbyte;
     uint8_t fdata;
+
+    if (this->Acquire() != pdTRUE)
+        return 0;
 
     for (p = 0; p < pixels;) {
         dy = this->y + p;
@@ -1036,6 +1052,7 @@ int gText::PutChar(uint8_t c) {
 
     this->x = this->x + width + 1;
 
+    this->Release();
 /*================== END of NEW FONT DRAWING ============================*/
 
 #endif // NEW_FONTDRAW
