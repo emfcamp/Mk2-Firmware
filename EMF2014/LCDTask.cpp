@@ -89,7 +89,6 @@ String LCDTask::getName() const
 }
 
 void LCDTask::task() {
-  GLCD.Init();
   while(true) {
     if(_enabled){
     GLCD.WaitForUpdate();

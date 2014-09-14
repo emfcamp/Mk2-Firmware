@@ -75,6 +75,7 @@ void setup() {
     // the startup
     // debug::waitForKey();
 
+    GLCD.Init();
     tiLDATask.start();
 
     debug::log("Start Scheduler");
