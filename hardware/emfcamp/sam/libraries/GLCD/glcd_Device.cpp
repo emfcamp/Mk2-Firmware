@@ -60,6 +60,9 @@ void glcd_Device::SetDot(uint8_t x, uint8_t y, uint8_t color) {
     if ((x >= this->CurrentWidth()) || (y >= this->CurrentHeight()))
         return;
 
+    if (this->Acquire() != pdTRUE)
+        return;
+
     this->GotoXY(x, y - y % 8); // read data from display memory
 
     data = this->ReadData();
@@ -69,6 +72,7 @@ void glcd_Device::SetDot(uint8_t x, uint8_t y, uint8_t color) {
         data &= ~(0x01 << (y % 8)); // clear dot
     }
     this->WriteData(data); // write data back to display
+    this->Release();
 }
 
 /**
@@ -111,6 +115,9 @@ void glcd_Device::SetPixels(uint8_t x, uint8_t y, uint8_t x2, uint8_t y2,
     }
     mask <<= pageOffset;
 
+    if (this->Acquire() != pdTRUE)
+        return;
+
     this->GotoXY(x, y);
     for (i = 0; i < width; i++) {
         data = this->ReadData();
@@ -150,6 +157,7 @@ void glcd_Device::SetPixels(uint8_t x, uint8_t y, uint8_t x2, uint8_t y2,
             this->WriteData(data);
         }
     }
+    this->Release();
 }
 
 /*

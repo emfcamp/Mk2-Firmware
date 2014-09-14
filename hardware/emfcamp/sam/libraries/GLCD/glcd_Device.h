@@ -120,8 +120,6 @@ class glcd_Device : public Print {
   public:
     glcd_Device();
     void WaitForUpdate(void);
-    uint8_t ReadData(void);
-    void WriteData(uint8_t);
     void Init();
     void Display();
     uint8_t CurrentWidth();
@@ -133,7 +131,14 @@ class glcd_Device : public Print {
     void SetDot(uint8_t x, uint8_t y, uint8_t color);
     void SetPixels(uint8_t x, uint8_t y, uint8_t x1, uint8_t y1, uint8_t color);
 
+    uint8_t Acquire(void);
+    void Release(void);
+
+    // These must only be called after a successful Acquire()
+    // Screen will only be updated after Release()
     void GotoXY(uint8_t x, uint8_t y);
+    uint8_t ReadData(void);
+    void WriteData(uint8_t);
 };
 
 #endif
