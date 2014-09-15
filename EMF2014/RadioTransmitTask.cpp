@@ -164,11 +164,12 @@ void RadioTransmitTask::respond() {
 		outgoingPacketBuffer[index++] = 0x04;
 		// Badge id
 		uint16_t badgeId = mSettingsStore.getBadgeId();
-		outgoingPacketBuffer[index++] = static_cast<byte>(badgeId);
 		outgoingPacketBuffer[index++] = static_cast<byte>(badgeId >> 8);
+		outgoingPacketBuffer[index++] = static_cast<byte>(badgeId);
+
 		// Battery status
 		outgoingPacketBuffer[index++] = Tilda::getBatteryPercent();
-    	outgoingPacketBuffer[index++] = Tilda::getChargeState();
+		outgoingPacketBuffer[index++] = Tilda::getChargeState();
 
 		while (index < RADIO_PACKET_LENGTH) {
 			outgoingPacketBuffer[index++] = 0;
