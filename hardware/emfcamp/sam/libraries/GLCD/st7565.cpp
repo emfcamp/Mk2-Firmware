@@ -339,9 +339,7 @@ void glcd_Device::UnlockFrameBuffer() {
     }
 
     if (xSemaphoreGive(frameBufferMutex) != pdTRUE) {
-        while(true) {
-            debug::log("st7565: Unable to give framebuffer mutex");
-        }
+        debug::stopWithMessage("st7565: Unable to give framebuffer mutex");
     }
 }
 

@@ -268,7 +268,7 @@ int8_t IMUTask::MPUSetup()
     
     /* Wake up all sensors. */
     result = mpu_set_sensors(INV_XYZ_GYRO | INV_XYZ_ACCEL);
-    SerialUSB.println("IMUTask: mpu_set_sensors returned " + String(result));
+    debug::log("IMUTask: mpu_set_sensors returned " + String(result));
 
     result = mpu_set_sample_rate(IMU_DEFAULT_MPU_HZ);
     debug::log("IMUTask: mpu_set_sample_rate returned " + String(result));

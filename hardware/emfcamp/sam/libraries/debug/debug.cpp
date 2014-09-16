@@ -105,13 +105,18 @@ namespace debug {
 
     /**
      * Lights the debug led and waits for a key to be pressed in
-     * the serial console before sending the text
+     * the serial console before sending the text if not in debug
      */
     void stopWithMessage(String text) {
         digitalWrite(DEBUG_LED, HIGH);
+#ifndef DEBUG
         waitForKey();
+#endif
         DEBUG_SERIAL.println(text);
-        while(true);
+        DEBUG_SERIAL.println("Halted");
+        while(true) {
+            delay(1000);
+        }
     }
 
      void waitForKey() {
