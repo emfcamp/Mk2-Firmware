@@ -68,6 +68,7 @@ String TiLDATask::getName() const {
 }
 
 void TiLDATask::task() {
+    GLCD.TaskOneInit();
     Tilda::_realTimeClock = new RTC_clock(RC);
     Tilda::_appManager = new AppManager;
 

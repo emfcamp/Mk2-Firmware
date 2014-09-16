@@ -122,6 +122,7 @@ class glcd_Device : public Print {
     uint8_t ReadData(void);
     void WriteData(uint8_t);
     void Init();
+    void TaskOneInit();
     void Display();
     uint8_t CurrentWidth();
     uint8_t CurrentHeight();

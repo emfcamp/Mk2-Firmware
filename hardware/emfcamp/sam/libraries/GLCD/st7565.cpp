@@ -199,6 +199,16 @@ void glcd_Device::Init(void) {
     memset(this->_framebuffer, 0x00, sizeof(_framebuffer));
 }
 
+void glcd_Device::TaskOneInit(void) {
+
+    _updateWaiting = xQueueCreate(1, sizeof(uint8_t));
+    if (!_updateWaiting) debug::stopWithMessage("Unable to create _updateWaiting");
+
+    frameBufferMutex = xSemaphoreCreateMutex();
+    if (!frameBufferMutex) debug::stopWithMessage("Unable to create frameBufferMutex");
+
+}
+
 uint8_t reverse(uint8_t b) {
    b = (b & 0xF0) >> 4 | (b & 0x0F) << 4;
    b = (b & 0xCC) >> 2 | (b & 0x33) << 2;
@@ -306,13 +316,6 @@ bool glcd_Device::LockFrameBuffer() {
         return true;
     }
 
-    if (frameBufferMutex == 0) {
-        #ifdef GLCD_DEBUG
-        debug::log("st7565: Creating framebuffer mutex");
-        #endif
-        frameBufferMutex = xSemaphoreCreateMutex();
-    }
-
     if (xSemaphoreTake(frameBufferMutex, portMAX_DELAY) == pdTRUE) {
         return true;
     }
@@ -362,14 +365,6 @@ void glcd_Device::_updateDisplay() {
     debug::log("st7565: _updateDisplay");
     #endif
     if (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING) {
-        if (_updateWaiting == 0) {
-            #ifdef GLCD_DEBUG
-            debug::log("st7565: waiting for queue to be created");
-            #endif
-            while (!_updateWaiting) {
-                vTaskDelay((100 / portTICK_PERIOD_MS));
-            }
-        }
         uint8_t discard = 1;
         xQueueOverwrite(_updateWaiting, &discard);
     }
@@ -474,15 +469,6 @@ void glcd_Device::WaitForUpdate() {
     debug::log("st7565: WaitForUpdate");
     #endif
     if (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING) {
-        if (_updateWaiting == 0) {
-            _updateWaiting = xQueueCreate(1, sizeof(uint8_t));
-            if (!_updateWaiting) {
-                while (true) {
-                    debug::log("st7565: Unable to create queue");
-                    vTaskDelay(1000);
-                }
-            }
-        }
         xQueueReceive(_updateWaiting, &discard,
                       portMAX_DELAY); // Sleep until there is a message
     }
