@@ -85,6 +85,11 @@ volatile uint8_t *timer5_pin_port;
 volatile uint8_t timer5_pin_mask;
 #endif
 
+#if defined(TC0)
+volatile long timer6_toggle_count;
+volatile long unsigned int *timer6_pin_port;
+volatile int timer6_pin_mask;
+#endif
 
 #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__)
 
@@ -109,7 +114,15 @@ static uint8_t tone_pins[AVAILABLE_TONE_PINS] = { 255 /*, 255 */ };
  
 const uint8_t PROGMEM tone_pin_to_timer_PGM[] = { 3 /*, 1 */ };
 static uint8_t tone_pins[AVAILABLE_TONE_PINS] = { 255 /*, 255 */ };
+
+#elif defined(__SAM3X8E__)
  
+#define AVAILABLE_TONE_PINS 1
+#define USE_TIMER6
+ 
+const uint8_t PROGMEM tone_pin_to_timer_PGM[] = { 6 /*, 1 */ };
+static uint8_t tone_pins[AVAILABLE_TONE_PINS] = { 255 /*, 255 */ };
+
 #else
 
 #define AVAILABLE_TONE_PINS 1
@@ -226,6 +239,25 @@ static int8_t toneBegin(uint8_t _pin)
         bitWrite(TCCR5B, CS50, 1);
         timer5_pin_port = portOutputRegister(digitalPinToPort(_pin));
         timer5_pin_mask = digitalPinToBitMask(_pin);
+        break;
+      #endif
+
+      #if defined(TC0) && defined(TC1) &&  defined(TC2)
+      case 6:
+        // 16 bit timer
+        pmc_set_writeprotect(false);
+        pmc_enable_periph_clk((uint32_t)TC3_IRQn);
+
+        TC_Configure(TC1, 0,
+            TC_CMR_TCCLKS_TIMER_CLOCK4 |
+            TC_CMR_WAVE |          // Waveform mode
+            TC_CMR_WAVSEL_UP_RC ); // Counter running up and reset when equals to RC
+
+        TC1->TC_CHANNEL[0].TC_IER=TC_IER_CPCS;  // RC compare interrupt
+        TC1->TC_CHANNEL[0].TC_IDR=~TC_IER_CPCS;
+        NVIC_EnableIRQ(TC3_IRQn);
+        timer6_pin_port = portOutputRegister(digitalPinToPort(_pin));
+        timer6_pin_mask = digitalPinToBitMask(_pin);
         break;
       #endif
     }
@@ -413,6 +445,16 @@ void tone(uint8_t _pin, unsigned int frequency, unsigned long duration)
         break;
 #endif
 
+#if defined(TC0) && defined(TC1) && defined(TC2)
+      case 6:
+        ocr = VARIANT_MCK / 256 / frequency; 
+        TC_Stop(TC1, 0);
+        TC_SetRC(TC1, 0, ocr);
+        TC_Start(TC1, 0);
+        timer6_toggle_count = toggle_count;
+        break;
+#endif
+
     }
   }
 }
@@ -469,6 +511,12 @@ void disableTimer(uint8_t _timer)
 #if defined(TIMSK5)
     case 5:
       TIMSK5 = 0;
+      break;
+#endif
+
+#if defined(TC0)
+    case 6:
+      TC_Stop(TC1, 0);
       break;
 #endif
   }
@@ -611,6 +659,26 @@ ISR(TIMER5_COMPA_vect)
   {
     disableTimer(5);
     *timer5_pin_port &= ~(timer5_pin_mask);  // keep pin low after stop
+  }
+}
+#endif
+
+static boolean pin_state = false;
+#ifdef USE_TIMER6
+void TC3_Handler(void) {
+  TC_GetStatus(TC1, 0);
+  if (timer6_toggle_count != 0)
+  {
+    // toggle the pin
+    *timer6_pin_port ^= timer6_pin_mask;
+
+    if (timer6_toggle_count > 0)
+    timer6_toggle_count--;
+  }
+  else
+  {
+    disableTimer(6);
+    *timer6_pin_port &= ~(timer6_pin_mask);  // keep pin low after stop
   }
 }
 #endif
