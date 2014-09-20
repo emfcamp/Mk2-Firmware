@@ -27,3 +27,32 @@
  */
 
 #include "SoundTask.h"
+
+SoundTask::SoundTask() {
+}
+
+void SoundTask::playMelody(int melody[], int tempo[], int length) {
+    for (int index = 0; index < length; index++) {
+        // calculate note duration
+        int noteDuration = 1000 / tempo[index];
+        // play tone
+        tone(PIEZO, melody[index], noteDuration);
+        // to distinguish the notes pause between
+        int pauseBetweenNotes = noteDuration * 1.30;
+        vTaskDelay(pauseBetweenNotes);
+        // stop tone
+        digitalWrite(PIEZO,LOW);
+    }
+}
+
+String SoundTask::getName() const {
+    return "SoundTask";
+}
+
+void SoundTask::task() {
+    while(true) {
+        // ToDo: Do something here that makes sound when inactivity occurs
+        // ToDo: Add some logic for sound, mario, megaman, ...
+        vTaskDelay((1000/portTICK_PERIOD_MS));
+    }
+}
