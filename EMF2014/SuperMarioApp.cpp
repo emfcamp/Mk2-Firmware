@@ -37,7 +37,7 @@
 #include "pitches.h"
 
 /* Mario main theme melody */
-int melody[] = {
+const uint16_t melody[] = {
   NOTE_E7, NOTE_E7, 0, NOTE_E7,
   0, NOTE_C7, NOTE_E7, 0,
   NOTE_G7, 0, 0,  0,
@@ -84,7 +84,7 @@ int melody[] = {
 };
 
 /* Mario main theme tempo */
-int tempo[] = {
+const uint16_t tempo[] = {
   12, 12, 12, 12,
   12, 12, 12, 12,
   12, 12, 12, 12,
@@ -146,7 +146,7 @@ SuperMarioApp::~SuperMarioApp() {
 }
 
 String SuperMarioApp::getName() const {
-        return "SuperMarioApp";
+    return "SuperMarioApp";
 }
 
 bool SuperMarioApp::keepAlive() const {
@@ -154,48 +154,48 @@ bool SuperMarioApp::keepAlive() const {
 }
 
 void SuperMarioApp::task() {
-        // Do some setup in here
-        Tilda::getGUITask().clearRoot(); // Clean screen
+    // Do some setup in here
+    Tilda::getGUITask().clearRoot(); // Clean screen
 
-        GLCD.SetRotation(ROTATION_180);   // Orientation
+    GLCD.SetRotation(ROTATION_180);   // Orientation
 
-        GLCD.SelectFont(System5x7);      // Font
-        Tilda::setLedColor({0, 0, 0});   // LEDs off
+    GLCD.SelectFont(System5x7);      // Font
+    Tilda::setLedColor({0, 0, 0});   // LEDs off
 
-        int x = 32;
-        int y = 64;
-        int step = 8;
-        GLCD.DrawBitmap(SUPER_MARIO_TEST_XBM, y, x);
-        int length = sizeof(melody) / sizeof(int);
-        Tilda::playMelody(melody, tempo, length);
+    int x = 32;
+    int y = 64;
+    int step = 8;
+    GLCD.DrawBitmap(SUPER_MARIO_TEST_XBM, y, x);
+    uint16_t length = sizeof(melody) / sizeof(uint16_t);
+    Tilda::playMelody(melody, tempo, length);
 
-        while(true) { // Make sure this loop goes on forever     
-            Button button = mButtonSubscription->waitForPress(1000); // Wait for up to a second for a button press
-            // Make sure all the buttons you're interested in are defined in the constructor
-            if (button == UP) {
-                Tilda::getGUITask().clearRoot();
-                y -= step;
-                GLCD.DrawBitmap(SUPER_MARIO_TEST_XBM, y, x);
-                //Tilda::setLedColor({255, 0, 0}); // red
-            } else if (button == DOWN) {
-                Tilda::getGUITask().clearRoot();
-                y += step;
-                GLCD.DrawBitmap(SUPER_MARIO_TEST_XBM, y, x);
-                //Tilda::setLedColor({0, 255, 0}); // green
-            } else if (button == LEFT) {
-                Tilda::getGUITask().clearRoot();
-                x += step;
-                GLCD.DrawBitmap(SUPER_MARIO_TEST_XBM, y, x);
-                //Tilda::setLedColor({0, 0, 255}); // blue
-            } else if (button == RIGHT) {
-                Tilda::getGUITask().clearRoot();
-                x -= step;
-                GLCD.DrawBitmap(SUPER_MARIO_TEST_XBM, y, x);
-                //Tilda::setLedColor({255, 255, 255}); // white
-            } else {
-                //Tilda::setLedColor({255, 255, 255});   // LEDs off
-            }
+    while(true) { // Make sure this loop goes on forever     
+        Button button = mButtonSubscription->waitForPress(1000); // Wait for up to a second for a button press
+        // Make sure all the buttons you're interested in are defined in the constructor
+        if (button == UP) {
+            Tilda::getGUITask().clearRoot();
+            y -= step;
+            GLCD.DrawBitmap(SUPER_MARIO_TEST_XBM, y, x);
+            //Tilda::setLedColor({255, 0, 0}); // red
+        } else if (button == DOWN) {
+            Tilda::getGUITask().clearRoot();
+            y += step;
+            GLCD.DrawBitmap(SUPER_MARIO_TEST_XBM, y, x);
+            //Tilda::setLedColor({0, 255, 0}); // green
+        } else if (button == LEFT) {
+            Tilda::getGUITask().clearRoot();
+            x += step;
+            GLCD.DrawBitmap(SUPER_MARIO_TEST_XBM, y, x);
+            //Tilda::setLedColor({0, 0, 255}); // blue
+        } else if (button == RIGHT) {
+            Tilda::getGUITask().clearRoot();
+            x -= step;
+            GLCD.DrawBitmap(SUPER_MARIO_TEST_XBM, y, x);
+            //Tilda::setLedColor({255, 255, 255}); // white
+        } else {
+            //Tilda::setLedColor({255, 255, 255});   // LEDs off
         }
+    }
 }
 
 void SuperMarioApp::afterSuspension() {} // If keepAlive() is true this is being called when the task is suspended

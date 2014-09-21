@@ -81,7 +81,7 @@ void Tilda::setLedColor(RGBColor color) {
     }
 }
 
-void Tilda::playMelody(int melody[], int tempo[], int length) {
+void Tilda::playMelody(const uint16_t melody[], const uint16_t tempo[], const uint16_t length) {
     if(_soundTask) {
         _soundTask->playMelody(melody, tempo, length);
     }

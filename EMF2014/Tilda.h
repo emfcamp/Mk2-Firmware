@@ -72,7 +72,7 @@ public:
     static void delay(uint16_t durationInMs);
     static void setLedColor(RGBLed led, RGBColor color);
     static void setLedColor(RGBColor color);
-    static void playMelody(int melody[], int tempo[], int length);
+    static void playMelody(const uint16_t melody[], const uint16_t tempo[], const uint16_t length);
     static void openApp(app_ctor aNew);
     static float getBatteryVoltage();
     static uint8_t getBatteryPercent();

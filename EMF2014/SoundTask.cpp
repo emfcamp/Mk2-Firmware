@@ -27,22 +27,48 @@
  */
 
 #include "SoundTask.h"
+#include "Tilda.h"
 
-SoundTask::SoundTask() {
+Tone::Tone(const uint16_t note, const uint16_t duration, const uint16_t pauseAfterwards) {
+    _note = note;
+    _duration = duration;
+    _pauseAfterwards = pauseAfterwards;
+};
+
+const void Tone::play() {
+    tone(PIEZO, _note, _duration);
+    vTaskDelay(_pauseAfterwards);
+    digitalWrite(PIEZO, LOW);
 }
 
-void SoundTask::playMelody(int melody[], int tempo[], int length) {
-    for (int index = 0; index < length; index++) {
+SoundTask::SoundTask() {
+    _tones = xQueueCreate(1024, sizeof(Tone *));
+}
+
+// ToDo: Add some type of event handler that gets called when the melody/tone has finished
+void SoundTask::playMelody(const uint16_t melody[], const uint16_t tempo[], const uint16_t length) {
+    clear();
+    for (uint16_t index = 0; index < length; index++) {
         // calculate note duration
-        int noteDuration = 1000 / tempo[index];
-        // play tone
-        tone(PIEZO, melody[index], noteDuration);
-        // to distinguish the notes pause between
-        int pauseBetweenNotes = noteDuration * 1.30;
-        vTaskDelay(pauseBetweenNotes);
-        // stop tone
-        digitalWrite(PIEZO,LOW);
+        const uint16_t noteDuration = 1000 / tempo[index];
+        const uint16_t pauseAfterwards = noteDuration * 1.30;
+
+        // queue up for future use
+        playTone(melody[index], noteDuration, pauseAfterwards);
     }
+}
+
+void SoundTask::playTone(const uint16_t note, const uint16_t duration, const uint16_t pauseAfterwards) {
+    Tone *tone = new Tone(note, duration, pauseAfterwards);
+    playTone(tone);
+}
+
+void SoundTask::playTone(const Tone* tone) {
+    xQueueSendToBack(_tones, (void *)  &tone, (TickType_t) 0);
+}
+
+void SoundTask::clear() {
+    xQueueReset(_tones);
 }
 
 String SoundTask::getName() const {
@@ -51,8 +77,10 @@ String SoundTask::getName() const {
 
 void SoundTask::task() {
     while(true) {
-        // ToDo: Do something here that makes sound when inactivity occurs
-        // ToDo: Add some logic for sound, mario, megaman, ...
-        vTaskDelay((1000/portTICK_PERIOD_MS));
+        Tone *tone;
+        if(xQueueReceive(_tones, &tone, portMAX_DELAY) == pdTRUE) {
+            tone->play();
+        }
+        delete tone;
     }
 }
