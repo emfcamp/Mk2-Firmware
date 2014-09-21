@@ -33,4 +33,18 @@
 #include <Arduino.h>
 #include <FreeRTOS_ARM.h>
 #include "EMF2014Config.h"
+#include "Task.h"
 
+class SoundTask: public Task {
+public:
+    SoundTask();
+
+    String getName() const;
+    void playMelody(int melody[], int tempo[], int length);
+
+private:
+    SoundTask(const SoundTask&) {}
+
+protected:
+    void task();
+};

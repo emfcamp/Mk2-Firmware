@@ -35,6 +35,7 @@
 
 #include "EMF2014Config.h"
 #include "RGBTask.h"
+#include "SoundTask.h"
 #include "BatterySaverTask.h"
 #include "RadioReceiveTask.h"
 #include "RadioTransmitTask.h"
@@ -76,6 +77,7 @@ void TiLDATask::task() {
     SettingsStore* settingsStore = new SettingsStore(*messageCheckTask);
     Tilda::_dataStore = new DataStore(*messageCheckTask);
     Tilda::_rgbTask = new RGBTask;
+    Tilda::_soundTask = new SoundTask;
     Tilda::_settingsStore = settingsStore;
     Tilda::_batterySaverTask = new BatterySaverTask;
     RadioReceiveTask* radioReceiveTask = new RadioReceiveTask(*messageCheckTask, *Tilda::_realTimeClock);
@@ -91,6 +93,7 @@ void TiLDATask::task() {
 
     // Background tasks
     Tilda::_rgbTask->start();
+    Tilda::_soundTask->start();
     Tilda::_batterySaverTask->start();
     messageCheckTask->start();
     radioReceiveTask->start();

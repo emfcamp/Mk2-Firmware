@@ -30,6 +30,7 @@
 #include <FreeRTOS_ARM.h>
 #include <debug.h>
 #include "RGBTask.h"
+#include "SoundTask.h"
 #include "AppManager.h"
 #include "PMICTask.h"
 #include "LCDTask.h"
@@ -37,6 +38,7 @@
 #include "IMUTask.h"
 
 RGBTask* Tilda::_rgbTask = NULL;
+SoundTask* Tilda::_soundTask = NULL;
 AppManager* Tilda::_appManager = NULL;
 RTC_clock* Tilda::_realTimeClock = NULL;
 BadgeNotifications* Tilda::_badgeNotifications = NULL;
@@ -76,6 +78,12 @@ void Tilda::setLedColor(RGBLed led, RGBColor color) {
 void Tilda::setLedColor(RGBColor color) {
     if (_rgbTask) {
         _rgbTask->setColor(color);
+    }
+}
+
+void Tilda::playMelody(int melody[], int tempo[], int length) {
+    if(_soundTask) {
+        _soundTask->playMelody(melody, tempo, length);
     }
 }
 
