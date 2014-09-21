@@ -29,6 +29,12 @@
 #include "SoundTask.h"
 #include "Tilda.h"
 
+Tone::Tone() {
+    _note = 0;
+    _duration = 0;
+    _pauseAfterwards = 0;
+};
+
 Tone::Tone(uint16_t note, uint16_t duration, uint16_t pauseAfterwards) {
     _note = note;
     _duration = duration;
@@ -42,7 +48,7 @@ void Tone::play() {
 }
 
 SoundTask::SoundTask() {
-    _tones = xQueueCreate(1024, sizeof(Tone *));
+    _tones = xQueueCreate(1024, sizeof(Tone));
 }
 
 // ToDo: Add some type of event handler that gets called when the melody/tone has finished
@@ -59,12 +65,12 @@ void SoundTask::playMelody(const uint16_t melody[], const uint16_t tempo[], cons
 }
 
 void SoundTask::playTone(const uint16_t note, const uint16_t duration, const uint16_t pauseAfterwards) {
-    Tone *tone = new Tone(note, duration, pauseAfterwards);
+    Tone tone(note, duration, pauseAfterwards);
     playTone(tone);
 }
 
-void SoundTask::playTone(const Tone* tone) {
-    xQueueSendToBack(_tones, (void *)  &tone, (TickType_t) 0);
+void SoundTask::playTone(const Tone& tone) {
+    xQueueSendToBack(_tones, (void *) &tone, (TickType_t) 0);
 }
 
 void SoundTask::clear() {
@@ -77,10 +83,9 @@ String SoundTask::getName() const {
 
 void SoundTask::task() {
     while(true) {
-        Tone *tone;
+        Tone tone;
         if(xQueueReceive(_tones, &tone, portMAX_DELAY) == pdTRUE) {
-            tone->play();
+            tone.play();
         }
-        delete tone;
     }
 }
