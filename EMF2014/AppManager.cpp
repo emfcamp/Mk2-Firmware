@@ -50,7 +50,7 @@ static const AppDefinition APPS[] = {
         AppDefinition("Snake",         SnakeApp::New),
         AppDefinition("Tetris",        TetrisApp::New),
         // AppDefinition("HelloWorld",    HelloWorldApp::New), // Uncomment this
-        AppDefinition("SuperMario",    SuperMarioApp::New)
+        AppDefinition("SuperMario",    SuperMarioApp::New),
         AppDefinition("Sponsors",      SponsorsApp::New)
 };
 
