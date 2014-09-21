@@ -38,7 +38,7 @@
 class Tone {
 public:
 	Tone(const uint16_t note, const uint16_t duration, const uint16_t pauseAfterwards);
-	const void play();
+	void play();
 private:
 	uint16_t _note;
 	uint16_t _duration;
@@ -50,7 +50,7 @@ public:
     SoundTask();
 
     String getName() const;
-    void playMelody(const uint16_t melody[], const uint16_t tempo[], const uint16_t length);
+    void playMelody(uint16_t melody[], uint16_t tempo[], uint16_t length);
     void playTone(const uint16_t note, const uint16_t duration, const uint16_t pauseAfterwards);
     void playTone(const Tone* tone);
     void clear();

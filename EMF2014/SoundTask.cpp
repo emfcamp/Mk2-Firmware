@@ -29,13 +29,13 @@
 #include "SoundTask.h"
 #include "Tilda.h"
 
-Tone::Tone(const uint16_t note, const uint16_t duration, const uint16_t pauseAfterwards) {
+Tone::Tone(uint16_t note, uint16_t duration, uint16_t pauseAfterwards) {
     _note = note;
     _duration = duration;
     _pauseAfterwards = pauseAfterwards;
 };
 
-const void Tone::play() {
+void Tone::play() {
     tone(PIEZO, _note, _duration);
     vTaskDelay(_pauseAfterwards);
     digitalWrite(PIEZO, LOW);
