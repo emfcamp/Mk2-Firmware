@@ -32,7 +32,7 @@
 #include <debug.h>
 
 // EventGroup bita
-#define PMIC_CHAREG_STATE_BIT   (1 << 0)
+#define PMIC_CHARGE_STATE_BIT   (1 << 0)
 #define PMIC_SAMPLE_RATE_BIT    (1 << 1)
 
 
@@ -48,7 +48,7 @@ static void PMICChargeStateInterrupt(void)
         
         // set the Charge state bit to wake the PMIC Task
         xEventGroupSetBitsFromISR(PMIC.eventGroup,
-                                  PMIC_CHAREG_STATE_BIT,
+                                  PMIC_CHARGE_STATE_BIT,
                                   &xHigherPriorityTaskWoken);
         
         if (xHigherPriorityTaskWoken) {
@@ -126,7 +126,7 @@ void PMICTask::task()
         /* Wait a maximum of 100ms for either bit 0 or bit 4 to be set within
          the event group.  Clear the bits before exiting. */
         uxBits = xEventGroupWaitBits(eventGroup,
-                                     PMIC_CHAREG_STATE_BIT | PMIC_SAMPLE_RATE_BIT,
+                                     PMIC_CHARGE_STATE_BIT | PMIC_SAMPLE_RATE_BIT,
                                      pdFALSE,
                                      pdFALSE,
                                      (sampleRate/portTICK_PERIOD_MS) );
@@ -137,15 +137,15 @@ void PMICTask::task()
                                  PMIC_SAMPLE_RATE_BIT);
         }
 
-        if ((uxBits & PMIC_CHAREG_STATE_BIT) != 0 ) {
+        if ((uxBits & PMIC_CHARGE_STATE_BIT) != 0 ) {
             chargeState = digitalRead(MCP_STAT);
             xEventGroupClearBits(eventGroup,
-                                 PMIC_CHAREG_STATE_BIT);
+                                 PMIC_CHARGE_STATE_BIT);
             debug::log("PMICTask: New charge state: " + String(chargeState));
             // TODO: notify others that want to know about state change
         }
 
-        if ((uxBits & (PMIC_CHAREG_STATE_BIT | PMIC_SAMPLE_RATE_BIT)) == 0 ) {
+        if ((uxBits & (PMIC_CHARGE_STATE_BIT | PMIC_SAMPLE_RATE_BIT)) == 0 ) {
             // wait timed out, time to sample the battery voltage
             batteryReading = analogRead(VBATT_MON);
             chargeState = digitalRead(MCP_STAT);
