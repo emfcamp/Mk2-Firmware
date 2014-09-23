@@ -44,14 +44,15 @@
 static void PMICChargeStateInterrupt(void)
 {
     if (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING) {
-        static BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+        BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+        BaseType_t xResult;
         
         // set the Charge state bit to wake the PMIC Task
-        xEventGroupSetBitsFromISR(PMIC.eventGroup,
-                                  PMIC_CHAREG_STATE_BIT,
-                                  &xHigherPriorityTaskWoken);
+        xResult = xEventGroupSetBitsFromISR(PMIC.eventGroup,
+                                            PMIC_CHAREG_STATE_BIT,
+                                            &xHigherPriorityTaskWoken);
         
-        if (xHigherPriorityTaskWoken) {
+        if (xResult == pdPASS) {
             portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
         }
     }
