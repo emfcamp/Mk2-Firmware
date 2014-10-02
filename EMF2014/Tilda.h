@@ -87,5 +87,6 @@ private:
     static LCDTask* _lcdTask;
     static GUITask* _guiTask;
     static SettingsStore* _settingsStore;
+    static BadgeNotifications* _badgeNotifications;
     static BatterySaverTask* _batterySaverTask;
 };

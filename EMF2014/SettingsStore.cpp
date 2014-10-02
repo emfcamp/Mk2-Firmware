@@ -29,68 +29,14 @@
 #include "SettingsStore.h"
 #include <DueFlashStorage.h>
 #include <debug.h>
+#include <Sha1.h>
 #include "Utils.h"
 
-#define BADGE_ID_UNKOWN 0
-#define MAX_OBSERVERS 10
-
-#define CONTENT_RID_RETURN_BADGE_ID 45058
-
 SettingsStore::SettingsStore() {
-    mBadgeId = BADGE_ID_UNKOWN;
-    mObservers = new SettingsStoreObserver*[MAX_OBSERVERS];
-    for (int i = 0 ; i < MAX_OBSERVERS ; ++i) {
-        mObservers[i] = NULL;
-    }
-
-    for (int i = 0; i < 11; ++i) {
-        name1[i] = 0;
-        name2[i] = 0;
-    }
-
-    mObserversMutex = xSemaphoreCreateMutex();
+    mBadgeIdAlreadyCalculated = false;
 }
 
-SettingsStore::~SettingsStore() {
-    delete[] mObservers;
-}
-
-void SettingsStore::addObserver(SettingsStoreObserver* aObserver) {
-    if (xSemaphoreTake(mObserversMutex, portMAX_DELAY) == pdTRUE) {
-        for (int i = 0 ; i < MAX_OBSERVERS ; ++i) {
-            if (mObservers[i] == NULL) {
-                mObservers[i] = aObserver;
-                break;
-            }
-        }
-
-        xSemaphoreGive(mObserversMutex);
-    }
-}
-
-void SettingsStore::removeObserver(SettingsStoreObserver* aObserver) {
-    if (xSemaphoreTake(mObserversMutex, portMAX_DELAY) == pdTRUE) {
-        for (int i = 0 ; i < MAX_OBSERVERS ; ++i) {
-            if (mObservers[i] = aObserver) {
-                mObservers[i] = NULL;
-            }
-        }
-
-        xSemaphoreGive(mObserversMutex);
-    }
-}
-
-void SettingsStore::notifyObservers(uint16_t aBadgeId) {
-    if (xSemaphoreTake(mObserversMutex, portMAX_DELAY) == pdTRUE) {
-        for (int i = 0 ; i < MAX_OBSERVERS ; ++i) {
-            if (mObservers[i] != NULL) {
-                mObservers[i]->badgeIdChanged(aBadgeId);
-            }
-        }
-
-        xSemaphoreGive(mObserversMutex);
-    }
-}
+SettingsStore::~SettingsStore() {}
 
 char* SettingsStore::getUserNameLine1() {
     return name1;
@@ -105,15 +51,22 @@ bool SettingsStore::getUniqueId(uint32_t* unique_id) const {
            flash_read_unique_id(unique_id, 4) == FLASH_RC_OK;
 }
 
-uint16_t SettingsStore::getBadgeId() const {
-    return mBadgeId;
-}
+const uint32_t SettingsStore::getBadgeId() {
+    if (!mBadgeIdAlreadyCalculated) {
+        uint32_t uniqueId[4];
+        SettingsStore::getUniqueId(uniqueId);
 
-void SettingsStore::setBadgeId(uint16_t aBadgeId) {
-    mBadgeId = aBadgeId;
-    notifyObservers(mBadgeId);
-}
+        Sha1.init();
+        Sha1.print(uniqueId[0]);
+        Sha1.print(uniqueId[1]);
+        Sha1.print(uniqueId[2]);
+        Sha1.print(uniqueId[3]);
 
-bool SettingsStore::hasBadgeId() const {
-    return mBadgeId != BADGE_ID_UNKOWN;
+        byte* fullHash = Sha1.result();
+        mBadgeId = Utils::bytesToInt(fullHash[0], fullHash[1], fullHash[2], fullHash[3]);
+        delete fullHash;
+        mBadgeIdAlreadyCalculated = true;
+    }
+
+    return mBadgeId;  
 }

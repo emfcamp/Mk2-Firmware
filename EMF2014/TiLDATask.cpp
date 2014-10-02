@@ -45,6 +45,7 @@
 #include "SnakeApp.h"
 #include "Tilda.h"
 #include "SettingsStore.h"
+#include "BadgeNotifications.h"
 #include "LCDTask.h"
 #include "PMICTask.h"
 #include "GUITask.h"
@@ -77,6 +78,7 @@ void TiLDATask::task() {
     Tilda::_soundTask = new SoundTask;
     Tilda::_settingsStore = settingsStore;
     Tilda::_batterySaverTask = new BatterySaverTask;
+    Tilda::_badgeNotifications = new BadgeNotifications(*Tilda::_appManager);
     AppOpenerTask* appOpenerTask = new AppOpenerTask(*Tilda::_appManager);
     Tilda::_lcdTask = new LCDTask;
     Tilda::_guiTask = new GUITask;

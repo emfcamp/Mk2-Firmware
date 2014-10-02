@@ -38,13 +38,6 @@
 #include <FreeRTOS_ARM.h>
 #include "EMF2014Config.h"
 
-class IncomingRadioMessage;
-
-class SettingsStoreObserver {
-public:
-    virtual void badgeIdChanged(uint16_t badgeId) = 0;
-};
-
 class SettingsStore {
 public:
     SettingsStore();
@@ -52,29 +45,20 @@ public:
 
     bool getUniqueId(uint32_t* unique_id) const;
 
-    uint16_t getBadgeId() const;
-    void setBadgeId(uint16_t aBadgeId);
-    bool hasBadgeId() const;
+    const uint32_t getBadgeId();
 
     char* getUserNameLine1();
     char* getUserNameLine2();
 
-    void addObserver(SettingsStoreObserver* aObserver);
-    void removeObserver(SettingsStoreObserver* aObserver);
-
 private:
     SettingsStore(const SettingsStore&);
 
-    void notifyObservers(uint16_t aBadgeId);
-
 private:
-    uint16_t mBadgeId;
+    uint32_t mBadgeId;
+    bool mBadgeIdAlreadyCalculated;
 
     char name1[11];
     char name2[11];
-
-    SettingsStoreObserver** mObservers;
-    SemaphoreHandle_t mObserversMutex;
 };
 
 #endif // _SETTINGS_STORE_H_

@@ -45,6 +45,7 @@ LCDTask* Tilda::_lcdTask = NULL;
 GUITask* Tilda::_guiTask = NULL;
 SettingsStore* Tilda::_settingsStore = NULL;
 BatterySaverTask* Tilda::_batterySaverTask = NULL;
+BadgeNotifications* Tilda::_badgeNotifications = NULL;
 
 Tilda::Tilda() {}
 
@@ -104,6 +105,10 @@ GUITask& Tilda::getGUITask() {
 
 SettingsStore& Tilda::getSettingsStore() {
     return *_settingsStore;
+}
+
+BadgeNotifications& Tilda::getBadgeNotifications() {
+    return *_badgeNotifications;
 }
 
 AppManager& Tilda::getAppManager() {

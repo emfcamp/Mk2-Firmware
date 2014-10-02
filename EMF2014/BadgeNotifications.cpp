@@ -39,23 +39,15 @@ RGBColor BadgeNotification::led2() const { return _led2; }
 boolean BadgeNotification::sound() const { return _sound; }
 uint8_t BadgeNotification::type() const { return _type; }
 
-BadgeNotifications::BadgeNotifications(SettingsStore& aSettingsStore, AppManager& aAppManager)
-    :mSettingsStore(aSettingsStore),
-    mAppManager(aAppManager),
+BadgeNotifications::BadgeNotifications(AppManager& aAppManager)
+    :mAppManager(aAppManager),
     mBadgeNotification(NULL)
 
 {
-    if (mSettingsStore.hasBadgeId()) {
-        uint16_t badgeId = mSettingsStore.getBadgeId();
-    }
-
-    mSettingsStore.addObserver(this);
-
     mNotificationMutex = xSemaphoreCreateMutex();
 }
 
 BadgeNotifications::~BadgeNotifications() {
-    mSettingsStore.removeObserver(this);
     delete mBadgeNotification;
 }
 
