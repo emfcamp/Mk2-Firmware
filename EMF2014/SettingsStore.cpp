@@ -64,7 +64,6 @@ const uint32_t SettingsStore::getBadgeId() {
 
         byte* fullHash = Sha1.result();
         mBadgeId = Utils::bytesToInt(fullHash[0], fullHash[1], fullHash[2], fullHash[3]);
-        delete fullHash;
         mBadgeIdAlreadyCalculated = true;
     }
 
