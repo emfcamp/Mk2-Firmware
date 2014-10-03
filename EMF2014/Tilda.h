@@ -44,6 +44,7 @@
 #include "GUITask.h"
 #include "SettingsStore.h"
 #include "BatterySaverTask.h"
+#include "RadioTask.h"
 
 class BadgeNotifications;
 class DataStore;
@@ -60,6 +61,7 @@ public:
     static GUITask& getGUITask();
     static SettingsStore& getSettingsStore();
     static AppManager& getAppManager();
+    static RadioTask& getRadioTask();
 
     // helpers
     static ButtonSubscription* createButtonSubscription(uint16_t buttons);
@@ -89,4 +91,5 @@ private:
     static SettingsStore* _settingsStore;
     static BadgeNotifications* _badgeNotifications;
     static BatterySaverTask* _batterySaverTask;
+    static RadioTask* _radioTask;
 };

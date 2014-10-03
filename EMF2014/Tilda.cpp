@@ -46,6 +46,7 @@ GUITask* Tilda::_guiTask = NULL;
 SettingsStore* Tilda::_settingsStore = NULL;
 BatterySaverTask* Tilda::_batterySaverTask = NULL;
 BadgeNotifications* Tilda::_badgeNotifications = NULL;
+RadioTask* Tilda::_radioTask = NULL;
 
 Tilda::Tilda() {}
 
@@ -113,6 +114,10 @@ BadgeNotifications& Tilda::getBadgeNotifications() {
 
 AppManager& Tilda::getAppManager() {
     return *_appManager;
+}
+
+RadioTask& Tilda::getRadioTask() {
+    return *_radioTask;
 }
 
 float Tilda::getBatteryVoltage() {

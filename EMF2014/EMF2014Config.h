@@ -53,13 +53,16 @@
 // Packet length
 #define RADIO_PACKET_LENGTH 58
 #define RADIO_PACKET_WITH_RSSI_LENGTH (58 + 1 + 4)
-// Radio message buffer length
-#define RADIO_MAX_MESSAGE_BUFFER_LENGTH 40960
+// How many messages are keept in buffer/
+#define RADIO_MAX_INCOMING_MESSAGES_BUFFER 4
+// How long to sleep after wakeup
+#define RADIO_WAKE_UP_DURATION 400
+
 
 // EMF Camp 2014 will be in Britain during British Summer Time
 #define TIMEZONE_OFFSET 3600
 
-#define BOOT_SCREEN_TIME 2000
+#define BOOT_SCREEN_TIME 500
 
 //#define RADIO_DEBUG_MODE
 //#define RADIO_DEBUG_MODE_EXTENDED

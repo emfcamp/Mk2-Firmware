@@ -38,6 +38,7 @@
 #include "SoundTask.h"
 #include "BatterySaverTask.h"
 #include "AppOpenerTask.h"
+#include "RadioTask.h"
 #include "AppManager.h"
 #include "HomeScreenApp.h"
 #include "SponsorsApp.h"
@@ -74,6 +75,7 @@ void TiLDATask::task() {
     Tilda::_appManager = new AppManager;
 
     SettingsStore* settingsStore = new SettingsStore();
+    Tilda::_radioTask = new RadioTask;
     Tilda::_rgbTask = new RGBTask;
     Tilda::_soundTask = new SoundTask;
     Tilda::_settingsStore = settingsStore;
@@ -91,6 +93,7 @@ void TiLDATask::task() {
     Tilda::_soundTask->start();
     Tilda::_batterySaverTask->start();
     Tilda::_lcdTask->start();
+    Tilda::_radioTask->start();
     GLCD.DrawBitmap(TiLDA_Logo_64x128, 0, 0);
     Tilda::_guiTask->start();
     appOpenerTask->start();
