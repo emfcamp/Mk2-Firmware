@@ -58,7 +58,6 @@
 // How long to sleep after wakeup
 #define RADIO_WAKE_UP_DURATION 400
 
-
 // EMF Camp 2014 will be in Britain during British Summer Time
 #define TIMEZONE_OFFSET 3600
 
@@ -66,6 +65,7 @@
 
 //#define RADIO_DEBUG_MODE
 //#define RADIO_DEBUG_MODE_EXTENDED
+//#define IMU_DEBUG
 
 enum Button {
     NONE         = 0,
