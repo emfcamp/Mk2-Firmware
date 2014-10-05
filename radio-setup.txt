@@ -1,0 +1,8 @@
+screen -S arduino -X quit; screen -S usb /dev/ttyACM1 11520
+
++++
+atpk3a
+atcn00
+atid0000
+atac
+atdn
