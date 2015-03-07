@@ -79,6 +79,7 @@ public:
     static void markActivity();
     static char* getUserNameLine1();
     static char* getUserNameLine2();
+    static uint32_t getBadgeId();
 private:
     Tilda();
 

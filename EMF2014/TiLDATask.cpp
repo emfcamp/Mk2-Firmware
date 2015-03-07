@@ -41,6 +41,7 @@
 #include "RadioTask.h"
 #include "AppManager.h"
 #include "HomeScreenApp.h"
+#include "YoApp.h"
 #include "SponsorsApp.h"
 #include "BadgeIdApp.h"
 #include "SnakeApp.h"
@@ -101,7 +102,7 @@ void TiLDATask::task() {
     imuTask.start();
 
     Tilda::delay(BOOT_SCREEN_TIME);
-    Tilda::openApp(HomeScreenApp::New);
+    Tilda::openApp(YoApp::New);
 
     suspend();
 }

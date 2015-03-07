@@ -151,3 +151,7 @@ char* Tilda::getUserNameLine1() {
 char* Tilda::getUserNameLine2() {
     return _settingsStore->getUserNameLine2();
 }
+
+uint32_t Tilda::getBadgeId() {
+    return Tilda::getSettingsStore().getBadgeId();
+}

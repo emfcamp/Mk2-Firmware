@@ -37,6 +37,7 @@
 #include "SnakeApp.h"
 #include "SuperMarioApp.h"
 #include "HelloWorldApp.h"
+#include "YoApp.h"
 #include "TetrisApp.h"
 
 
@@ -47,6 +48,7 @@ static const AppDefinition APPS[] = {
         AppDefinition("Tetris",        TetrisApp::New),
         // AppDefinition("HelloWorld",    HelloWorldApp::New), // Uncomment this
         AppDefinition("SuperMario",    SuperMarioApp::New),
+        AppDefinition("Yo!",           YoApp::New),
         AppDefinition("Sponsors",      SponsorsApp::New)
 };
 
