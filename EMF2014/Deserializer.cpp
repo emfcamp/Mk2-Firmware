@@ -1,8 +1,7 @@
 /*
  TiLDA Mk2
 
- YoApp
- The most useful app ever - Used to demostrate how to use the radio
+ Deserializer
 
  The MIT License (MIT)
 
@@ -27,45 +26,24 @@
  SOFTWARE.
  */
 
-#pragma once
-
-#include <Arduino.h>
-#include <FreeRTOS_ARM.h>
-#include <deque>
-#include "EMF2014Config.h"
-#include "App.h"
-#include "ButtonSubscription.h"
+#include "Deserializer.h"
 #include "Serializable.h"
+#include "Utils.h"
+#include "Tilda.h"
 
-static const uint8_t MAX_YOS_ON_SCREEN = 4;
+#include "YoApp.h"
 
-class Yo: public Serializable {
-public: 
-    Yo(uint32_t sBadgeId, String sName): badgeId(sBadgeId), name(sName) {};
-    uint32_t badgeId;
-    String name;
+Serializable* Deserializer::deserialize(const byte* data) {
+    uint16_t messageTypeId = data[1] * 256 + data[0];
 
-    uint16_t getMessageTypeId();
-    void serialize(byte* data);
-};
+    if (messageTypeId == MESSAGE_TYPE_ID_YO) {
+        uint32_t badgeId = Utils::bytesToInt(data[2], data[3], data[4], data[5]);
+        char name[11]; 
+        for (uint8_t i=0; i<10; i++) name[i] = data[i + 6];
+        name[10] = 0;
+        return new Yo(badgeId, String(name));
+    }
 
-class YoApp: public App {
-public:
-    static App* New();
-    ~YoApp();
-
-    String getName() const;
-private:
-    YoApp();
-    YoApp(YoApp&);
-
-    void task();
-    void afterSuspension();
-    void beforeResume();
-
-    void addYoToList(Yo& yo);
-    void updateScreen();
-private:
-    ButtonSubscription* mButtonSubscription;
-    std::deque<Yo> mYosDisplayed;
-};
+    Tilda::log("Deserializer: Couldn't handle message type id " + String(messageTypeId));
+    return NULL;
+}

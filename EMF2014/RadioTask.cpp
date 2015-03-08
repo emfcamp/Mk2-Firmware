@@ -29,12 +29,14 @@
 #include "RadioTask.h"
 #include "Tilda.h"
 #include "Utils.h"
+#include "Deserializer.h"
 #include <debug.h>
 
 RadioTask::RadioTask() {
     _messages = xQueueCreate(RADIO_MAX_INCOMING_MESSAGES_BUFFER, sizeof(Serializable *));
     _wakeUpSignal = xQueueCreate(1, sizeof(byte));
     pinMode(PIN_LED_RXL, OUTPUT);
+    _listening = false;
 }
 
 String RadioTask::getName() const {
@@ -54,6 +56,25 @@ void RadioTask::listen(uint8_t channel, uint16_t panId) {
 void RadioTask::close() {
     _listening = false;
     xQueueReset(_wakeUpSignal);
+}
+
+void RadioTask::sendMessage(Serializable& message) {
+    byte data[58];
+
+    // 2 Byte MessageTypeId
+    uint16_t messageTypeId = message.getMessageTypeId();
+    data[0] = static_cast<byte>(messageTypeId);
+    data[1] = static_cast<byte>(messageTypeId >> 8);
+
+    // Null the rest
+    for (uint8_t i=2; i<58; i++) data[i] = 0;
+    
+    // Serialize
+    message.serialize(data+2);
+    
+    // Send
+    RADIO_SERIAL.write(data, 58);
+    RADIO_SERIAL.flush();
 }
 
 void RadioTask::task() {
@@ -135,9 +156,17 @@ uint8_t RadioTask::_parsePacketBuffer(byte packetBuffer[], uint8_t packetBufferL
 
         #ifdef RADIO_DEBUG_MODE
             debug::log("Packet!");
+            debug::logByteArray(packetBuffer, packetBufferLength);
         #endif
 
-        debug::logByteArray(packetBuffer, packetBufferLength);
+        Serializable* message = Deserializer::deserialize(packetBuffer);
+        if (message != NULL) {
+            if (xQueueSendToBack(_messages, ( void * ) &message, 0) == errQUEUE_FULL) {
+                // ToDo: do something smart here
+                debug::log("Incoming messages buffer is full. Clearing it.");
+                xQueueReset(_messages); 
+            }
+        }
 
         packetBufferLength = 0;
     } else if (packetBufferLength == RADIO_PACKET_WITH_RSSI_LENGTH) {
@@ -179,7 +208,7 @@ void RadioTask::_clearSerialBuffer() {
 
 Serializable* RadioTask::waitForMessage(TickType_t ticksToWait) {
     Serializable* message;
-    if (xQueueReceive(_messages, message, portMAX_DELAY) == pdTRUE) {
+    if (xQueueReceive(_messages, &(message), ticksToWait) == pdTRUE) {
         return message;
     } 
     return NULL;

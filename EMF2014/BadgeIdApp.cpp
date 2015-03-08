@@ -59,24 +59,24 @@ M2_LIST(badgeIdApp_m2_list_dt) = {&badgeIdApp_m2_label0, &badgeIdApp_m2_label1};
 M2_VLIST(badgeIdApp_m2_label_list_found, NULL, badgeIdApp_m2_list_dt);
 
 void BadgeIdApp::task() {
-        GLCD.SetRotation(ROTATION_0);
+    GLCD.SetRotation(ROTATION_0);
 
-        uint32_t badgeId = Tilda::getSettingsStore().getBadgeId();
-        uint8_t badgeIdBytes[] = {static_cast<byte>(badgeId >> 24), static_cast<byte>(badgeId >> 16), static_cast<byte>(badgeId >> 8), static_cast<byte>(badgeId)};
-        badgeIdApp_m2_label1_text[4]  = "0123456789abcdef"[badgeIdBytes[0]>>4];
-        badgeIdApp_m2_label1_text[5]  = "0123456789abcdef"[badgeIdBytes[0]&0xf];
-        badgeIdApp_m2_label1_text[6]  = "0123456789abcdef"[badgeIdBytes[1]>>4];
-        badgeIdApp_m2_label1_text[7]  = "0123456789abcdef"[badgeIdBytes[1]&0xf];
-        badgeIdApp_m2_label1_text[8]  = "0123456789abcdef"[badgeIdBytes[2]>>4];
-        badgeIdApp_m2_label1_text[9]  = "0123456789abcdef"[badgeIdBytes[2]&0xf];
-        badgeIdApp_m2_label1_text[10] = "0123456789abcdef"[badgeIdBytes[3]>>4];
-        badgeIdApp_m2_label1_text[11] = "0123456789abcdef"[badgeIdBytes[3]&0xf];
+    uint32_t badgeId = Tilda::getSettingsStore().getBadgeId();
+    uint8_t badgeIdBytes[] = {static_cast<byte>(badgeId >> 24), static_cast<byte>(badgeId >> 16), static_cast<byte>(badgeId >> 8), static_cast<byte>(badgeId)};
+    badgeIdApp_m2_label1_text[4]  = "0123456789abcdef"[badgeIdBytes[0]>>4];
+    badgeIdApp_m2_label1_text[5]  = "0123456789abcdef"[badgeIdBytes[0]&0xf];
+    badgeIdApp_m2_label1_text[6]  = "0123456789abcdef"[badgeIdBytes[1]>>4];
+    badgeIdApp_m2_label1_text[7]  = "0123456789abcdef"[badgeIdBytes[1]&0xf];
+    badgeIdApp_m2_label1_text[8]  = "0123456789abcdef"[badgeIdBytes[2]>>4];
+    badgeIdApp_m2_label1_text[9]  = "0123456789abcdef"[badgeIdBytes[2]&0xf];
+    badgeIdApp_m2_label1_text[10] = "0123456789abcdef"[badgeIdBytes[3]>>4];
+    badgeIdApp_m2_label1_text[11] = "0123456789abcdef"[badgeIdBytes[3]&0xf];
 
-        Tilda::getGUITask().setM2Root(&badgeIdApp_m2_label_list_found);
+    Tilda::getGUITask().setM2Root(&badgeIdApp_m2_label_list_found);
 
-        while(true) {
-            Tilda::delay(300);
-        }
+    while(true) {
+        Tilda::delay(300);
+    }
 }
 
 void BadgeIdApp::afterSuspension() {}

@@ -1,7 +1,7 @@
 /*
  TiLDA Mk2
 
- Flash Light App
+ YoApp
 
  The MIT License (MIT)
 
@@ -38,6 +38,25 @@
 #include "logo.h"
 #include <fonts/allFonts.h>
 
+uint16_t Yo::getMessageTypeId() { 
+    return MESSAGE_TYPE_ID_YO;
+};
+
+void Yo::serialize(byte* data) {
+    uint8_t index = 0;
+
+    // Badge id
+    data[index++] = static_cast<byte>(badgeId);
+    data[index++] = static_cast<byte>(badgeId >> 8);
+    data[index++] = static_cast<byte>(badgeId >> 16);
+    data[index++] = static_cast<byte>(badgeId >> 24);
+
+    // Name
+    for (uint8_t i=0; i<name.length();  i++) {
+        data[index++] = name[i];
+    }
+}
+
 App* YoApp::New() {
     return new YoApp();
 }
@@ -45,8 +64,8 @@ App* YoApp::New() {
 YoApp::YoApp() {
     mButtonSubscription = Tilda::createButtonSubscription(A);
 
-    // Start with one Yo
-    mYosDisplayed.push_front(Yo(Tilda::getBadgeId(), "Marek"));
+    // Start listening to the radio
+    Tilda::getRadioTask().listen(1, 1);
 }
 
 YoApp::~YoApp() {
@@ -57,12 +76,13 @@ String YoApp::getName() const {
     return "Yo!";
 }
 
-void YoApp::sendYo() {
+void YoApp::addYoToList(Yo& yo) {
     if (mYosDisplayed.size() == MAX_YOS_ON_SCREEN) {
         mYosDisplayed.pop_back();
     }
-    mYosDisplayed.push_front(Yo(Tilda::getBadgeId(), "Someone"));
 
+    mYosDisplayed.push_front(yo);
+    
     updateScreen();
 }
 
@@ -88,17 +108,22 @@ void YoApp::task() {
 
     while(true) {
         Button button = mButtonSubscription->waitForPress(100);
-        if (button == A) {
-            sendYo();
-            
+        if (button == A) {   
+            Yo yo = Yo(Tilda::getBadgeId(), Tilda::getUserNameLine1());    
+            addYoToList(yo);
+            Tilda::getRadioTask().sendMessage(yo);
         }
 
-        //updateScreen();
+        Serializable* message = Tilda::getRadioTask().waitForMessage(1000);
+        if (message != NULL && message->getMessageTypeId() == MESSAGE_TYPE_ID_YO) {
+            Tilda::log("Got a Yo!");
+            addYoToList(*(Yo*)message);
+        }
     }
 }
 
 void YoApp::afterSuspension() {
-      
+    Tilda::getRadioTask().close();
 }
 
 void YoApp::beforeResume() {
@@ -107,4 +132,5 @@ void YoApp::beforeResume() {
         mButtonSubscription->clear();
     }
     updateScreen();
+    Tilda::getRadioTask().listen(1, 1);
 }

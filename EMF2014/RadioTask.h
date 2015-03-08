@@ -46,6 +46,7 @@ public:
     void close();
     Serializable* waitForMessage(TickType_t ticksToWait);
     Serializable* waitForMessage();
+    void sendMessage(Serializable& message);
 protected:
     void task();
 

@@ -34,6 +34,21 @@
 
 SettingsStore::SettingsStore() {
     mBadgeIdAlreadyCalculated = false;
+
+    // Use this as a default
+    uint32_t badgeId = getBadgeId();
+    uint8_t badgeIdBytes[] = {static_cast<byte>(badgeId >> 24), static_cast<byte>(badgeId >> 16), static_cast<byte>(badgeId >> 8), static_cast<byte>(badgeId)};
+    name1[0] = 'I';
+    name1[1] = 'D';
+    name1[2] = "0123456789abcdef"[badgeIdBytes[0]>>4];
+    name1[3] = "0123456789abcdef"[badgeIdBytes[0]&0xf];
+    name1[4] = "0123456789abcdef"[badgeIdBytes[1]>>4];
+    name1[5] = "0123456789abcdef"[badgeIdBytes[1]&0xf];
+    name1[6] = "0123456789abcdef"[badgeIdBytes[2]>>4];
+    name1[7] = "0123456789abcdef"[badgeIdBytes[2]&0xf];
+    name1[8] = "0123456789abcdef"[badgeIdBytes[3]>>4];
+    name1[9] = "0123456789abcdef"[badgeIdBytes[3]&0xf];
+    name1[10] = 0;
 }
 
 SettingsStore::~SettingsStore() {}

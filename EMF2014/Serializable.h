@@ -1,7 +1,7 @@
 /*
  TiLDA Mk2
 
- FixedSizeSerializable
+ Serializable
 
  Interface 
 
@@ -30,15 +30,18 @@
 
 #pragma once
 
+#include <Arduino.h>
+#include <FreeRTOS_ARM.h>
+
 class Serializable {
 public:
-    virtual uint16_t typeId() = 0;
-    virtual byte* serialize() = 0;
+    virtual uint16_t getMessageTypeId() = 0;
+    virtual void serialize(byte* data) = 0; // 56 bytes at most
 };
 
-
-class Deserializer {
-public:
-    virtual bool canDeserialize(const uint16_t typeId) = 0;
-    virtual Serializable* deserialize(const uint16_t length, const byte* payload) = 0;
+// Define all your message types here. That way we avoid collisons and have a
+// single place to look them up. It also avoids spreading those ids around 
+// everywhere.
+enum MessageTypeIds {
+    MESSAGE_TYPE_ID_YO = 1001
 };

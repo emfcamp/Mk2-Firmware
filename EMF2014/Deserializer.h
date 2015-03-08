@@ -1,8 +1,7 @@
 /*
  TiLDA Mk2
 
- YoApp
- The most useful app ever - Used to demostrate how to use the radio
+ Deserializer
 
  The MIT License (MIT)
 
@@ -29,43 +28,10 @@
 
 #pragma once
 
-#include <Arduino.h>
-#include <FreeRTOS_ARM.h>
-#include <deque>
-#include "EMF2014Config.h"
-#include "App.h"
-#include "ButtonSubscription.h"
 #include "Serializable.h"
 
-static const uint8_t MAX_YOS_ON_SCREEN = 4;
-
-class Yo: public Serializable {
-public: 
-    Yo(uint32_t sBadgeId, String sName): badgeId(sBadgeId), name(sName) {};
-    uint32_t badgeId;
-    String name;
-
-    uint16_t getMessageTypeId();
-    void serialize(byte* data);
-};
-
-class YoApp: public App {
+class Deserializer {
 public:
-    static App* New();
-    ~YoApp();
-
-    String getName() const;
-private:
-    YoApp();
-    YoApp(YoApp&);
-
-    void task();
-    void afterSuspension();
-    void beforeResume();
-
-    void addYoToList(Yo& yo);
-    void updateScreen();
-private:
-    ButtonSubscription* mButtonSubscription;
-    std::deque<Yo> mYosDisplayed;
+    static Serializable* deserialize(const byte* payload);
 };
+
