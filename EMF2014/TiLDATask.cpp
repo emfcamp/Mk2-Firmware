@@ -37,22 +37,19 @@
 #include "RGBTask.h"
 #include "SoundTask.h"
 #include "BatterySaverTask.h"
-#include "RadioReceiveTask.h"
-#include "RadioTransmitTask.h"
-#include "MessageCheckTask.h"
 #include "AppOpenerTask.h"
+#include "RadioTask.h"
 #include "AppManager.h"
 #include "HomeScreenApp.h"
+#include "YoApp.h"
 #include "SponsorsApp.h"
 #include "BadgeIdApp.h"
-#include "NotificationApp.h"
 #include "SnakeApp.h"
 #include "Tilda.h"
 #include "SettingsStore.h"
-#include "LCDTask.h"
-#include "DataStore.h"
-#include "PMICTask.h"
 #include "BadgeNotifications.h"
+#include "LCDTask.h"
+#include "PMICTask.h"
 #include "GUITask.h"
 #include "IMUTask.h"
 #include <glcd.h>
@@ -78,19 +75,15 @@ void TiLDATask::task() {
     Tilda::_realTimeClock = new RTC_clock(RC);
     Tilda::_appManager = new AppManager;
 
-    MessageCheckTask* messageCheckTask = new MessageCheckTask;
-    SettingsStore* settingsStore = new SettingsStore(*messageCheckTask);
-    Tilda::_dataStore = new DataStore(*messageCheckTask);
+    SettingsStore* settingsStore = new SettingsStore();
+    Tilda::_radioTask = new RadioTask;
     Tilda::_rgbTask = new RGBTask;
     Tilda::_soundTask = new SoundTask;
     Tilda::_settingsStore = settingsStore;
     Tilda::_batterySaverTask = new BatterySaverTask;
-    RadioReceiveTask* radioReceiveTask = new RadioReceiveTask(*messageCheckTask, *Tilda::_realTimeClock);
-    Tilda::_radioReceiveTask = radioReceiveTask;
-    RadioTransmitTask* radioTransmitTask = new RadioTransmitTask(*radioReceiveTask, *settingsStore, *messageCheckTask);
+    Tilda::_badgeNotifications = new BadgeNotifications(*Tilda::_appManager);
     AppOpenerTask* appOpenerTask = new AppOpenerTask(*Tilda::_appManager);
     Tilda::_lcdTask = new LCDTask;
-    Tilda::_badgeNotifications = new BadgeNotifications(*settingsStore, *messageCheckTask, *Tilda::_appManager);
     Tilda::_guiTask = new GUITask;
     Tilda::_guiTask->setOrientation(ORIENTATION_HELD);
 
@@ -100,10 +93,8 @@ void TiLDATask::task() {
     Tilda::_rgbTask->start();
     Tilda::_soundTask->start();
     Tilda::_batterySaverTask->start();
-    messageCheckTask->start();
-    radioReceiveTask->start();
-    radioTransmitTask->start();
     Tilda::_lcdTask->start();
+    Tilda::_radioTask->start();
     GLCD.DrawBitmap(TiLDA_Logo_64x128, 0, 0);
     Tilda::_guiTask->start();
     appOpenerTask->start();
@@ -111,7 +102,7 @@ void TiLDATask::task() {
     imuTask.start();
 
     Tilda::delay(BOOT_SCREEN_TIME);
-    Tilda::openApp(HomeScreenApp::New);
+    Tilda::openApp(YoApp::New);
 
     suspend();
 }

@@ -144,12 +144,18 @@ void IMUTask::setup()
     // MPU setup
     int count = 0;
     int result = 0;
+    int delay = 100;
     do {
-        debug::log("IMUTask: Initialising MPU attempt " + String(count));
+        #ifdef IMU_DEBUG
+            debug::log("IMUTask: Initialising MPU attempt " + String(count));
+        #endif
         mpu_force_reset();
-        Tilda::delay(100);
+        Tilda::delay(delay);
         count++;
         result = MPUSetup();
+        if ((result != 0) && (delay < 100 * 1000)) {
+            delay *= 2;
+        }
     } while (result != 0);
 
     
@@ -261,27 +267,37 @@ int8_t IMUTask::MPUSetup()
     unsigned long timestamp;
     
     result = mpu_init(&int_param);
-    debug::log("IMUTask: mpu_init returned " + String(result));
+    #ifdef IMU_DEBUG
+        debug::log("IMUTask: mpu_init returned " + String(result));
+    #endif
     if (result != 0) {
         return -1;
     }
     
     /* Wake up all sensors. */
     result = mpu_set_sensors(INV_XYZ_GYRO | INV_XYZ_ACCEL);
-    debug::log("IMUTask: mpu_set_sensors returned " + String(result));
+    #ifdef IMU_DEBUG
+        debug::log("IMUTask: mpu_set_sensors returned " + String(result));
+    #endif
 
     result = mpu_set_sample_rate(IMU_DEFAULT_MPU_HZ);
-    debug::log("IMUTask: mpu_set_sample_rate returned " + String(result));
+    #ifdef IMU_DEBUG
+        debug::log("IMUTask: mpu_set_sample_rate returned " + String(result));
     
-    debug::log("Pre laod");
+        debug::log("Pre laod");
+    #endif
     
     result = dmp_load_motion_driver_firmware();
-    debug::log("IMUTask: dmp_load_motion_driver_firmware returned " + String(result));
+    #ifdef IMU_DEBUG
+        debug::log("IMUTask: dmp_load_motion_driver_firmware returned " + String(result));
+    #endif
     if (result != 0) {
        return -2;
     }
     result = dmp_set_orientation( inv_orientation_matrix_to_scalar(gyro_orientation) );
-    debug::log("IMUTask: dmp_set_orientation returned " + String(result));
+    #ifdef IMU_DEBUG
+        debug::log("IMUTask: dmp_set_orientation returned " + String(result));
+    #endif
     if (result != 0) {
         return -3;
     }

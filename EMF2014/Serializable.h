@@ -1,13 +1,9 @@
 /*
  TiLDA Mk2
 
- OutgoingMessagesManager
+ Serializable
 
- This class takes care of messages that are meant to be sent via the radio.
- That includes:
- * Queueing up of external messages
- * Creating sytem/protocol specific outgoing messages
- * Sending outgoing message during transmit window
+ Interface 
 
  The MIT License (MIT)
 
@@ -32,21 +28,20 @@
  SOFTWARE.
  */
 
-#ifndef _OUTGOING_MESSAGES_MANAGER_H_
-#define _OUTGOING_MESSAGES_MANAGER_H_
+#pragma once
 
 #include <Arduino.h>
 #include <FreeRTOS_ARM.h>
-#include "EMF2014Config.h"
 
-class OutgoingMessagesManager {
+class Serializable {
 public:
-    OutgoingMessagesManager();
-
-    /* This is a blocking method */
-    void handleTransmissionWindow(TickType_t duration);
-private:
-
+    virtual uint16_t getMessageTypeId() = 0;
+    virtual void serialize(byte* data) = 0; // 56 bytes at most
 };
 
-#endif // _OUTGOING_MESSAGES_MANAGER_H_
+// Define all your message types here. That way we avoid collisons and have a
+// single place to look them up. It also avoids spreading those ids around 
+// everywhere.
+enum MessageTypeIds {
+    MESSAGE_TYPE_ID_YO = 1001
+};

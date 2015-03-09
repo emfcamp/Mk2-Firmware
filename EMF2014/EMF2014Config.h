@@ -53,41 +53,19 @@
 // Packet length
 #define RADIO_PACKET_LENGTH 58
 #define RADIO_PACKET_WITH_RSSI_LENGTH (58 + 1 + 4)
-// Radio message buffer length
-#define RADIO_MAX_MESSAGE_BUFFER_LENGTH 40960
-// Radio discovery channel (in hex)
-#define RADIO_DISCOVERY_CHANNEL "02"
-// Discovery time in ticks
-#define RADIO_DISCOVERY_TIME 3000
-// Sleep between unsuccessful discoverys
-#define RADIO_UNSUCCESSFUL_DISCOVERY_SLEEP 60000
-// Time spend without incoming messages before badge goes back into
-// discovery mode (in ticks)
-#define RADIO_RECEIVE_TIMEOUT 10000
-// Sleep time for the receiver task when no serial data is available
-#define RADIO_NO_DATA_SLEEP_DURATION 5
-// This is how long we'll wait before sending after waking up the radio
-#define RADIO_WAKEUP_TIME 400
-// This is a sanity check. Make sure no transmit window is longer than this
-#define RADIO_MAX_TRANSMIT_WINDOW_LENGTH (3 * 60 * 1000)
-// Another sanity check. Minimum/Maximum current time
-#define RADIO_MINIMUM_CURRENT_TIME 1408879302
-#define RADIO_MAXIMUM_CURRENT_TIME 1440415302
+// How many messages are keept in buffer/
+#define RADIO_MAX_INCOMING_MESSAGES_BUFFER 4
+// How long to sleep after wakeup
+#define RADIO_WAKE_UP_DURATION 400
 
 // EMF Camp 2014 will be in Britain during British Summer Time
 #define TIMEZONE_OFFSET 3600
 
-#define BOOT_SCREEN_TIME 2000
+#define BOOT_SCREEN_TIME 500
 
 //#define RADIO_DEBUG_MODE
 //#define RADIO_DEBUG_MODE_EXTENDED
-
-
-// EMF2014 Public Key
-const uint8_t EMF_PUBLIC_KEY[40] = {0x2b, 0xaf, 0x24, 0xb9, 0x9e, 0x0a, 0xc6, 0x20, 0x64, 0xbe,
-                                    0x7e, 0xf6, 0x9a, 0xad, 0x86, 0xff, 0x41, 0x60, 0x74, 0x2c,
-                                    0xe2, 0x5b, 0xc2, 0xef, 0xa6, 0xb6, 0x62, 0x24, 0x0b, 0xb2,
-                                    0xf8, 0x82, 0x3f, 0x92, 0x9e, 0x1e, 0x91, 0x3a, 0xb9, 0xfd};
+//#define IMU_DEBUG
 
 enum Button {
     NONE         = 0,

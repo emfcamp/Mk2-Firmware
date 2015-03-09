@@ -26,9 +26,7 @@
  SOFTWARE.
  */
 
-#include "MessageCheckTask.h"
 #include "BadgeNotifications.h"
-#include "IncomingRadioMessage.h"
 #include "NotificationApp.h"
 #include "AppManager.h"
 #include "Utils.h"
@@ -41,29 +39,15 @@ RGBColor BadgeNotification::led2() const { return _led2; }
 boolean BadgeNotification::sound() const { return _sound; }
 uint8_t BadgeNotification::type() const { return _type; }
 
-BadgeNotifications::BadgeNotifications(SettingsStore& aSettingsStore, MessageCheckTask& aMessageCheckTask, AppManager& aAppManager)
-    :mSettingsStore(aSettingsStore),
-    mMessageCheckTask(aMessageCheckTask),
-    mAppManager(aAppManager),
+BadgeNotifications::BadgeNotifications(AppManager& aAppManager)
+    :mAppManager(aAppManager),
     mBadgeNotification(NULL)
 
 {
-    if (mSettingsStore.hasBadgeId()) {
-        uint16_t badgeId = mSettingsStore.getBadgeId();
-        mMessageCheckTask.subscribe(this, badgeId, badgeId);
-    }
-
-    mSettingsStore.addObserver(this);
-
     mNotificationMutex = xSemaphoreCreateMutex();
-    mMessageCheckTask.subscribe(this, 0xb003, 0xb003);
-
-    badgeIdSubscriptionSet = false;
 }
 
 BadgeNotifications::~BadgeNotifications() {
-    mSettingsStore.removeObserver(this);
-    mMessageCheckTask.unsubscribe(this);
     delete mBadgeNotification;
 }
 
@@ -72,24 +56,6 @@ RGBColor BadgeNotifications::getRGBColor(PackReader& aReader) {
     uint8_t green = static_cast<uint8_t>(Utils::getInteger(aReader));
     uint8_t blue = static_cast<uint8_t>(Utils::getInteger(aReader));
     return RGBColor(red, blue, green);
-}
-
-void BadgeNotifications::handleMessage(const IncomingRadioMessage& aIncomingRadioMessage) {
-    // parse the radio message content into mBadgeNotification
-    // <3 bytes rgb1> <3 bytes rgb2> <1 byte sound> <text>
-
-        mReader.setBuffer((unsigned char*)aIncomingRadioMessage.content(), aIncomingRadioMessage.length());
-
-        RGBColor rgb1 = getRGBColor(mReader);
-        RGBColor rgb2 = getRGBColor(mReader);
-        boolean sound = Utils::getBoolean(mReader);
-        uint8_t type = static_cast<uint8_t>(Utils::getInteger(mReader));
-        char* textChars = Utils::getString(mReader);
-        String text(textChars);
-        delete[] textChars;
-        debug::log("BADGER NOTIFICATION");
-        debug::log(text);
-        pushNotification(text, rgb1, rgb2, sound, type);
 }
 
 void BadgeNotifications::pushNotification(String text, RGBColor rgb1, RGBColor rgb2, boolean sound, uint8_t type) {
@@ -101,12 +67,6 @@ void BadgeNotifications::pushNotification(String text, RGBColor rgb1, RGBColor r
     }
 }
 
-void BadgeNotifications::badgeIdChanged(uint16_t badgeId) {
-    if (!badgeIdSubscriptionSet) {
-        badgeIdSubscriptionSet = true;
-        mMessageCheckTask.subscribe(this, badgeId, badgeId);
-    }
-}
 
 BadgeNotification* BadgeNotifications::popNotification() {
     BadgeNotification* notification = NULL;

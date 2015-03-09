@@ -37,20 +37,18 @@
 #include "SnakeApp.h"
 #include "SuperMarioApp.h"
 #include "HelloWorldApp.h"
-#include "ScheduleApp.h"
+#include "YoApp.h"
 #include "TetrisApp.h"
-#include "WeatherApp.h"
 
 
 // Add your app here to appear in the app list
 static const AppDefinition APPS[] = {
-        AppDefinition("Schedule",      ScheduleApp::New),
-        AppDefinition("Weather",       WeatherApp::New),
         AppDefinition("Badge ID",      BadgeIdApp::New),
         AppDefinition("Snake",         SnakeApp::New),
         AppDefinition("Tetris",        TetrisApp::New),
         // AppDefinition("HelloWorld",    HelloWorldApp::New), // Uncomment this
         AppDefinition("SuperMario",    SuperMarioApp::New),
+        AppDefinition("Yo!",           YoApp::New),
         AppDefinition("Sponsors",      SponsorsApp::New)
 };
 

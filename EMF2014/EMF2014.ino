@@ -75,7 +75,7 @@ void setup() {
     tildaButtonInterruptPriority();
 
     // Uncomment to wait for a keypress before continuing startup
-    // debug::waitForKey();
+    //debug::waitForKey();
 
     GLCD.Init();
     tiLDATask.start();

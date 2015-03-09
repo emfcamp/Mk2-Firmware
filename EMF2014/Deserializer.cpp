@@ -1,8 +1,7 @@
 /*
  TiLDA Mk2
 
- SponsorsApp
- Displays a list of all sponsors
+ Deserializer
 
  The MIT License (MIT)
 
@@ -27,32 +26,24 @@
  SOFTWARE.
  */
 
-#pragma once
+#include "Deserializer.h"
+#include "Serializable.h"
+#include "Utils.h"
+#include "Tilda.h"
 
-#include <Arduino.h>
-#include <FreeRTOS_ARM.h>
-#include <rtc_clock.h>
-#include "EMF2014Config.h"
-#include "App.h"
-#include "Weather.h"
+#include "YoApp.h"
 
-class WeatherApp: public App {
-public:
-    static App* New();
-    ~WeatherApp();
+Serializable* Deserializer::deserialize(const byte* data) {
+    uint16_t messageTypeId = data[1] * 256 + data[0];
 
-    String getName() const;
+    if (messageTypeId == MESSAGE_TYPE_ID_YO) {
+        uint32_t badgeId = Utils::bytesToInt(data[2], data[3], data[4], data[5]);
+        char name[11]; 
+        for (uint8_t i=0; i<10; i++) name[i] = data[i + 6];
+        name[10] = 0;
+        return new Yo(badgeId, String(name));
+    }
 
-private:
-    WeatherApp();
-    WeatherApp(const WeatherApp&);
-
-    // helpers
-    static String getWeatherTypeString(WeatherType aWeatherType);
-    static String getDayOfWeekString(const RTC_date_time& timestamp);
-    static bool getWeatherString(String& forecastStr, const WeatherForecast& aWeatherForecast, uint8_t aWeatherPeriod);
-
-    void task();
-private:
-    class ButtonSubscription* mButtonSubscription;
-};
+    Tilda::log("Deserializer: Couldn't handle message type id " + String(messageTypeId));
+    return NULL;
+}

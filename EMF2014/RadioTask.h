@@ -1,7 +1,11 @@
 /*
  TiLDA Mk2
 
- OutgoingMessagesManager
+ RadioTask
+
+ This class handles radio communication in some sort of organised fashion. 
+
+ See: https://github.com/sebnil/DueFlashStorage/blob/master/flash_efc.cpp#L845
 
  The MIT License (MIT)
 
@@ -26,10 +30,39 @@
  SOFTWARE.
  */
 
-#include "OutgoingMessagesManager.h"
+#pragma once
 
-OutgoingMessagesManager::OutgoingMessagesManager() {}
+#include <Arduino.h>
+#include <FreeRTOS_ARM.h>
+#include "EMF2014Config.h"
+#include "Serializable.h"
+#include "Task.h"
 
-void OutgoingMessagesManager::handleTransmissionWindow(TickType_t duration) {
+class RadioTask: public Task {
+public:
+    RadioTask();
+    String getName() const;
+    void listen(uint8_t channel, uint16_t panId);
+    void close();
+    Serializable* waitForMessage(TickType_t ticksToWait);
+    Serializable* waitForMessage();
+    void sendMessage(Serializable& message);
+protected:
+    void task();
 
-}
+private:
+    void _enterAtMode();
+    void _leaveAtMode();
+    void _sleep();
+    void _wakeUp();
+    void _clearSerialBuffer();
+    uint8_t _parsePacketBuffer(byte packetBuffer[], uint8_t packetBufferLength);
+
+    QueueHandle_t _messages;
+    QueueHandle_t _wakeUpSignal;
+    uint8_t _channel; 
+    uint16_t _panId;
+    bool _listening;
+    bool _changed;
+    uint8_t _rssi;
+};

@@ -44,7 +44,7 @@
 #include "GUITask.h"
 #include "SettingsStore.h"
 #include "BatterySaverTask.h"
-#include "RadioReceiveTask.h"
+#include "RadioTask.h"
 
 class BadgeNotifications;
 class DataStore;
@@ -57,14 +57,11 @@ public:
     // access to things
     static RTC_clock& getClock();
     static BadgeNotifications& getBadgeNotifications();
-    static DataStore& getDataStore();
     static LCDTask& getLCDTask();
     static GUITask& getGUITask();
     static SettingsStore& getSettingsStore();
     static AppManager& getAppManager();
-
-    static char* getUserNameLine1();
-    static char* getUserNameLine2();
+    static RadioTask& getRadioTask();
 
     // helpers
     static ButtonSubscription* createButtonSubscription(uint16_t buttons);
@@ -80,8 +77,9 @@ public:
     static Orientation_t getOrientation();
     static uint32_t millisecondsSinceBoot();
     static void markActivity();
-    static char* radioChannelIdentifier();
-    static uint8_t radioRssi();
+    static char* getUserNameLine1();
+    static char* getUserNameLine2();
+    static uint32_t getBadgeId();
 private:
     Tilda();
 
@@ -89,11 +87,10 @@ private:
     static SoundTask* _soundTask;
     static AppManager* _appManager;
     static RTC_clock* _realTimeClock;
-    static BadgeNotifications* _badgeNotifications;
-    static DataStore* _dataStore;
     static LCDTask* _lcdTask;
     static GUITask* _guiTask;
     static SettingsStore* _settingsStore;
+    static BadgeNotifications* _badgeNotifications;
     static BatterySaverTask* _batterySaverTask;
-    static RadioReceiveTask* _radioReceiveTask;
+    static RadioTask* _radioTask;
 };

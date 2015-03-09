@@ -29,109 +29,29 @@
 #include "SettingsStore.h"
 #include <DueFlashStorage.h>
 #include <debug.h>
+#include <Sha1.h>
 #include "Utils.h"
-#include "IncomingRadioMessage.h"
 
-#define BADGE_ID_UNKOWN 0
-#define MAX_OBSERVERS 10
+SettingsStore::SettingsStore() {
+    mBadgeIdAlreadyCalculated = false;
 
-#define CONTENT_RID_RETURN_BADGE_ID 45058
-
-SettingsStore::SettingsStore(MessageCheckTask& aMessageCheckTask)
-    :mMessageCheckTask(aMessageCheckTask)
-{
-    mBadgeId = BADGE_ID_UNKOWN;
-    mObservers = new SettingsStoreObserver*[MAX_OBSERVERS];
-    for (int i = 0 ; i < MAX_OBSERVERS ; ++i) {
-        mObservers[i] = NULL;
-    }
-
-    for (int i = 0; i < 11; ++i) {
-        name1[i] = 0;
-        name2[i] = 0;
-    }
-
-    mMessageCheckTask.subscribe(this, CONTENT_RID_RETURN_BADGE_ID, CONTENT_RID_RETURN_BADGE_ID);
-
-    mObserversMutex = xSemaphoreCreateMutex();
+    // Use this as a default
+    uint32_t badgeId = getBadgeId();
+    uint8_t badgeIdBytes[] = {static_cast<byte>(badgeId >> 24), static_cast<byte>(badgeId >> 16), static_cast<byte>(badgeId >> 8), static_cast<byte>(badgeId)};
+    name1[0] = 'I';
+    name1[1] = 'D';
+    name1[2] = "0123456789abcdef"[badgeIdBytes[0]>>4];
+    name1[3] = "0123456789abcdef"[badgeIdBytes[0]&0xf];
+    name1[4] = "0123456789abcdef"[badgeIdBytes[1]>>4];
+    name1[5] = "0123456789abcdef"[badgeIdBytes[1]&0xf];
+    name1[6] = "0123456789abcdef"[badgeIdBytes[2]>>4];
+    name1[7] = "0123456789abcdef"[badgeIdBytes[2]&0xf];
+    name1[8] = "0123456789abcdef"[badgeIdBytes[3]>>4];
+    name1[9] = "0123456789abcdef"[badgeIdBytes[3]&0xf];
+    name1[10] = 0;
 }
 
-SettingsStore::~SettingsStore() {
-    mMessageCheckTask.unsubscribe(this);
-
-    delete[] mObservers;
-}
-
-void SettingsStore::addObserver(SettingsStoreObserver* aObserver) {
-    if (xSemaphoreTake(mObserversMutex, portMAX_DELAY) == pdTRUE) {
-        for (int i = 0 ; i < MAX_OBSERVERS ; ++i) {
-            if (mObservers[i] == NULL) {
-                mObservers[i] = aObserver;
-                break;
-            }
-        }
-
-        xSemaphoreGive(mObserversMutex);
-    }
-}
-
-void SettingsStore::removeObserver(SettingsStoreObserver* aObserver) {
-    if (xSemaphoreTake(mObserversMutex, portMAX_DELAY) == pdTRUE) {
-        for (int i = 0 ; i < MAX_OBSERVERS ; ++i) {
-            if (mObservers[i] = aObserver) {
-                mObservers[i] = NULL;
-            }
-        }
-
-        xSemaphoreGive(mObserversMutex);
-    }
-}
-
-void SettingsStore::notifyObservers(uint16_t aBadgeId) {
-    if (xSemaphoreTake(mObserversMutex, portMAX_DELAY) == pdTRUE) {
-        for (int i = 0 ; i < MAX_OBSERVERS ; ++i) {
-            if (mObservers[i] != NULL) {
-                mObservers[i]->badgeIdChanged(aBadgeId);
-            }
-        }
-
-        xSemaphoreGive(mObserversMutex);
-    }
-}
-
-void SettingsStore::handleMessage(const IncomingRadioMessage& radioMessage) {
-    uint32_t uniqueId[4];
-    if (getUniqueId(uniqueId)) {
-        bool ourUniqueId = true;
-
-        for (int i = 0 ; i < 4 ; ++i) {
-            uint32_t receivedUniqueId = Utils::bytesToInt(radioMessage.content()[(i * 4) + 3],
-                                                            radioMessage.content()[(i * 4) + 2],
-                                                            radioMessage.content()[(i * 4) + 1],
-                                                            radioMessage.content()[(i * 4) + 0]);
-
-            ourUniqueId = ourUniqueId && receivedUniqueId == uniqueId[i];
-
-            if (!ourUniqueId)
-                debug::log("**** " + String(uniqueId[i]) + ":" + String(receivedUniqueId));
-        }
-
-        if (ourUniqueId) {
-            mBadgeId = Utils::bytesToInt(radioMessage.content()[16], radioMessage.content()[17]);
-
-            for (int i = 0; i < 10; ++i) {
-                name1[i] = radioMessage.content()[18 + i];
-                name2[i] = radioMessage.content()[28 + i];
-            }
-
-            debug::log("SettingsStore: Received Badge ID " + String(mBadgeId) + " with name1 " + String(name1) + " and name2 " + String(name2));
-
-            notifyObservers(mBadgeId);
-        } else {
-            debug::log("not our unique id");
-        }
-    }
-}
+SettingsStore::~SettingsStore() {}
 
 char* SettingsStore::getUserNameLine1() {
     return name1;
@@ -146,15 +66,21 @@ bool SettingsStore::getUniqueId(uint32_t* unique_id) const {
            flash_read_unique_id(unique_id, 4) == FLASH_RC_OK;
 }
 
-uint16_t SettingsStore::getBadgeId() const {
-    return mBadgeId;
-}
+const uint32_t SettingsStore::getBadgeId() {
+    if (!mBadgeIdAlreadyCalculated) {
+        uint32_t uniqueId[4];
+        SettingsStore::getUniqueId(uniqueId);
 
-void SettingsStore::setBadgeId(uint16_t aBadgeId) {
-    mBadgeId = aBadgeId;
-    notifyObservers(mBadgeId);
-}
+        Sha1.init();
+        Sha1.print(uniqueId[0]);
+        Sha1.print(uniqueId[1]);
+        Sha1.print(uniqueId[2]);
+        Sha1.print(uniqueId[3]);
 
-bool SettingsStore::hasBadgeId() const {
-    return mBadgeId != BADGE_ID_UNKOWN;
+        byte* fullHash = Sha1.result();
+        mBadgeId = Utils::bytesToInt(fullHash[0], fullHash[1], fullHash[2], fullHash[3]);
+        mBadgeIdAlreadyCalculated = true;
+    }
+
+    return mBadgeId;  
 }

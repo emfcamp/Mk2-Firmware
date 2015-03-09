@@ -114,17 +114,9 @@ char footerBuffer[22];
 const char *HomeScreenApp::footerText(m2_rom_void_p element) {
 
     String footer;
-    if (Tilda::radioChannelIdentifier()[0] == '?') {
-        footer = "            " +
-                 String(Tilda::getBatteryPercent()) + "%";
-    } else {
-        footer = String(Tilda::radioChannelIdentifier()) +
-                 " -" +
-                 String(Tilda::radioRssi()) +
-                 "    " +
-                 String(Tilda::getBatteryPercent()) + "%";
-    }
-
+    footer = "            " +
+       String(Tilda::getBatteryPercent()) + "%";
+    
     footer.toCharArray(footerBuffer, 22);
     return footerBuffer;
 }

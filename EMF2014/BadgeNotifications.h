@@ -35,7 +35,6 @@
 
 #include "EMF2014Config.h"
 #include "RGBTask.h"
-#include "SettingsStore.h"
 
 class MessageCheckTask;
 class AppManager;
@@ -56,28 +55,17 @@ private:
     uint8_t _type;
 };
 
-class BadgeNotifications : public SettingsStoreObserver, public RadioMessageHandler {
+class BadgeNotifications {
 public:
-    BadgeNotifications(SettingsStore& aSettingsStore, MessageCheckTask& aMessageCheckTask, AppManager& aAppManager);
+    BadgeNotifications(AppManager& aAppManager);
     ~BadgeNotifications();
 
     BadgeNotification* popNotification();
     void pushNotification(String text, RGBColor rgb1, RGBColor rgb2, boolean sound, uint8_t type);
 
-private: // from RadioMessageHandler
-    void handleMessage(const IncomingRadioMessage&);
-
-private: // from SettingsStoreObserver
-    void badgeIdChanged(uint16_t badgeId);
-
 private:
     static RGBColor getRGBColor(PackReader& aReader);
-
-    bool badgeIdSubscriptionSet;
-
 private:
-    MessageCheckTask& mMessageCheckTask;
-    SettingsStore& mSettingsStore;
     AppManager& mAppManager;
     BadgeNotification* mBadgeNotification;
     SemaphoreHandle_t mNotificationMutex;

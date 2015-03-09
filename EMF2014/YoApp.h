@@ -1,10 +1,8 @@
 /*
  TiLDA Mk2
 
- DataStore
-
- This is a helper class that knows how to de-serialise and store data send via
- radio. Other apps/tasks can look up data
+ YoApp
+ The most useful app ever - Used to demostrate how to use the radio
 
  The MIT License (MIT)
 
@@ -33,43 +31,41 @@
 
 #include <Arduino.h>
 #include <FreeRTOS_ARM.h>
-#include <TinyPacks.h>
-
+#include <deque>
 #include "EMF2014Config.h"
-#include "RadioMessageHandler.h"
-#include "Schedule.h"
+#include "App.h"
+#include "ButtonSubscription.h"
+#include "Serializable.h"
 
-class IncomingRadioMessage;
-class MessageCheckTask;
-class WeatherForecast;
-class WeatherForecastPeriod;
+static const uint8_t MAX_YOS_ON_SCREEN = 4;
 
-class DataStore: public RadioMessageHandler {
+class Yo: public Serializable {
+public: 
+    Yo(uint32_t sBadgeId, String sName): badgeId(sBadgeId), name(sName) {};
+    uint32_t badgeId;
+    String name;
+
+    uint16_t getMessageTypeId();
+    void serialize(byte* data);
+};
+
+class YoApp: public App {
 public:
-	DataStore(MessageCheckTask& aMessageCheckTask);
-	~DataStore();
+    static App* New();
+    ~YoApp();
 
-	WeatherForecast* getWeatherForecast() const;
-	Schedule* getSchedule(uint8_t aDay, uint8_t aLocationId) const;
-
-private: // from RadioMessageHandler
-	void handleMessage(const IncomingRadioMessage& aIncomingRadioMessage);
-
+    String getName() const;
 private:
-	void _addWeatherForecastRaw(const IncomingRadioMessage& aIncomingRadioMessage);
-	void _addScheduleRaw(const IncomingRadioMessage& aIncomingRadioMessage, uint8_t day, uint8_t aLocationId);
+    YoApp();
+    YoApp(YoApp&);
 
-	static void _unpackWeatherForecastPeriod(WeatherForecastPeriod& period, PackReader& reader);
+    void task();
+    void afterSuspension();
+    void beforeResume();
 
+    void addYoToList(Yo& yo);
+    void updateScreen();
 private:
-	MessageCheckTask& mMessageCheckTask;
-
-	PackReader mReader;
-
-	// data
-	WeatherForecast* mWeatherForecast;
-	Schedule*** mSchedule;
-
-	SemaphoreHandle_t mWeatherSemaphore;
-	SemaphoreHandle_t mScheduleSemaphore;
+    ButtonSubscription* mButtonSubscription;
+    std::deque<Yo> mYosDisplayed;
 };
