@@ -82,6 +82,18 @@ String SoundTask::getName() const {
 }
 
 void SoundTask::task() {
+    if (PLAY_INTRO_SOUND) {
+        // Intro sound - Similar to the one of a famous handheld gaming console
+        vTaskDelay(100);
+        tone(PIEZO, 1047, 100); // Other frequencies are 3144hz, 5242hz and 7341hz, but we can't do multichannel :(
+        vTaskDelay(100);
+        tone(PIEZO, 2079, 500); // Other frequency is 6240hz
+        // Sadly we also can't do fade out :(
+        vTaskDelay(500);
+        noTone(PIEZO);
+    }
+
+    // Consume queue 
     while(true) {
         Tone tone;
         if(xQueueReceive(_tones, &tone, portMAX_DELAY) == pdTRUE) {
